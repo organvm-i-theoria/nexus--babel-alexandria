@@ -1,0 +1,21 @@
+# Security: Secrets and Config
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+*.cert
+*.pfx
+secrets/
+credentials/
+config/local.py
+config/secrets.py
+
+# Python Basics
+__pycache__/
+*.py[cod]
+.venv
+venv/
+env/
+.pytest_cache/
+.mypy_cache/
