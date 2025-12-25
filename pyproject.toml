@@ -1,0 +1,24 @@
+[tool.poetry]
+name = "rlos"
+version = "0.1.0"
+description = "Rhetorical-Linguistic Operating System"
+authors = ["RLOS Team"]
+readme = "README.md"
+packages = [{include = "core"}, {include = "modules"}, {include = "engines"}]
+
+[tool.poetry.dependencies]
+python = "^3.12"
+
+[tool.poetry.group.dev.dependencies]
+pytest = "^8.0.0"
+bandit = "^1.7.0"
+black = "^24.0.0"
+flake8 = "^7.0.0"
+mypy = "^1.8.0"
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
+
+[tool.bandit]
+exclude_dirs = ["tests", "venv"]
