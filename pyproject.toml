@@ -1,0 +1,23 @@
+[project]
+name = "rlos"
+version = "0.1.0"
+description = "Rhetorical-Linguistic Operating System"
+authors = [
+    {name = "Sentinel",email = "sentinel@example.com"}
+]
+readme = "README.md"
+requires-python = "^3.11"
+dependencies = [
+    "numpy (>=2.4.0,<3.0.0)"
+]
+
+[dependency-groups]
+dev = [
+    "bandit (>=1.9.2,<2.0.0)",
+    "safety (>=3.7.0,<4.0.0)"
+]
+
+
+[build-system]
+requires = ["poetry-core>=2.0.0,<3.0.0"]
+build-backend = "poetry.core.masonry.api"
