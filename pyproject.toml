@@ -1,0 +1,34 @@
+[tool.poetry]
+name = "rlos"
+version = "0.1.0"
+description = "Rhetorical-Linguistic Operating System"
+authors = ["Admin <admin@example.com>"]
+readme = "README.md"
+packages = [{include = "core"}, {include = "modules"}]
+
+[tool.poetry.dependencies]
+python = "^3.12"
+numpy = "^1.26.0"
+
+[tool.poetry.group.dev.dependencies]
+pytest = "^8.0.0"
+ruff = "^0.3.0"
+black = "^24.0.0"
+mypy = "^1.8.0"
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
+
+[tool.ruff]
+# Enable strict linting
+select = ["E", "F", "B", "S", "I"]
+ignore = []
+line-length = 88
+
+[tool.ruff.lint.per-file-ignores]
+"tests/*" = ["S101"] # Allow assert in tests
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+python_files = "test_*.py"
