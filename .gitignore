@@ -1,0 +1,89 @@
+# Security: Secrets and Credentials
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+secrets.json
+client_secrets.json
+credentials.json
+auth.json
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+share/python-wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+MANIFEST
+
+# Virtual Environments
+venv/
+env/
+ENV/
+.venv/
+
+# Poetry
+# poetry.lock is usually committed, but if you want to ignore it:
+# poetry.lock
+
+# PyTorch / Machine Learning
+*.pt
+*.pth
+*.onnx
+*.safetensors
+models/
+checkpoints/
+wandb/
+
+# Data
+data/
+datasets/
+corpora/
+cache/
+
+# IDEs and Editors
+.idea/
+.vscode/
+*.swp
+*.swo
+.DS_Store
+
+# Logs
+*.log
+logs/
+
+# Testing
+.pytest_cache/
+.coverage
+htmlcov/
+coverage.xml
+
+# Node/Frontend (future proofing)
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+dist/
+.cache/
+
+# Docker
+.docker/
+docker-compose.override.yml
