@@ -1,0 +1,115 @@
+# --- Security & Secrets ---
+# Crucial: Never commit secrets to version control
+.env
+.env.*
+*.env
+*.key
+*.pem
+*.cert
+*.p12
+*.pfx
+secrets.json
+client_secrets.json
+auth.json
+credentials.json
+token.json
+# Exclude standard private keys
+id_rsa
+id_dsa
+id_ed25519
+id_ecdsa
+*.ppk
+
+# --- Python ---
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+share/python-wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+MANIFEST
+
+# --- Virtual Environments ---
+venv/
+.venv/
+env/
+.env/
+ENV/
+env.bak/
+venv.bak/
+
+# --- Node.js / Web (Defensive) ---
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+.npm/
+.yarn/
+dist/
+out/
+.next/
+.nuxt/
+.vuepress/dist
+.serverless/
+.fusebox/
+.dynamodb/
+.grunt
+bower_components
+.tern-port
+
+# --- IDEs & OS ---
+.idea/
+.vscode/
+*.swp
+*.swo
+.DS_Store
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+
+# --- Logs & Databases ---
+*.log
+*.sqlite
+*.db
+
+# --- Testing and Coverage ---
+.tox/
+.nox/
+.coverage
+.coverage.*
+.cache
+nosetests.xml
+coverage.xml
+*.cover
+*.py,cover
+.hypothesis/
+.pytest_cache/
+cover/
+.nyc_output
+
+# --- Jupyter Notebook ---
+.ipynb_checkpoints
+
+# --- MyPy ---
+.mypy_cache/
+.dmypy.json
+dmypy.json
+
+# --- Ruff ---
+.ruff_cache/
