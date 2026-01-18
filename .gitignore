@@ -1,0 +1,33 @@
+# General
+.DS_Store
+.idea/
+.vscode/
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+.venv/
+env/
+venv/
+*.egg-info/
+.coverage
+htmlcov/
+dist/
+build/
+.pytest_cache/
+.mypy_cache/
+
+# Security (CRITICAL)
+.env
+.env.*
+!.env.example
+secrets.json
+*.pem
+*.key
+
+# Project specific (from roadmap)
+data/
+models/
+cache/
+*.log
