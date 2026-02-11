@@ -1,5 +1,7 @@
-[![ORGAN-I: Theory](https://img.shields.io/badge/ORGAN--I-Theory-1a237e?style=flat-square)](https://github.com/organvm-i-theoria)
-[![Status](https://img.shields.io/badge/status-design%20document-yellow?style=flat-square)]()
+[![ORGAN-I: Theoria](https://img.shields.io/badge/ORGAN--I-Theoria-311b92?style=flat-square)](https://github.com/organvm-i-theoria)
+[![License: MIT](https://img.shields.io/badge/License-MIT-blue?style=flat-square)](LICENSE)
+[![Status: Design Document](https://img.shields.io/badge/status-design%20document-yellow?style=flat-square)]()
+[![Specification: 50K words](https://img.shields.io/badge/specification-50%2C000%20words-informational?style=flat-square)]()
 
 # Nexus Babel Alexandria
 
@@ -9,13 +11,67 @@
 
 ---
 
-## Overview
+## Table of Contents
+
+- [Theoretical Purpose](#theoretical-purpose)
+- [Philosophical Framework](#philosophical-framework)
+- [The Nine-Layer Plexus Architecture](#the-nine-layer-plexus-architecture)
+- [Formal Foundations](#formal-foundations)
+- [The 84 Core Functions](#the-84-core-functions)
+- [Semiotic Engine](#semiotic-engine)
+- [Rhetorical Strategy Engine](#rhetorical-strategy-engine)
+- [Multimodal Architecture](#multimodal-architecture)
+- [Meta-Learning and Evolution](#meta-learning-and-evolution)
+- [Dual-Mode Governance](#dual-mode-governance)
+- [Technical Architecture](#technical-architecture)
+- [Cross-Organ Position](#cross-organ-position)
+- [Repository Contents](#repository-contents)
+- [Related Work](#related-work)
+- [Contributing](#contributing)
+- [License](#license)
+- [Author](#author)
+
+---
+
+## Theoretical Purpose
 
 Nexus Babel Alexandria is a pure design-document repository. It contains no source code. What it contains is a 50,000-word architectural specification for a system that does not yet exist — and that specification is the contribution.
 
 The document proposes **RLOS (Rhetorical-Linguistic Operating System)**, a nine-layer "plexus architecture" for computational linguistics. Where conventional NLP pipelines process language as a linear sequence of transformations — tokenize, parse, classify, output — RLOS models language as a **bidirectional hypergraph** in which every layer communicates with every other layer simultaneously. A morphological insight can reshape a pragmatic interpretation; a sociolinguistic register shift can rewrite a syntactic parse. The architecture treats language the way language actually behaves: as a living, self-referential system where meaning emerges from the interplay of all levels at once.
 
-This is ORGAN-I (Theory) work in its most concentrated form. The document synthesizes traditions that rarely share a page — Friedrich Kittler's media archaeology alongside Abstract Meaning Representation, Aristotle's rhetorical triangle alongside DisCoCat categorical semantics, Peirce's triadic semiotics alongside PyTorch tensor operations — and proposes a unified computational framework that respects all of them. Whether or not this system is ever built exactly as specified, the synthesis itself maps intellectual territory that the NLP community has left largely unexplored.
+The name encodes three epistemic commitments. **Nexus**: connection, the hypergraph substrate that refuses to decompose language into isolated components. **Babel**: multiplicity, the insistence that any serious language system must work for Yoruba and Welsh and Tagalog with the same architectural commitment it gives to English. **Alexandria**: preservation, the ambition to build a knowledge architecture capacious enough to hold the full complexity of human linguistic expression without reducing it to feature vectors.
+
+This is ORGAN-I (Theoria) work in its most concentrated form. The document synthesizes traditions that rarely share a page — Friedrich Kittler's media archaeology alongside Abstract Meaning Representation, Aristotle's rhetorical triangle alongside DisCoCat categorical semantics, Peirce's triadic semiotics alongside PyTorch tensor operations — and proposes a unified computational framework that respects all of them. Whether or not this system is ever built exactly as specified, the synthesis itself maps intellectual territory that the NLP community has left largely unexplored.
+
+The central theoretical claim is that **language is irreducibly multi-layered, bidirectional, and rhetorical**. Any system that processes language through a linear pipeline — however sophisticated its transformer architecture — has already committed an ontological error by assuming that phonology precedes morphology precedes syntax precedes semantics. RLOS refuses that assumption. The plexus architecture is not merely an engineering choice but a philosophical position about the nature of linguistic cognition.
+
+---
+
+## Philosophical Framework
+
+### The Problem of Linearity in Computational Linguistics
+
+The dominant paradigm in NLP treats language processing as a pipeline: raw input enters at one end, passes through successive transformation stages, and exits as structured output at the other. This model, inherited from the Chomskyan tradition of generative grammar (where deep structure maps to surface structure through ordered transformations), persists in modern architectures even when the underlying theory has moved on.
+
+The pipeline assumption is not merely an engineering convenience — it is an epistemological commitment. It asserts that linguistic knowledge decomposes cleanly into sequential layers, that information flows in one direction, and that each layer's output is sufficient input for the next. Every NLP practitioner knows this is false. Pragmatic context reshapes syntactic interpretation. Prosodic contour disambiguates lexical meaning. Sociolinguistic register determines morphological choice. The pipeline handles these cross-layer interactions as special cases, exceptions, post-hoc corrections. The plexus handles them as the fundamental mechanism of linguistic cognition.
+
+### Four Theoretical Pillars
+
+The RLOS specification draws its formal architecture from four traditions, each contributing irreplaceable structural commitments:
+
+**Category Theory and DisCoCat Semantics.** The mathematical backbone is Distributional Compositional Categorical (DisCoCat) semantics, which uses category theory to model how word meanings compose into sentence meanings. In the RLOS architecture, each plexus layer is a category, morphisms between layers are functors, and the hypergraph connections are natural transformations. This gives the system a rigorous algebraic structure for reasoning about cross-layer interactions — not as ad hoc connections but as mathematically principled mappings. The use of Frobenius algebras for relative clauses and quantum density matrices for polysemy extends the framework into domains that standard distributional semantics cannot reach.
+
+**Peircean Semiotics.** Charles Sanders Peirce's triadic sign theory (sign-object-interpretant) provides the framework for how RLOS models meaning across modalities. Where Saussurean semiotics offers a dyadic model (signifier-signified) that maps cleanly onto text, Peirce's triadic model handles the multimodal reality of language: an icon (visual resemblance), an index (causal connection), and a symbol (conventional association) all participate in meaning-making simultaneously. The concept of unlimited semiosis — where every interpretant becomes the sign vehicle for a subsequent interpretation — maps directly onto the recursive structure of the hypergraph, where every node's meaning is perpetually conditioned by its connections.
+
+**Aristotelian Rhetoric.** The rhetorical tradition contributes the ethos-pathos-logos-kairos framework as a first-class analytical dimension. The system does not merely classify text by sentiment (a semantic task) but models the rhetorical strategies at work: how a speaker constructs credibility (ethos), appeals to emotion (pathos), constructs logical arguments (logos), and responds to situational context (kairos). This is most visible in the Pragmatic and Discourse layers, where rhetorical function shapes the interpretation of speech acts and argumentation structures. The inclusion of kairos — the right thing at the right time — as a computational concern is, as far as this document is aware, unprecedented in NLP.
+
+**Media Archaeology (Kittler).** Friedrich Kittler's insight that media systems are not transparent tools but infrastructural conditions for what can be said, known, and argued informs the Meta-Interface layer and the entire governance architecture. RLOS does not present itself as a neutral analysis tool. The specification explicitly acknowledges that the system's architecture constitutes an epistemological framework — that the choice of what to foreground in a visualization is a political act, that the decision to model rhetoric computationally is itself a rhetorical move. This self-reflexivity, unusual in a technical specification, is characteristic of ORGAN-I's commitment to theory that knows itself as theory.
+
+### The Synthesis as Contribution
+
+These four traditions have been developed in near-total isolation from each other. Category theorists working on DisCoCat rarely cite Kittler. Rhetoricians working on persuasion analysis rarely formalize their models in algebraic terms. Semioticians working on multimodal meaning rarely engage with the concrete engineering constraints of transformer architectures. The specification's primary intellectual contribution is demonstrating that these traditions are not merely compatible but mutually necessary: category theory provides the algebraic structure, semiotics provides the theory of signs, rhetoric provides the theory of purpose, and media archaeology provides the critical self-awareness that prevents the system from mistaking its own abstractions for neutral descriptions of reality.
+
+---
 
 ## The Nine-Layer Plexus Architecture
 
@@ -33,84 +89,236 @@ The core architectural innovation is the **plexus**: nine layers arranged not as
 | **8. SOCIOLINGUISTIC** | Register, dialect, and culture | Style detection, code-switching, dialect identification, cultural context modeling |
 | **9. META-INTERFACE** | User interaction | Visualization, explanation generation, interactive exploration, feedback loops |
 
-The key departure from standard architectures: **there are no back-edges because there is no forward direction**. Every layer connects to every other layer through the hypergraph. A phonological pattern (sarcastic intonation) directly informs pragmatic interpretation without passing through syntax and semantics as intermediaries. A sociolinguistic register shift (formal to colloquial) directly modifies morphological tokenization strategies. The plexus treats these cross-layer interactions not as edge cases to be patched but as the fundamental mechanism of linguistic cognition.
+The key departure from standard architectures: **there are no back-edges because there is no forward direction.** Every layer connects to every other layer through the hypergraph. A phonological pattern (sarcastic intonation) directly informs pragmatic interpretation without passing through syntax and semantics as intermediaries. A sociolinguistic register shift (formal to colloquial) directly modifies morphological tokenization strategies. The plexus treats these cross-layer interactions not as edge cases to be patched but as the fundamental mechanism of linguistic cognition.
 
-## Theoretical Foundations
+The mathematical substrate for this full connectivity is a **labeled property hypergraph** — a graph structure in which edges can connect arbitrary numbers of nodes (not just pairs), each edge and node carries typed properties, and the graph supports efficient traversal in any direction. The specification details a custom `.rl` format (JSON-LD based) for serializing these hypergraphs, with each node carrying layer-specific embeddings in 768-1024 dimensional vector spaces.
 
-The design document draws on four primary theoretical traditions, each contributing structural commitments to the architecture:
+---
 
-### Category Theory and DisCoCat
+## Formal Foundations
 
-The mathematical backbone is **DisCoCat** (Distributional Compositional Categorical) semantics, which uses category theory to model how word meanings compose into sentence meanings. In the RLOS architecture, each plexus layer is a category, morphisms between layers are functors, and the hypergraph connections are natural transformations. This gives the system a rigorous algebraic structure for reasoning about cross-layer interactions — not as ad hoc connections but as mathematically principled mappings.
+### Category Theory Framework
 
-### Peircean Semiotics
+The DisCoCat framework treats grammar as a free rigid monoidal category **G** and semantics as the category **FVect** of finite-dimensional vector spaces. A strong monoidal functor **F: G -> S** maps grammatical derivations to semantic computations, ensuring that compositional sentence meaning arises from word-level meanings in an algebraically principled way.
 
-Charles Sanders Peirce's triadic sign theory (sign–object–interpretant) provides the framework for how RLOS models meaning across modalities. Where Saussurean semiotics offers a dyadic model (signifier–signified) that maps cleanly onto text, Peirce's triadic model handles the multimodal reality of language: an icon (visual resemblance), an index (causal connection), and a symbol (conventional association) all participate in meaning-making simultaneously. The Iconographic layer is explicitly Peircean in its design.
+The specification extends this standard framework in two directions:
 
-### Aristotelian Rhetoric
-
-The rhetorical tradition contributes the **ethos–pathos–logos–kairos** framework as a first-class analytical dimension. The system does not merely classify text by sentiment (a semantic task) but models the rhetorical strategies at work: how a speaker constructs credibility (ethos), appeals to emotion (pathos), constructs logical arguments (logos), and responds to situational context (kairos). This is most visible in the Pragmatic and Discourse layers, where rhetorical function shapes the interpretation of speech acts and argumentation structures.
+- **Frobenius algebras** model relative clauses and other recursive structures, providing a categorical account of how embedded clauses interact with their matrix sentences.
+- **Quantum density matrices** model lexical polysemy, treating a word's meaning not as a single vector but as a mixed state that collapses to a particular sense under contextual measurement.
 
 ### Synchronous Hyperedge Replacement Grammars
 
-The computational formalism for the plexus itself is drawn from **Synchronous Hyperedge Replacement Grammars (SHRGs)**, which generalize synchronous context-free grammars to hypergraphs. Where SCFGs model the relationship between two string languages (useful for machine translation), SHRGs model the relationship between two graph languages — which is exactly what RLOS needs to formalize the bidirectional mappings between plexus layers. Each layer's internal representation is a hypergraph; inter-layer communication is an SHRG derivation.
+The computational formalism for inter-layer communication is drawn from Synchronous Hyperedge Replacement Grammars (SHRGs), which generalize synchronous context-free grammars to hypergraphs. Where SCFGs model the relationship between two string languages (useful for machine translation), SHRGs model the relationship between two graph languages — which is exactly what RLOS needs to formalize the bidirectional mappings between plexus layers.
 
-## Function Specification
+Parsing complexity is bounded at O(n^(k+1) * 3^(d(k+1))) for treewidth k. The specification notes that 98% of AMR semantic graphs have treewidth 2 or less, making SHRG parsing tractable for realistic linguistic inputs. The use of S-Graph grammars (with Merge, Rename, and Forget operations) provides a 6722x speedup over the standard HRG toolkit Bolinas, bringing the formalism from theoretical elegance into practical viability.
+
+### Abstract Meaning Representation Extensions
+
+The specification extends standard AMR in three directions critical for the plexus architecture:
+
+- **Multimodal AMR**: Nodes for visual and audio entities, cross-modal edges linking textual references to perceptual grounding.
+- **Rhetorical AMR**: Discourse relations encoded as graph edges, connecting the semantic layer to the discourse and pragmatic layers.
+- **Temporal/Modal AMR**: Uniform Meaning Representation (UMR) extensions for temporal relations and modality, enabling the system to reason about tense, aspect, and counterfactual meaning.
+
+Performance target: Smatch F1 greater than 85% with an explainable SHRG backbone — meaning the system can not only produce correct semantic graphs but also provide human-readable derivation traces for its analyses.
+
+---
+
+## The 84 Core Functions
 
 The design document specifies **84 core functions** across all nine layers, each with defined inputs, outputs, dependencies, and target accuracy metrics. These are not API endpoints — they are functional specifications for capabilities the system would need to exhibit.
 
-Representative examples:
+The functions span eight functional categories:
 
-- **PHON_001–PHON_012**: Phonological functions including phoneme recognition, prosodic boundary detection, intonation contour classification, and speech-text forced alignment
-- **MORPH_001–MORPH_010**: Morphological functions including subword tokenization, compound decomposition, derivational analysis, and neologism detection with etymological tracing
-- **SYN_001–SYN_009**: Syntactic functions including multilingual dependency parsing, constituency analysis, and grammatical error detection with correction suggestions
-- **SEM_001–SEM_012**: Semantic functions including AMR parsing, frame-semantic role labeling, metaphor detection, and cross-lingual semantic similarity
-- **PRAG_001–PRAG_008**: Pragmatic functions including speech act classification, presupposition identification, Gricean implicature resolution, and indirect speech act detection
-- **DISC_001–DISC_008**: Discourse functions including RST parsing, argumentation mining, narrative structure extraction, and coherence scoring
-- **SOCIO_001–SOCIO_008**: Sociolinguistic functions including register classification, code-switching detection, dialect identification, and cultural reference resolution
-- **RHET_001–RHET_006**: Rhetorical functions including ethos/pathos/logos classification, kairos detection, rhetorical figure identification, and persuasion strategy analysis
+- **Phonology (8 functions)**: Speech-to-text via Whisper, prosodic extraction (F0, intensity, duration, rhythm), intonation classification, stress detection, tone classification for tonal languages, phonetic alignment via Montreal Forced Aligner, voice activity detection, and speaker diarization.
 
-Each function specification includes target accuracy ranges (typically 85–95% F1 for well-resourced languages), computational complexity estimates, and dependency chains to other functions.
+- **Morphology (10 functions)**: Language-specific tokenization (with dedicated modules for Chinese/jieba, Japanese/MeCab, Arabic/CAMeL), lemmatization, morpheme segmentation (critical for agglutinative languages like Turkish and Finnish), compound decomposition, stemming, inflection generation, emoji normalization, alliteration detection, assonance detection, and grapheme safety checking (homoglyph detection for security).
 
-## Technical Architecture (As Specified)
+- **Syntax (12 functions)**: Universal Dependencies parsing, POS tagging (UPOS universal tagset), constituency parsing, phrase extraction, rhetorical parallelism detection, chiasmus detection (A-B-B-A patterns, F1 ~0.78), clause segmentation, argument structure analysis, grammaticality scoring, modifier extraction, coordination resolution, and long-distance dependency tracking (filler-gap/wh-movement).
 
-The design document specifies a complete technology stack, included here for reference — these are design choices documented in the specification, not implemented components:
+- **Semantics (14 functions)**: Named entity recognition (18 fine-grained types, F1 >90%), semantic role labeling (PropBank/FrameNet, F1 ~87%), sentiment analysis (polarity + VAD scores, F1 >92%), semantic similarity (Sentence-BERT), intent classification (20+ types, F1 >85%), word sense disambiguation (WordNet synsets, F1 ~80%), metaphor detection (F1 ~75-80%), frame semantic parsing, temporal and causal relation extraction, emotion classification (8 emotions, F1 ~65-75%), AMR parsing (Smatch ~84%), entity linking (Wikipedia/Wikidata), and multimodal grounding.
+
+- **Pragmatics (11 functions)**: Speech act classification (Searle's 5 categories), coreference resolution, Gricean implicature detection, presupposition identification, irony/sarcasm detection (multimodal: text + prosody + emoji), politeness analysis (Brown and Levinson framework), hedging detection, deictic resolution (including gestural deixis), ellipsis recovery, question type classification, and dialogue act tagging.
+
+- **Discourse (9 functions)**: Enhanced RST parsing with graph structure (F1 >70% relation labeling), topic segmentation, topic tracking, coherence evaluation, argumentation mining (premise-claim-rebuttal), rhetorical relation classification (25+ relations), discourse deixis resolution, information structure (given-new, topic-focus), and discourse marker analysis.
+
+- **Sociolinguistics (8 functions)**: Dialect identification, register classification (formal/informal/technical/literary), style analysis (authorship attribution), code-switching detection, politeness strategy detection (positive/negative face), formality scoring, sociolinguistic gender marker analysis (with ethics constraints), and cultural context retrieval via the World Knowledge and Reasoning Module.
+
+- **Iconography and Rhetoric (12 functions)**: Emoji sense disambiguation (EmojiNet), emoji sentiment analysis (VAD scores), hieroglyph processing (Egyptian/Mayan/Chinese pictographs), typography analysis (font semantics, CAPS, emphasis), meme template recognition, visual metaphor detection, rhetorical appeal classification (ethos/pathos/logos, F1 ~0.75-0.85), rhetorical figure detection (25+ figures), fallacy detection (10+ types, F1 ~0.70-0.84), propaganda technique detection (18 techniques), persuasive strategy identification (Cialdini's 6 principles), and argument quality assessment.
+
+Each function specification includes target accuracy ranges (typically 85-95% F1 for well-resourced languages), computational complexity estimates, and dependency chains to other functions.
+
+---
+
+## Semiotic Engine
+
+The Peircean Semiotic Engine implements Peirce's triadic sign model as a computational system:
+
+- **Representamen**: The sign vehicle — emoji bytes, sound waves, pixel arrays, typographic marks.
+- **Object**: The referent concept — what the sign points to.
+- **Interpretant**: The context-dependent meaning effect — what the sign produces in its receiver.
+
+The engine classifies signs along the icon-index-symbol axis. Icons are detected through visual similarity metrics and CLIP embeddings. Indexes are traced through causal reasoning via the World Knowledge and Reasoning Module. Symbols are resolved through a cultural symbol lexicon integrated with the sociolinguistic context layer.
+
+A critical feature is the modeling of **semiotic chains** — where one sign's interpretant becomes the representamen of the next sign, producing the "unlimited semiosis" that Peirce described and that Umberto Eco made central to his theory of interpretation. The specification illustrates this with the example of a red rose: denotation (Rosa genus flower) branches into culturally weighted connotations (love at 0.9 in Western cultures, England at 0.6 in British contexts, pain/thorns at 0.4 in warning contexts), with the pragmatic and sociolinguistic modules providing the contextual weights that select the appropriate connotative chain.
+
+The emoji semantics subsystem demonstrates the engine's practical application. The skull emoji carries a denotative meaning (death, danger) and a context-dependent connotative meaning ("I'm dying of laughter" in internet slang). The engine disambiguates through co-occurrence analysis, contextual BERT embeddings, and semantic shift detection via longitudinal analysis — detecting when a sign's dominant interpretant has shifted across a community over time.
+
+---
+
+## Rhetorical Strategy Engine
+
+The Rhetorical Strategy Engine (RSE) implements Aristotle's rhetorical triad as a computational framework with measurable performance targets:
+
+**Ethos Detection (F1 ~0.75-0.80)**: Identifies credibility construction through source citations, expertise markers, trust signals, and their opposites (ad hominem attacks, credibility undermining). The engine distinguishes between ethos-building and ethos-attacking moves.
+
+**Pathos Detection (F1 ~0.80-0.85)**: The highest-performing component, reflecting the relative salience of emotional language in persuasive text. Draws on emotion lexicons (NRC, VAD), intensity adjectives, vivid imagery, and metaphor. The specification notes that approximately 31% of persuasive text clauses contain pathos-bearing elements.
+
+**Logos Detection**: Integrates argumentation mining, logical connective analysis, and evidence marker detection with the fallacy detection subsystem (F1 ~0.70-0.84). RST integration provides the argumentative structure that logos analysis requires.
+
+**Kairos Assessment**: Models situational appropriateness — not just what is said but whether it is the right thing at the right time. This is the most experimental component, drawing on audience modeling and contextual state tracking.
+
+The engine implements Enhanced Rhetorical Structure Theory (eRST), which extends traditional tree-based RST to a graph-based model handling concurrent relations. The system identifies 25+ discourse relations (Elaboration, Evidence, Contrast, Concession, Motivation, Antithesis, among others) with signal-based detection using explicit markers ("although," "because," "however").
+
+The computational persuasion subsystem models audiences as probabilistic state machines with belief states (Bayesian networks), emotional states (VAD coordinates), cognitive states (elaboration likelihood), social identities (values, ideology), and credibility perceptions (trust ratings). Strategy selection optimizes P(Goal_State | Strategy, Current_State) subject to ethical constraints: in PUBLIC mode, all manipulative strategies (fallacies, deception, dark patterns) are prohibited, while non-rational persuasion (emotion, ethos) is permitted only when accompanied by rational persuasion (facts, evidence, logic).
+
+---
+
+## Multimodal Architecture
+
+The multimodal integration architecture uses **Multimodal Bottleneck Transformers** with cross-attention mechanisms to avoid the quadratic scaling that naive fusion would require. Modality-specific encoders produce embeddings in a shared 512-768 dimensional space:
+
+- **Text**: SentencePiece/BPE tokenization to 768-1024d embeddings
+- **Image**: Vision Transformer (ViT) with 14x14 or 16x16 patches
+- **Audio**: Whisper/Wav2Vec2 spectrogram encoding
+- **Video**: Frame sampling + ViT + temporal transformer
+- **Gesture**: OpenPose/MediaPipe keypoints with sequence modeling
+
+The shared embedding space is trained via CLIP-style contrastive learning on 400M+ image-text pairs. Cross-modal alignment uses the formula CrossAttention(Q, K, V) = softmax(QK^T / sqrt(d_k))V, where queries come from one modality and keys/values from another.
+
+The specification draws on Kress and van Leeuwen's theory of **modal affordances** — the recognition that different modalities contribute different kinds of meaning (writing conveys precise propositional content, images convey spatial relationships, gesture conveys deictic reference, music conveys emotional evocation). Integration modes are classified as redundancy (reinforcement), complementarity (unique information from each modality), or contradiction (a critical signal for irony and sarcasm detection). The FRESCO framework provides three semiotic levels for visual analysis: plastic (colors, lines, shapes), figurative (entities, objects), and enunciation (point of view, framing).
+
+---
+
+## Meta-Learning and Evolution
+
+The system's adaptability architecture uses **Model-Agnostic Meta-Learning (MAML)** with an outer loop that learns optimal parameter initialization across a distribution of 1000+ tasks, and an inner loop that adapts to new tasks in 3-10 gradient steps. First-Order MAML (omitting the Hessian) provides a 33% speedup with minimal performance loss.
+
+Low-resource language adaptation combines five strategies: multilingual pre-trained language models (mGPT, BLOOM), in-context learning with 5-10 target-language examples, query alignment for cross-lingual transfer, parameter-efficient fine-tuning (LoRA with rank 4-16, adapter bottlenecks of 64-256), and data augmentation through back-translation and synthetic templates. The target is performance within 10% of high-resource languages.
+
+Continual learning integrates six methods to prevent catastrophic forgetting: episodic memory replay (1-2% of data), EWC-style parameter regularization, knowledge distillation on anchor points, sharpness-aware minimization for flat minima, task-specific adapters with gating, and prototypical networks for class-incremental learning. The backward transfer target is less than 5% accuracy drop on Task 1 after learning Task 10.
+
+---
+
+## Dual-Mode Governance
+
+The specification addresses the dual-use nature of powerful language technology through a **RAW/PUBLIC mode architecture**:
+
+| Dimension | PUBLIC Mode | RAW Mode |
+|-----------|-------------|----------|
+| **Access** | Open to general public | Vetted researchers and institutions |
+| **Content Filters** | Strong multi-layered (NSFW, hate speech, misinformation, violence, self-harm) | Configurable, researcher-controlled |
+| **Bias Mitigation** | Pre-deployment fairness audits, continuous monitoring | Full exposure of biases for research |
+| **Accountability** | Provider + user shared | User/institution full responsibility |
+| **Transparency** | AI-generated labels, watermarks | Full system internals |
+| **Data Privacy** | GDPR-compliant, data minimization | Anonymized/synthetic data only |
+| **Oversight** | Internal ethics teams + incident response | Independent multi-stakeholder ethics council |
+
+PUBLIC mode implements four safety layers: pre-training data curation (quality filtering, bias auditing), safety alignment (RLHF, Constitutional AI principles), runtime filters (prompt shields, output classifiers across four core harm categories with configurable severity thresholds), and human-in-the-loop monitoring. Performance targets: false negative rate below 1%, false positive rate below 5%.
+
+The governance framework aligns with NIST AI RMF 1.0, EU AI Act high-risk system requirements, and ISO/IEC 42001 AI Management System certification. A multi-stakeholder council of technical experts, ethicists, legal scholars, and civil society representatives oversees RAW mode access and adjudicates disputes.
+
+The specification draws on Godber and Origgi's framework for **virtuous persuasion**: rational persuasion (facts, evidence, logic) is encouraged, non-rational persuasion (emotion, ethos) is acceptable when accompanied by rational persuasion, and manipulative persuasion (fallacies, falsehoods) is prohibited. This ethical framework is not bolted on as an afterthought but woven into the system's rhetorical analysis capabilities — the same engine that detects persuasive strategies in input text enforces ethical constraints on generated output.
+
+---
+
+## Technical Architecture
+
+The design document specifies a complete technology stack — these are design choices documented in the specification, not implemented components:
 
 - **Runtime**: Python 3.11+, FastAPI for service layer
 - **ML Framework**: PyTorch 2.0+ with Hugging Face Transformers
-- **Graph Infrastructure**: Neo4j for persistent hypergraph storage, NetworkX for in-memory graph operations
-- **Multimodal**: OpenAI CLIP for vision-language alignment, Whisper for speech processing
+- **Graph Infrastructure**: Neo4j for persistent hypergraph storage, NetworkX for in-memory operations, PyTorch Geometric for graph neural networks
+- **Multimodal**: OpenAI CLIP for vision-language alignment, Whisper for speech processing, timm for image models
 - **Orchestration**: Kubernetes for deployment, Ray for distributed computation
-- **Meta-Learning**: MAML (Model-Agnostic Meta-Learning) for rapid adaptation to new languages and domains
-- **Language Coverage**: 100+ languages targeted, with explicit support tiers for high/medium/low-resource languages
+- **Meta-Learning**: MAML for rapid adaptation to new languages and domains
+- **Language Coverage**: 100+ languages targeted, with explicit support tiers
 
-The multilingual commitment is architecturally significant. RLOS does not treat non-English languages as afterthoughts to be handled by translation; each plexus layer is designed from the ground up to operate multilingually, with language-specific morphological analyzers, syntax parsers, and sociolinguistic models as first-class components rather than bolted-on modules.
+The API specification defines four primary endpoints: `/analyze` (multimodal input to full hypergraph analysis), `/generate` (AMR graph to target modality output), `/visualize` (hypergraph to interactive SVG/HTML), and `/rhetorical_analysis` (text + audience profile to ethos/pathos/logos scores with strategy and fallacy detection).
 
-## Roadmap and Scope
+The visualization system uses a "Semiotic Garden" metaphor — concepts as plants with size proportional to salience, relations as pathways with style encoding type, layers as depth, and discourse unfolding as growth animation. The interface includes accessibility features: screen reader compatibility (ARIA labels), keyboard navigation, high-contrast mode, and alternative text for all visualizations.
 
-The companion `roadmap.md` breaks implementation into **10 phases over 12 months** with 200+ atomic tasks. The phases progress from core infrastructure (hypergraph engine, basic plexus connectivity) through individual layer implementations to full integration, meta-learning, and multilingual expansion.
+**System requirements** range from development (16 cores, 64GB RAM, 1x A100) to production (64 cores, 256GB RAM, 4x A100/H100) to enterprise scale (100+ GPUs, petabyte storage, global CDN). Training procedures span 12-18 months across four phases: multimodal pre-training, meta-training, safety alignment, and continual adaptation.
 
-This is an extraordinarily ambitious scope — intentionally so. The document is a design artifact, not a project plan with committed resources. Its value lies in mapping the full territory of what a rhetoric-aware, semiotically grounded, category-theoretic NLP system would require. The roadmap makes the scope explicit rather than hiding it behind vague gestures toward "future work."
+---
+
+## Cross-Organ Position
+
+Within the eight-organ system, Nexus Babel Alexandria represents **ORGAN-I at its most ambitious**: pure theoretical architecture, rigorous in its formalism, expansive in its scope, and honest about the gap between specification and realization.
+
+The dependency flows are clear:
+
+- **ORGAN-I -> ORGAN-II (Poiesis)**: The plexus architecture provides the theoretical vocabulary for generative art systems. The nine-layer model of linguistic cognition maps onto multi-layered creative processes — a generative music system, for instance, can be understood as operating across phonological (timbral), syntactic (harmonic), semantic (emotional), and pragmatic (performative) layers simultaneously.
+
+- **ORGAN-I -> ORGAN-III (Ergon)**: The 84 function specifications and API design provide blueprints for commercial NLP products. The rhetorical analysis engine, the multilingual processing pipeline, the multimodal integration architecture — each could seed a product vertical. The dual-mode governance framework provides the ethical architecture that commercial deployment requires.
+
+- **ORGAN-I -> ORGAN-IV (Taxis)**: The category-theoretic framework provides a formal model for orchestration systems. Functors between categories, natural transformations between functors — these are precisely the mathematical objects needed to model information flow across organizational boundaries. The plexus architecture itself is a governance model: fully connected, bidirectional, with no single layer claiming authority over the others.
+
+- **ORGAN-I -> ORGAN-V (Logos)**: The specification is itself a contribution to public process — building in public means sharing not just finished products but the theoretical foundations from which products emerge. Essays on computational rhetoric, on the gap between specification and implementation, on the politics of language technology design all flow naturally from this document.
+
+---
 
 ## Repository Contents
 
 ```
 .
-├── theoria-linguae-machina.md    # Full architectural specification (~50KB, 892 lines)
-└── roadmap.md                     # 10-phase implementation roadmap (200+ tasks)
+├── README.md                                    # This document
+├── theoria-linguae-machina.md                   # Full architectural specification (~50KB, 892 lines)
+└── roadmap.md                                   # 10-phase implementation roadmap (200+ tasks)
 ```
 
-That is the entire repository. Two markdown files, 201KB total, representing roughly six months of theoretical synthesis compressed into a single architectural vision.
+Two markdown files, ~207KB total, representing the synthesis of category theory, semiotics, rhetoric, and media archaeology into a unified computational linguistics framework.
 
-**Note on repository hygiene:** The 92 open issues and 30 branches visible on GitHub are bot-generated noise (automated Jules suggestions) and do not represent meaningful project activity. The actual intellectual content is the two committed documents.
+The main specification document is organized in twelve parts: Architectural Foundations, Formal Foundations, The 84 Core Functions, Semiotic Engine, Rhetorical Strategy Engine, Multimodal Architecture, Meta-Learning and Evolution, Dual-Mode Governance, Implementation Specifications, Visualization and Interface, Cultural-Technical System, and Future Directions. The roadmap breaks implementation into 10 phases over 12 months with 200+ atomic tasks, each with explicit dependencies, deliverables, and validation criteria.
 
-## Situating This Work
+**Note on repository hygiene:** The open issues and branches visible on GitHub are bot-generated suggestions (automated Jules activity) and do not represent meaningful project activity. The actual intellectual content is the two committed documents.
 
-Nexus Babel Alexandria sits at the intersection of several active research areas — compositional semantics, multimodal NLP, computational rhetoric, linguistic typology — but it does not belong to any of them. It is a **synthesis document**: an attempt to show what happens when you take category theory seriously as a foundation for NLP, when you treat rhetoric as a computational concern rather than a humanities curiosity, when you insist that a language system should work for Yoruba and Welsh and Tagalog with the same architectural commitment it gives to English.
+---
 
-The document is unapologetically theoretical. It specifies 84 functions with accuracy targets for a system that does not exist. It proposes a hypergraph architecture that has never been implemented at this scale. It draws on Kittler's media archaeology — a tradition that most NLP researchers have never encountered — as a design influence. This is deliberate. The purpose of ORGAN-I work is to think further than implementation currently permits and to leave a detailed map for when implementation catches up.
+## Related Work
 
-Within the eight-organ system, Nexus Babel Alexandria represents ORGAN-I at its most ambitious: pure theoretical architecture, rigorous in its formalism, expansive in its scope, and honest about the gap between specification and realization.
+The specification engages with and extends several active research programs:
+
+- **Compositional Distributional Semantics**: Coecke, Sadrzadeh, and Clark (2010) established the DisCoCat framework; RLOS extends it with Frobenius algebras for recursion and density matrices for polysemy.
+- **Abstract Meaning Representation**: Banarescu et al. (2013) defined AMR; RLOS extends it to multimodal, rhetorical, and temporal domains.
+- **Computational Argumentation**: Stab and Gurevych (2017) established neural argumentation mining; RLOS integrates it with rhetorical analysis and audience modeling.
+- **Multimodal NLP**: Baltrusaitis, Ahuja, and Morency (2019) surveyed multimodal ML; RLOS adds semiotic grounding and modal affordance theory.
+- **Enhanced RST**: Zeldes et al. (2021) developed graph-based RST; RLOS adopts this as its primary discourse representation.
+- **AI Safety and Governance**: Alignment with NIST AI RMF 1.0, EU AI Act, and ISO/IEC 42001 reflects current best practice in responsible AI development.
+- **Media Archaeology**: Kittler's *Discourse Networks 1800/1900* (1990) and *Gramophone, Film, Typewriter* (1999) provide the critical media-theoretic frame.
+
+---
+
+## Contributing
+
+This is a design-document repository. Contributions that engage with the theoretical framework are welcome:
+
+- **Theoretical critique**: Identify gaps, inconsistencies, or missed connections in the specification.
+- **Formal extensions**: Propose additional categorical structures, semiotic models, or rhetorical formalisms.
+- **Implementation prototypes**: Build proof-of-concept implementations of individual functions or subsystems.
+- **Cross-linguistic validation**: Assess the architecture's claims about multilingual coverage against specific languages.
+
+Please open an issue to discuss substantial contributions before submitting a pull request.
+
+---
+
+## License
+
+[MIT](LICENSE)
+
+The specification itself is released under MIT. The document references CC BY-NC-SA 4.0 for certain future components — the MIT license applies to the current repository contents.
+
+---
 
 ## Author
 
