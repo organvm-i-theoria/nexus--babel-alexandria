@@ -8,16 +8,35 @@ jobs:
   validate:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout code
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
       - name: Validate repository structure
         run: |
-          echo "Repository structure validation"
-          test -f README.md && echo "✓ README.md exists" || echo "✗ README.md missing"
-          if [ -f "requirements.txt" ]; then
-            echo "✓ Python dependencies found"
-            pip install -r requirements.txt 2>/dev/null || true
+          echo "=== Repository structure validation ==="
+          test -f README.md && echo "✓ README.md exists" || { echo "✗ README.md missing"; exit 1; }
+          echo "--- Checking documentation files ---"
+          MD_COUNT=$(find . -name "*.md" -not -path "./.github/*" | wc -l)
+          echo "✓ Found ${MD_COUNT} markdown files"
+          echo "--- Checking file sizes ---"
+          for f in $(find . -name "*.md" -not -path "./.github/*"); do
+            SIZE=$(wc -c < "$f")
+            WORDS=$(wc -w < "$f")
+            echo "  ${f}: ${SIZE} bytes, ${WORDS} words"
+          done
+          echo "--- Checking for broken internal links ---"
+          LINK_ERRORS=0
+          for f in $(find . -name "*.md" -not -path "./.github/*"); do
+            while IFS= read -r link; do
+              target=$(echo "$link" | sed "s/.*](//" | sed "s/).*//")
+              if [[ "$target" == ./* || "$target" == ../* ]] && [ ! -e "$target" ]; then
+                echo "  ✗ Broken link in ${f}: ${target}"
+                LINK_ERRORS=$((LINK_ERRORS + 1))
+              fi
+            done < <(grep -oE "\[([^]]+)\]\(([^)]+)\)" "$f" 2>/dev/null || true)
+          done
+          if [ "$LINK_ERRORS" -gt 0 ]; then
+            echo "✗ Found ${LINK_ERRORS} broken internal links"
+          else
+            echo "✓ No broken internal links found"
           fi
-          if [ -f "package.json" ]; then
-            echo "✓ Node.js project found"
-          fi
-          echo "✓ Repository validation complete"
+          echo "=== Repository validation complete ==="
