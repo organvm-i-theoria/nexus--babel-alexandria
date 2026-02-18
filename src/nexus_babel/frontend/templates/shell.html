@@ -1,0 +1,171 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Nexus Babel Alexandria - {{ view|capitalize }}</title>
+  <style>
+    :root {
+      --ink: #101828;
+      --paper: #f9fafb;
+      --accent: #0ea5e9;
+      --accent-2: #16a34a;
+      --warn: #dc2626;
+      --panel: #ffffff;
+      --line: #e5e7eb;
+      --shadow: 0 8px 24px rgba(16, 24, 40, 0.08);
+      --font-head: "IBM Plex Sans", "Segoe UI", sans-serif;
+      --font-body: "IBM Plex Mono", "Menlo", monospace;
+    }
+
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: var(--font-body);
+      color: var(--ink);
+      background: radial-gradient(circle at 0% 0%, #e0f2fe, transparent 40%),
+                  radial-gradient(circle at 100% 100%, #dcfce7, transparent 40%),
+                  var(--paper);
+      min-height: 100vh;
+    }
+
+    header {
+      padding: 1rem;
+      border-bottom: 1px solid var(--line);
+      background: rgba(255, 255, 255, 0.85);
+      backdrop-filter: blur(4px);
+      position: sticky;
+      top: 0;
+      z-index: 10;
+    }
+
+    .brand {
+      font-family: var(--font-head);
+      font-size: 1.1rem;
+      font-weight: 700;
+      margin-bottom: 0.6rem;
+    }
+
+    nav {
+      display: flex;
+      gap: 0.6rem;
+      flex-wrap: wrap;
+    }
+
+    nav a {
+      text-decoration: none;
+      padding: 0.45rem 0.8rem;
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      color: var(--ink);
+      background: var(--panel);
+      transition: transform 120ms ease;
+      font-size: 0.85rem;
+    }
+
+    nav a:hover { transform: translateY(-1px); }
+    nav a.active { border-color: var(--accent); color: var(--accent); }
+
+    main { padding: 1rem; max-width: 1080px; margin: 0 auto; }
+
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 1rem;
+    }
+
+    .panel {
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: 14px;
+      padding: 1rem;
+      box-shadow: var(--shadow);
+    }
+
+    .panel h2 {
+      margin-top: 0;
+      font-family: var(--font-head);
+      font-size: 1rem;
+    }
+
+    .metric {
+      font-size: 1.5rem;
+      font-weight: 700;
+      margin: 0.25rem 0;
+    }
+
+    .hint { color: #475467; font-size: 0.85rem; line-height: 1.4; }
+
+    .ok { color: var(--accent-2); }
+    .warn { color: var(--warn); }
+
+    code, pre {
+      background: #f3f4f6;
+      border: 1px solid #e5e7eb;
+      border-radius: 8px;
+      padding: 0.7rem;
+      overflow-x: auto;
+      display: block;
+      font-size: 0.8rem;
+    }
+
+    @media (max-width: 700px) {
+      .metric { font-size: 1.2rem; }
+      main { padding: 0.8rem; }
+    }
+  </style>
+</head>
+<body>
+<header>
+  <div class="brand">Nexus Babel-Alexandria MVP</div>
+  <nav>
+    <a href="/app/corpus" class="{% if view == 'corpus' %}active{% endif %}">Corpus</a>
+    <a href="/app/hypergraph" class="{% if view == 'hypergraph' %}active{% endif %}">Hypergraph</a>
+    <a href="/app/timeline" class="{% if view == 'timeline' %}active{% endif %}">Timeline</a>
+    <a href="/app/governance" class="{% if view == 'governance' %}active{% endif %}">Governance</a>
+  </nav>
+</header>
+
+<main>
+  <div class="grid">
+    <section class="panel">
+      <h2>{{ view|capitalize }} View</h2>
+      <div class="metric" id="status">Loading...</div>
+      <p class="hint" id="message">Checking API status and showing a minimal dashboard shell for this view.</p>
+    </section>
+
+    <section class="panel">
+      <h2>API Surface</h2>
+      <pre>/api/v1/ingest/batch
+/api/v1/analyze
+/api/v1/evolve/branch
+/api/v1/governance/evaluate</pre>
+    </section>
+
+    <section class="panel">
+      <h2>Current Context</h2>
+      <pre id="context">view={{ view }}</pre>
+    </section>
+  </div>
+</main>
+
+<script>
+  async function boot() {
+    const statusEl = document.getElementById('status');
+    const msgEl = document.getElementById('message');
+    try {
+      const res = await fetch('/healthz');
+      const json = await res.json();
+      statusEl.textContent = json.status === 'ok' ? 'System Healthy' : 'System Degraded';
+      statusEl.className = json.status === 'ok' ? 'metric ok' : 'metric warn';
+      msgEl.textContent = 'Use this shell to validate end-to-end flows while API slices evolve.';
+    } catch {
+      statusEl.textContent = 'API Unreachable';
+      statusEl.className = 'metric warn';
+      msgEl.textContent = 'Backend did not respond. Verify service startup and environment.';
+    }
+  }
+  boot();
+</script>
+</body>
+</html>

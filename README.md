@@ -9,6 +9,31 @@
 
 > *A comprehensive design document for RLOS: a plexus architecture that replaces linear NLP pipelines with a bidirectional hypergraph network grounded in category theory, Peircean semiotics, and Aristotelian rhetoric.*
 
+## MVP Implementation Status (2026-02-18)
+
+This repository now includes an executable MVP scaffold implementing the plan at:
+
+- Backend API: `POST /api/v1/ingest/batch`, `GET /api/v1/ingest/jobs/{id}`, `POST /api/v1/analyze`, `POST /api/v1/evolve/branch`, `GET /api/v1/branches/{id}/timeline`, `POST /api/v1/rhetorical_analysis`, `POST /api/v1/governance/evaluate`
+- UI shells: `/app/corpus`, `/app/hypergraph`, `/app/timeline`, `/app/governance`
+- Storage model: Postgres-compatible SQLAlchemy schema + Neo4j projection adapter
+- Canonicalization rules: semantic variant grouping, sibling representation linking, conflict-marker hygiene
+- Test coverage: ingestion, governance mode regression, hypergraph integrity, branch determinism, multimodal linkage, API contracts, UI flow, and baseline load test
+
+### Quickstart
+
+1. Install dependencies:
+   - `python3 -m pip install -e .[dev,postgres]`
+2. Start infrastructure (optional but recommended for Postgres/Neo4j):
+   - `docker compose up -d`
+3. Configure environment:
+   - `cp .env.example .env`
+4. Run API:
+   - `uvicorn nexus_babel.main:app --reload`
+5. Run ingestion against current corpus:
+   - `python scripts/ingest_corpus.py`
+6. Run tests:
+   - `pytest -q`
+
 ---
 
 ## Table of Contents
