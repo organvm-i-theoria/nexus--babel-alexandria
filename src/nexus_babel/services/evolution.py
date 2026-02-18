@@ -1,15 +1,18 @@
 from __future__ import annotations
 
+import base64
 import hashlib
+import json
 import random
 import re
+import zlib
 from dataclasses import dataclass
 from typing import Any
 
-from sqlalchemy import select
+from sqlalchemy import func, select
 from sqlalchemy.orm import Session
 
-from nexus_babel.models import Branch, BranchEvent, Document
+from nexus_babel.models import Branch, BranchCheckpoint, BranchEvent, Document
 
 
 @dataclass
@@ -28,6 +31,7 @@ class EvolutionService:
     }
 
     GLYPH_POOL = ["∆", "Æ", "Ω", "§", "☲", "⟁"]
+    PHASES = {"expansion", "peak", "compression", "rebirth"}
 
     def evolve_branch(
         self,
@@ -38,13 +42,21 @@ class EvolutionService:
         event_payload: dict[str, Any],
         mode: str,
     ) -> tuple[Branch, BranchEvent]:
+        payload = self._validate_event_payload(event_type, event_payload)
         parent = None
+        lineage_event_count = 0
         if parent_branch_id:
             parent = session.scalar(select(Branch).where(Branch.id == parent_branch_id))
             if not parent:
                 raise ValueError(f"Parent branch {parent_branch_id} not found")
             root_document_id = parent.root_document_id
             base_text = str((parent.state_snapshot or {}).get("current_text", ""))
+            lineage_event_count = self._lineage_event_count(session, parent)
+            expected_parent_event_index = payload.get("expected_parent_event_index")
+            if expected_parent_event_index is not None and int(expected_parent_event_index) != lineage_event_count:
+                raise ValueError(
+                    f"Optimistic concurrency violation: expected_parent_event_index={expected_parent_event_index} actual={lineage_event_count}"
+                )
         else:
             if not root_document_id:
                 raise ValueError("root_document_id is required when parent_branch_id is not provided")
@@ -53,7 +65,8 @@ class EvolutionService:
                 raise ValueError(f"Root document {root_document_id} not found")
             base_text = str((doc.provenance or {}).get("extracted_text", ""))
 
-        drift = self._apply_event(base_text, event_type=event_type, event_payload=event_payload)
+        drift = self._apply_event(base_text, event_type=event_type, event_payload=payload)
+        new_hash = hashlib.sha256(drift.output_text.encode("utf-8")).hexdigest()
 
         new_branch = Branch(
             parent_branch_id=parent.id if parent else None,
@@ -62,25 +75,44 @@ class EvolutionService:
             mode=mode.upper(),
             state_snapshot={
                 "current_text": drift.output_text,
-                "phase": event_payload.get("phase", "expansion"),
-                "text_hash": hashlib.sha256(drift.output_text.encode("utf-8")).hexdigest(),
+                "phase": payload.get("phase", "expansion"),
+                "text_hash": new_hash,
             },
+            branch_version=(parent.branch_version + 1) if parent else 1,
         )
         session.add(new_branch)
         session.flush()
 
+        current_event_index = self._next_event_index(session, new_branch.id)
+        event_hash = hashlib.sha256(
+            f"{new_branch.id}:{current_event_index}:{event_type}:{json.dumps(payload, sort_keys=True)}:{new_hash}".encode("utf-8")
+        ).hexdigest()
+
         event = BranchEvent(
             branch_id=new_branch.id,
-            event_index=1,
+            event_index=current_event_index,
             event_type=event_type,
-            event_payload=event_payload,
+            event_payload=payload,
+            payload_schema_version="v2",
+            event_hash=event_hash,
             diff_summary=drift.diff_summary,
             result_snapshot={
-                "text_hash": hashlib.sha256(drift.output_text.encode("utf-8")).hexdigest(),
+                "text_hash": new_hash,
                 "preview": drift.output_text[:500],
             },
         )
         session.add(event)
+
+        total_lineage_events = lineage_event_count + 1
+        if total_lineage_events % 10 == 0:
+            session.add(
+                BranchCheckpoint(
+                    branch_id=new_branch.id,
+                    event_index=total_lineage_events,
+                    snapshot_hash=new_hash,
+                    snapshot_compressed=self._compress_snapshot(new_branch.state_snapshot),
+                )
+            )
 
         return new_branch, event
 
@@ -114,7 +146,36 @@ class EvolutionService:
             "replay_snapshot": {
                 "text_hash": hashlib.sha256(replay_text.encode("utf-8")).hexdigest(),
                 "preview": replay_text[:500],
+                "event_count": len(events),
             },
+        }
+
+    def replay_branch(self, session: Session, branch_id: str) -> dict[str, Any]:
+        timeline = self.get_timeline(session, branch_id)
+        replay = timeline["replay_snapshot"]
+        return {
+            "branch_id": branch_id,
+            "event_count": replay.get("event_count", 0),
+            "text_hash": replay["text_hash"],
+            "preview": replay["preview"],
+            "replay_snapshot": replay,
+        }
+
+    def compare_branches(self, session: Session, left_branch_id: str, right_branch_id: str) -> dict[str, Any]:
+        left = self.replay_branch(session, left_branch_id)
+        right = self.replay_branch(session, right_branch_id)
+        preview_left = left["preview"]
+        preview_right = right["preview"]
+        distance = self._simple_distance(preview_left, preview_right)
+        return {
+            "left_branch_id": left_branch_id,
+            "right_branch_id": right_branch_id,
+            "left_hash": left["text_hash"],
+            "right_hash": right["text_hash"],
+            "distance": distance,
+            "same": left["text_hash"] == right["text_hash"],
+            "preview_left": preview_left,
+            "preview_right": preview_right,
         }
 
     def _lineage(self, session: Session, branch: Branch) -> list[Branch]:
@@ -128,6 +189,61 @@ class EvolutionService:
             current = parent
         lineage.reverse()
         return lineage
+
+    def _lineage_event_count(self, session: Session, branch: Branch) -> int:
+        lineage = self._lineage(session, branch)
+        count = 0
+        for node in lineage:
+            count += int(
+                session.scalar(
+                    select(func.count(BranchEvent.id)).where(BranchEvent.branch_id == node.id)
+                )
+                or 0
+            )
+        return count
+
+    def _next_event_index(self, session: Session, branch_id: str) -> int:
+        max_index = session.scalar(select(func.max(BranchEvent.event_index)).where(BranchEvent.branch_id == branch_id))
+        return int(max_index or 0) + 1
+
+    def _validate_event_payload(self, event_type: str, payload: dict[str, Any]) -> dict[str, Any]:
+        data = dict(payload or {})
+        if "seed" in data:
+            data["seed"] = int(data["seed"])
+
+        if event_type == "natural_drift":
+            data.setdefault("seed", 0)
+            return data
+
+        if event_type == "synthetic_mutation":
+            mutation_rate = float(data.get("mutation_rate", 0.08))
+            if mutation_rate < 0.0 or mutation_rate > 1.0:
+                raise ValueError("mutation_rate must be between 0.0 and 1.0")
+            data["mutation_rate"] = mutation_rate
+            data.setdefault("seed", 0)
+            return data
+
+        if event_type == "phase_shift":
+            phase = str(data.get("phase", "expansion")).lower()
+            if phase not in self.PHASES:
+                raise ValueError(f"phase must be one of {sorted(self.PHASES)}")
+            data["phase"] = phase
+            data.setdefault("seed", 0)
+            return data
+
+        if event_type == "glyph_fusion":
+            left = str(data.get("left", "A"))
+            right = str(data.get("right", "E"))
+            fused = str(data.get("fused", "Æ"))
+            if not left or not right or not fused:
+                raise ValueError("glyph_fusion requires non-empty left/right/fused")
+            data["left"] = left
+            data["right"] = right
+            data["fused"] = fused
+            data.setdefault("seed", 0)
+            return data
+
+        raise ValueError(f"Unsupported event_type: {event_type}")
 
     def _apply_event(self, text: str, event_type: str, event_payload: dict[str, Any]) -> DriftResult:
         seed_input = f"{event_type}:{event_payload.get('seed', '')}:{hashlib.sha256(text.encode('utf-8')).hexdigest()}"
@@ -160,6 +276,8 @@ class EvolutionService:
             elif phase == "rebirth":
                 compressed = re.sub(r"([aeiouAEIOU])", "", text)
                 out = f"{compressed}\n\n⟁ SONG-BIRTH ⟁"
+            elif phase == "peak":
+                out = text.upper()
             else:
                 words = text.split()
                 expanded = []
@@ -180,3 +298,18 @@ class EvolutionService:
             return DriftResult(out, {"event": event_type, "fusions": count, "pair": pair, "fused": fused, "before_chars": before_chars, "after_chars": len(out)})
 
         return DriftResult(text, {"event": event_type, "before_chars": before_chars, "after_chars": len(text), "note": "no-op"})
+
+    def _compress_snapshot(self, snapshot: dict[str, Any]) -> str:
+        encoded = json.dumps(snapshot, sort_keys=True).encode("utf-8")
+        compressed = zlib.compress(encoded, level=9)
+        return base64.b64encode(compressed).decode("ascii")
+
+    def _simple_distance(self, left: str, right: str) -> int:
+        length = max(len(left), len(right))
+        distance = 0
+        for idx in range(length):
+            l = left[idx] if idx < len(left) else ""
+            r = right[idx] if idx < len(right) else ""
+            if l != r:
+                distance += 1
+        return distance

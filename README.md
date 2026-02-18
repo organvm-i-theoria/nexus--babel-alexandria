@@ -14,6 +14,7 @@
 This repository now includes an executable MVP scaffold implementing the plan at:
 
 - Backend API: `POST /api/v1/ingest/batch`, `GET /api/v1/ingest/jobs/{id}`, `POST /api/v1/analyze`, `POST /api/v1/evolve/branch`, `GET /api/v1/branches/{id}/timeline`, `POST /api/v1/rhetorical_analysis`, `POST /api/v1/governance/evaluate`
+- Wave 2 API additions: `POST /api/v1/jobs/submit`, `GET /api/v1/jobs/{id}`, `GET /api/v1/analysis/runs/{id}`, `POST /api/v1/branches/{id}/replay`, `GET /api/v1/branches/{id}/compare/{other_id}`, `GET /api/v1/hypergraph/query`, `GET /api/v1/audit/policy-decisions`
 - UI shells: `/app/corpus`, `/app/hypergraph`, `/app/timeline`, `/app/governance`
 - Storage model: Postgres-compatible SQLAlchemy schema + Neo4j projection adapter
 - Canonicalization rules: semantic variant grouping, sibling representation linking, conflict-marker hygiene
@@ -31,9 +32,11 @@ Historical context: this repository started as a design-first corpus; the MVP ru
    - `cp .env.example .env`
 4. Run API:
    - `uvicorn nexus_babel.main:app --reload`
-5. Run ingestion against current corpus:
+5. Run worker:
+   - `python -m nexus_babel.worker`
+6. Run ingestion against current corpus:
    - `python scripts/ingest_corpus.py`
-6. Run tests:
+7. Run tests:
    - `pytest -q`
 
 ### Security Model (MVP)

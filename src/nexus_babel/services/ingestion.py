@@ -1,8 +1,10 @@
 from __future__ import annotations
 
 import hashlib
+import re
 import shutil
 import wave
+from collections import defaultdict
 from pathlib import Path
 from typing import Any
 from uuid import uuid4
@@ -12,7 +14,7 @@ from sqlalchemy import delete, select
 from sqlalchemy.orm import Session
 
 from nexus_babel.config import Settings
-from nexus_babel.models import Atom, Document, IngestJob
+from nexus_babel.models import Atom, Document, IngestJob, ProjectionLedger
 from nexus_babel.services.canonicalization import apply_canonicalization, collect_current_corpus_paths
 from nexus_babel.services.hypergraph import HypergraphProjector
 from nexus_babel.services.text_utils import atomize_text, has_conflict_markers, sha256_file
@@ -40,6 +42,7 @@ class IngestionService:
         modality_filter = {m.lower() for m in modalities} if modalities else set()
         atom_levels = parse_options.get("atom_levels", ["glyph-seed", "word", "sentence", "paragraph"])
         atomize_enabled = bool(parse_options.get("atomize", True))
+        force_reingest = bool(parse_options.get("force", False))
 
         job = IngestJob(status="running", request_payload={"source_paths": [str(p) for p in selected_paths], "modalities": modalities, "parse_options": parse_options})
         session.add(job)
@@ -48,9 +51,11 @@ class IngestionService:
         files: list[dict[str, Any]] = []
         documents_ingested = 0
         atoms_created = 0
+        documents_unchanged = 0
         checksums: list[str] = []
         errors: list[str] = []
         warnings: list[str] = []
+        updated_doc_ids: set[str] = set()
 
         for path in selected_paths:
             try:
@@ -66,6 +71,17 @@ class IngestionService:
 
                 checksum = sha256_file(path)
                 checksums.append(checksum)
+                existing = session.scalar(select(Document).where(Document.path == str(path.resolve())))
+                if existing and existing.checksum == checksum and existing.ingested and not force_reingest:
+                    existing.ingest_status = "unchanged"
+                    existing.modality_status = {
+                        **(existing.modality_status or {}),
+                        existing.modality: "complete",
+                    }
+                    files.append({"path": str(path), "status": "unchanged", "document_id": existing.id, "error": None})
+                    documents_unchanged += 1
+                    continue
+
                 raw_storage_path = self._store_raw_payload(path, checksum)
 
                 extracted_text = ""
@@ -82,12 +98,14 @@ class IngestionService:
                         "line_count": extracted_text.count("\n") + 1,
                         "char_count": len(extracted_text),
                     }
+                    segments.update(self._derive_text_segments(extracted_text, is_pdf=False))
                 elif path.suffix.lower() in PDF_EXT:
                     extracted_text = self._extract_pdf_text(path)
                     segments = {
                         "char_count": len(extracted_text),
                         "page_count": self._pdf_page_count(path),
                     }
+                    segments.update(self._derive_text_segments(extracted_text, is_pdf=True))
                 elif path.suffix.lower() in IMAGE_EXT:
                     segments = self._extract_image_metadata(path)
                 elif path.suffix.lower() in AUDIO_EXT:
@@ -107,6 +125,7 @@ class IngestionService:
 
                 if conflict:
                     doc.conflict_reason = conflict_reason
+                    doc.modality_status = {doc.modality: "failed"}
                     files.append({"path": str(path), "status": "conflict", "document_id": doc.id, "error": conflict_reason})
                     continue
 
@@ -128,9 +147,11 @@ class IngestionService:
                     )
                     doc.graph_projected_atom_count = len(atom_payloads)
                     doc.graph_projection_status = "complete" if doc.graph_projected_atom_count == doc.atom_count else "partial"
+                    self._update_projection_ledger(session, doc.id, atom_payloads, status="projected")
                 except Exception as graph_exc:  # pragma: no cover - fallback path
                     projection_warning = f"Graph projection failed: {graph_exc}"
                     doc.graph_projection_status = "failed"
+                    self._update_projection_ledger(session, doc.id, atom_payloads, status="failed", error=projection_warning)
                     warnings.append(f"{path}: {projection_warning}")
 
                 doc.provenance = {
@@ -140,8 +161,18 @@ class IngestionService:
                     "hypergraph": hypergraph_ids,
                     "ingest_scope": ingest_scope,
                 }
+                doc.modality_status = {
+                    **(doc.modality_status or {}),
+                    doc.modality: self._derive_modality_status(doc.modality, projection_warning, segments),
+                }
+                doc.provider_summary = {
+                    **(doc.provider_summary or {}),
+                    "ingestion_provider": "builtin",
+                    "projection_provider": "neo4j" if self.hypergraph.enabled else "local_cache",
+                }
                 doc.ingested = True
                 doc.ingest_status = "ingested" if not projection_warning else "ingested_with_warnings"
+                updated_doc_ids.add(doc.id)
 
                 documents_ingested += 1
                 files.append(
@@ -157,11 +188,13 @@ class IngestionService:
                 files.append({"path": str(path), "status": "error", "document_id": None, "error": str(exc)})
 
         apply_canonicalization(session)
+        self._apply_cross_modal_links(session, updated_doc_ids)
 
         digest = hashlib.sha256("\n".join(sorted(checksums)).encode("utf-8")).hexdigest() if checksums else ""
         summary = {
             "files": files,
             "documents_ingested": documents_ingested,
+            "documents_unchanged": documents_unchanged,
             "atoms_created": atoms_created,
             "provenance_digest": digest,
             "ingest_scope": ingest_scope,
@@ -186,6 +219,7 @@ class IngestionService:
             "errors": job.errors or [],
             "documents_ingested": summary.get("documents_ingested", 0),
             "atoms_created": summary.get("atoms_created", 0),
+            "documents_unchanged": summary.get("documents_unchanged", 0),
             "provenance_digest": summary.get("provenance_digest", ""),
             "ingest_scope": summary.get("ingest_scope", "partial"),
             "warnings": summary.get("warnings", []),
@@ -230,7 +264,13 @@ class IngestionService:
         return len(reader.pages)
 
     def _extract_image_metadata(self, path: Path) -> dict[str, Any]:
-        metadata = {"filename": path.name, "size_bytes": path.stat().st_size}
+        metadata = {
+            "filename": path.name,
+            "size_bytes": path.stat().st_size,
+            "ocr_spans": [],
+            "caption_candidate": path.stem.replace("-", " ").replace("_", " ").strip(),
+            "embedding_ref": f"image:{sha256_file(path)[:16]}",
+        }
         try:
             from PIL import Image  # type: ignore
 
@@ -241,13 +281,36 @@ class IngestionService:
         return metadata
 
     def _extract_audio_metadata(self, path: Path) -> dict[str, Any]:
-        metadata = {"filename": path.name, "size_bytes": path.stat().st_size}
+        metadata = {
+            "filename": path.name,
+            "size_bytes": path.stat().st_size,
+            "transcription_segments": [],
+            "prosody_summary": {},
+        }
         if path.suffix.lower() == ".wav":
             with wave.open(str(path), "rb") as wav:
                 frames = wav.getnframes()
                 rate = wav.getframerate()
                 duration = frames / float(rate) if rate else 0.0
-                metadata.update({"sample_rate": rate, "channels": wav.getnchannels(), "duration_seconds": duration})
+                metadata.update(
+                    {
+                        "sample_rate": rate,
+                        "channels": wav.getnchannels(),
+                        "duration_seconds": duration,
+                        "transcription_segments": [
+                            {
+                                "start": 0.0,
+                                "end": round(duration, 3),
+                                "text": "",
+                                "speaker": "speaker_0",
+                            }
+                        ],
+                        "prosody_summary": {
+                            "avg_intensity": None,
+                            "tempo_hint": None,
+                        },
+                    }
+                )
         return metadata
 
     def _upsert_document(
@@ -302,8 +365,10 @@ class IngestionService:
 
     def _create_atoms(self, session: Session, doc: Document, text: str, atom_levels: list[str]) -> list[dict[str, Any]]:
         session.execute(delete(Atom).where(Atom.document_id == doc.id))
+        session.execute(delete(ProjectionLedger).where(ProjectionLedger.document_id == doc.id))
         atoms_map = atomize_text(text)
         atoms_to_add: list[Atom] = []
+        ledger_rows: list[ProjectionLedger] = []
         payloads: list[dict[str, Any]] = []
         for level in atom_levels:
             values = atoms_map.get(level, [])
@@ -318,6 +383,14 @@ class IngestionService:
                     atom_metadata={"length": len(content)},
                 )
                 atoms_to_add.append(atom)
+                ledger_rows.append(
+                    ProjectionLedger(
+                        document_id=doc.id,
+                        atom_id=atom_id,
+                        status="pending",
+                        attempt_count=0,
+                    )
+                )
                 payloads.append(
                     {
                         "id": atom_id,
@@ -329,6 +402,7 @@ class IngestionService:
                 )
         if atoms_to_add:
             session.add_all(atoms_to_add)
+            session.add_all(ledger_rows)
             session.flush()
         return payloads
 
@@ -340,3 +414,101 @@ class IngestionService:
         if not destination.exists():
             shutil.copy2(source_path, destination)
         return destination
+
+    def _derive_text_segments(self, text: str, *, is_pdf: bool) -> dict[str, Any]:
+        paragraphs = [chunk.strip() for chunk in re.split(r"\n\s*\n", text) if chunk.strip()]
+        heading_candidates = []
+        for line in text.splitlines():
+            stripped = line.strip()
+            if not stripped:
+                continue
+            if len(stripped) <= 80 and (stripped.isupper() or stripped == stripped.title()):
+                heading_candidates.append(stripped)
+        citation_markers = []
+        citation_markers.extend(re.findall(r"\[[0-9]{1,3}\]", text))
+        citation_markers.extend(re.findall(r"\([A-Z][A-Za-z]+,\s*[0-9]{4}\)", text))
+        paragraph_blocks = [
+            {"index": idx + 1, "char_count": len(block), "preview": block[:160]}
+            for idx, block in enumerate(paragraphs[:200])
+        ]
+        return {
+            "paragraph_blocks": paragraph_blocks,
+            "heading_candidates": heading_candidates[:100],
+            "citation_markers": citation_markers[:100],
+            "pdf_like_layout": bool(is_pdf),
+        }
+
+    def _derive_modality_status(self, modality: str, projection_warning: str | None, segments: dict[str, Any]) -> str:
+        if projection_warning:
+            return "partial"
+        if modality in {"text", "pdf"}:
+            return "complete" if int(segments.get("char_count", 0)) > 0 else "partial"
+        if modality == "image":
+            return "complete" if segments.get("width") and segments.get("height") else "partial"
+        if modality == "audio":
+            return "complete" if float(segments.get("duration_seconds", 0.0)) > 0 else "partial"
+        return "pending"
+
+    def _update_projection_ledger(
+        self,
+        session: Session,
+        document_id: str,
+        atom_payloads: list[dict[str, Any]],
+        *,
+        status: str,
+        error: str | None = None,
+    ) -> None:
+        if not atom_payloads:
+            return
+        atom_ids = [p["id"] for p in atom_payloads]
+        rows = session.scalars(
+            select(ProjectionLedger).where(
+                ProjectionLedger.document_id == document_id,
+                ProjectionLedger.atom_id.in_(atom_ids),
+            )
+        ).all()
+        for row in rows:
+            row.status = status
+            row.attempt_count = int(row.attempt_count) + 1
+            row.last_error = error
+
+    def _apply_cross_modal_links(self, session: Session, updated_doc_ids: set[str]) -> None:
+        if not updated_doc_ids:
+            return
+        docs = session.scalars(select(Document).where(Document.id.in_(updated_doc_ids))).all()
+        if not docs:
+            return
+
+        groups: dict[str, list[Document]] = defaultdict(list)
+        for doc in docs:
+            stem = Path(doc.path).stem.lower()
+            groups[stem].append(doc)
+
+        for _, group in groups.items():
+            text_docs = [d for d in group if d.modality in {"text", "pdf"}]
+            media_docs = [d for d in group if d.modality in {"image", "audio"}]
+            if not text_docs or not media_docs:
+                continue
+            for text_doc in text_docs:
+                links = []
+                for media_doc in media_docs:
+                    links.append(
+                        {
+                            "target_document_id": media_doc.id,
+                            "target_modality": media_doc.modality,
+                            "text_anchor": {"start": 0, "end": min(120, len(str((text_doc.provenance or {}).get("extracted_text", ""))))},
+                            "target_anchor": {"region": "full" if media_doc.modality == "image" else "0.0-1.0"},
+                        }
+                    )
+                text_doc.provenance = {**(text_doc.provenance or {}), "cross_modal_links": links}
+            for media_doc in media_docs:
+                links = []
+                for text_doc in text_docs:
+                    links.append(
+                        {
+                            "target_document_id": text_doc.id,
+                            "target_modality": text_doc.modality,
+                            "target_anchor": {"start": 0, "end": 120},
+                        }
+                    )
+                media_doc.provenance = {**(media_doc.provenance or {}), "cross_modal_links": links}

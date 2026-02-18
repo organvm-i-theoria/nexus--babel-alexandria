@@ -18,6 +18,12 @@ class Settings(BaseSettings):
     neo4j_username: str | None = None
     neo4j_password: str | None = None
     raw_mode_enabled: bool = True
+    async_jobs_enabled: bool = True
+    plugin_ml_enabled: bool = False
+    shadow_execution_enabled: bool = False
+    worker_poll_seconds: float = 1.0
+    worker_lease_seconds: int = 30
+    worker_name: str = "nexus-worker"
     corpus_root: Path = Field(default_factory=lambda: Path.cwd())
     object_storage_root: Path = Field(default_factory=lambda: Path.cwd() / "object_storage")
     bootstrap_viewer_key: str = "nexus-dev-viewer-key"

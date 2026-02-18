@@ -2,21 +2,27 @@ from __future__ import annotations
 
 from typing import Callable
 
-from fastapi import APIRouter, Depends, Header, HTTPException, Request, status
+from fastapi import APIRouter, Depends, Header, HTTPException, Query, Request, status
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
-from nexus_babel.models import Document
+from nexus_babel.models import AnalysisRun, Branch, Document, Job
 from nexus_babel.services.auth import AuthContext
 from nexus_babel.schemas import (
+    AnalysisRunResponse,
     AnalyzeRequest,
     AnalyzeResponse,
+    BranchCompareResponse,
     BranchEventView,
+    BranchReplayResponse,
     BranchTimelineResponse,
     EvolveBranchRequest,
     EvolveBranchResponse,
     GovernanceEvaluateRequest,
     GovernanceEvaluateResponse,
+    JobStatusResponse,
+    JobSubmitRequest,
+    JobSubmitResponse,
     IngestBatchRequest,
     IngestBatchResponse,
     IngestFileStatus,
@@ -60,7 +66,12 @@ def _require_auth(min_role: str = "viewer") -> Callable:
 
 
 def _enforce_mode(request: Request, ctx: AuthContext, mode: str) -> None:
-    if not request.app.state.auth_service.mode_allows(ctx.role, mode, request.app.state.settings.raw_mode_enabled):
+    if not request.app.state.auth_service.mode_allows(
+        ctx.role,
+        mode,
+        request.app.state.settings.raw_mode_enabled,
+        ctx.raw_mode_enabled,
+    ):
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail=f"Role '{ctx.role}' is not allowed to execute mode '{mode.upper()}'",
@@ -81,6 +92,7 @@ def ingest_batch(payload: IngestBatchRequest, request: Request) -> IngestBatchRe
         return IngestBatchResponse(
             ingest_job_id=result["job"].id,
             documents_ingested=result["documents_ingested"],
+            documents_unchanged=result.get("documents_unchanged", 0),
             atoms_created=result["atoms_created"],
             provenance_digest=result["provenance_digest"],
             ingest_scope=result["ingest_scope"],
@@ -104,6 +116,7 @@ def ingest_job(job_id: str, request: Request) -> IngestJobResponse:
             files=[IngestFileStatus(**item) for item in result["files"]],
             errors=result["errors"],
             documents_ingested=result["documents_ingested"],
+            documents_unchanged=result.get("documents_unchanged", 0),
             atoms_created=result["atoms_created"],
             provenance_digest=result["provenance_digest"],
             ingest_scope=result["ingest_scope"],
@@ -133,13 +146,62 @@ def analyze(
                     status_code=status.HTTP_409_CONFLICT,
                     detail="Document is conflicted or non-ingestable; analysis is blocked",
                 )
+        if payload.execution_mode == "async":
+            if not request.app.state.settings.async_jobs_enabled:
+                raise HTTPException(status_code=400, detail="Async jobs are disabled by feature flag")
+            job = request.app.state.job_service.submit(
+                session=session,
+                job_type="analyze",
+                payload={
+                    "document_id": payload.document_id,
+                    "branch_id": payload.branch_id,
+                    "layers": payload.layers,
+                    "mode": payload.mode,
+                    "plugin_profile": payload.plugin_profile,
+                },
+                execution_mode="async",
+                created_by=auth_context.owner,
+            )
+            session.commit()
+            return AnalyzeResponse(
+                analysis_run_id=None,
+                mode=payload.mode,
+                layers={},
+                confidence_bundle={},
+                hypergraph_ids={},
+                plugin_provenance={},
+                job_id=job.id,
+                status=job.status,
+            )
+
         run, result = request.app.state.analysis_service.analyze(
             session=session,
             document_id=payload.document_id,
             branch_id=payload.branch_id,
             layers=payload.layers,
             mode=payload.mode,
+            execution_mode="sync",
+            plugin_profile=payload.plugin_profile,
+            job_id=None,
         )
+
+        shadow_job_id = None
+        if payload.execution_mode == "shadow" and request.app.state.settings.shadow_execution_enabled:
+            shadow_job = request.app.state.job_service.submit(
+                session=session,
+                job_type="analyze",
+                payload={
+                    "document_id": payload.document_id,
+                    "branch_id": payload.branch_id,
+                    "layers": payload.layers,
+                    "mode": payload.mode,
+                    "plugin_profile": payload.plugin_profile or "ml_first",
+                },
+                execution_mode="async",
+                created_by=auth_context.owner,
+            )
+            shadow_job_id = shadow_job.id
+
         session.commit()
         return AnalyzeResponse(
             analysis_run_id=run.id,
@@ -147,6 +209,9 @@ def analyze(
             layers=result["layers"],
             confidence_bundle=result["confidence_bundle"],
             hypergraph_ids=result["hypergraph_ids"],
+            plugin_provenance=result.get("plugin_provenance", {}),
+            job_id=shadow_job_id,
+            status="completed" if not shadow_job_id else "shadow_queued",
         )
     except HTTPException:
         session.rollback()
@@ -217,6 +282,28 @@ def branch_timeline(branch_id: str, request: Request) -> BranchTimelineResponse:
         session.close()
 
 
+@router.get("/branches", dependencies=[Depends(_require_auth("viewer"))])
+def list_branches(request: Request, limit: int = Query(default=100, ge=1, le=1000)) -> dict:
+    session = _session(request)
+    try:
+        branches = session.scalars(select(Branch).order_by(Branch.created_at.desc()).limit(limit)).all()
+        return {
+            "branches": [
+                {
+                    "id": b.id,
+                    "parent_branch_id": b.parent_branch_id,
+                    "root_document_id": b.root_document_id,
+                    "mode": b.mode,
+                    "branch_version": b.branch_version,
+                    "created_at": b.created_at,
+                }
+                for b in branches
+            ]
+        }
+    finally:
+        session.close()
+
+
 @router.post("/rhetorical_analysis", response_model=RhetoricalAnalysisResponse)
 def rhetorical_analysis(
     payload: RhetoricalAnalysisRequest,
@@ -259,6 +346,7 @@ def governance_evaluate(
             policy_hits=decision["policy_hits"],
             redactions=decision["redactions"],
             audit_id=decision["audit_id"],
+            decision_trace=decision.get("decision_trace", {}),
         )
     except HTTPException:
         session.rollback()
@@ -300,6 +388,8 @@ def list_documents(request: Request) -> dict:
                     "atom_count": d.atom_count,
                     "graph_projected_atom_count": d.graph_projected_atom_count,
                     "graph_projection_status": d.graph_projection_status,
+                    "modality_status": d.modality_status,
+                    "provider_summary": d.provider_summary,
                 }
                 for d in docs
             ]
@@ -327,6 +417,8 @@ def get_document(document_id: str, request: Request) -> dict:
             "atom_count": doc.atom_count,
             "graph_projected_atom_count": doc.graph_projected_atom_count,
             "graph_projection_status": doc.graph_projection_status,
+            "modality_status": doc.modality_status,
+            "provider_summary": doc.provider_summary,
             "provenance": doc.provenance,
         }
     finally:
@@ -336,11 +428,202 @@ def get_document(document_id: str, request: Request) -> dict:
 @router.get("/auth/whoami")
 def auth_whoami(request: Request, auth_context: AuthContext = Depends(_require_auth("viewer"))) -> dict:
     allowed_modes = ["PUBLIC"]
-    if request.app.state.auth_service.mode_allows(auth_context.role, "RAW", request.app.state.settings.raw_mode_enabled):
+    if request.app.state.auth_service.mode_allows(
+        auth_context.role,
+        "RAW",
+        request.app.state.settings.raw_mode_enabled,
+        auth_context.raw_mode_enabled,
+    ):
         allowed_modes.append("RAW")
     return {
         "api_key_id": auth_context.api_key_id,
         "owner": auth_context.owner,
         "role": auth_context.role,
+        "raw_mode_enabled": auth_context.raw_mode_enabled,
         "allowed_modes": allowed_modes,
     }
+
+
+@router.post("/jobs/submit", response_model=JobSubmitResponse)
+def submit_job(
+    payload: JobSubmitRequest,
+    request: Request,
+    auth_context: AuthContext = Depends(_require_auth("operator")),
+) -> JobSubmitResponse:
+    session = _session(request)
+    try:
+        if payload.job_type == "analyze":
+            mode = str(payload.payload.get("mode", "PUBLIC"))
+            _enforce_mode(request, auth_context, mode)
+        if payload.execution_mode == "async" and not request.app.state.settings.async_jobs_enabled:
+            raise HTTPException(status_code=400, detail="Async jobs are disabled by feature flag")
+        job = request.app.state.job_service.submit(
+            session=session,
+            job_type=payload.job_type,
+            payload=payload.payload,
+            execution_mode=payload.execution_mode,
+            idempotency_key=payload.idempotency_key,
+            created_by=auth_context.owner,
+            max_attempts=payload.max_attempts,
+        )
+        if payload.execution_mode == "sync":
+            request.app.state.job_service.execute(session, job)
+        session.commit()
+        return JobSubmitResponse(
+            job_id=job.id,
+            status=job.status,
+            job_type=job.job_type,
+            execution_mode=job.execution_mode,  # type: ignore[arg-type]
+        )
+    except HTTPException:
+        session.rollback()
+        raise
+    except Exception as exc:
+        session.rollback()
+        raise HTTPException(status_code=400, detail=str(exc)) from exc
+    finally:
+        session.close()
+
+
+@router.get("/jobs/{job_id}", response_model=JobStatusResponse, dependencies=[Depends(_require_auth("viewer"))])
+def get_job(job_id: str, request: Request) -> JobStatusResponse:
+    session = _session(request)
+    try:
+        data = request.app.state.job_service.get_job(session=session, job_id=job_id)
+        return JobStatusResponse(**data)
+    except Exception as exc:
+        raise HTTPException(status_code=404, detail=str(exc)) from exc
+    finally:
+        session.close()
+
+
+@router.get("/jobs", dependencies=[Depends(_require_auth("viewer"))])
+def list_jobs(request: Request, limit: int = Query(default=100, ge=1, le=1000)) -> dict:
+    session = _session(request)
+    try:
+        jobs = session.scalars(select(Job).order_by(Job.created_at.desc()).limit(limit)).all()
+        return {
+            "jobs": [
+                {
+                    "job_id": j.id,
+                    "job_type": j.job_type,
+                    "status": j.status,
+                    "execution_mode": j.execution_mode,
+                    "attempt_count": j.attempt_count,
+                    "max_attempts": j.max_attempts,
+                    "created_at": j.created_at,
+                    "updated_at": j.updated_at,
+                }
+                for j in jobs
+            ]
+        }
+    finally:
+        session.close()
+
+
+@router.post("/jobs/{job_id}/cancel", response_model=JobStatusResponse)
+def cancel_job(
+    job_id: str,
+    request: Request,
+    auth_context: AuthContext = Depends(_require_auth("operator")),
+) -> JobStatusResponse:
+    session = _session(request)
+    try:
+        _ = auth_context
+        request.app.state.job_service.cancel(session=session, job_id=job_id)
+        session.commit()
+        data = request.app.state.job_service.get_job(session=session, job_id=job_id)
+        return JobStatusResponse(**data)
+    except Exception as exc:
+        session.rollback()
+        raise HTTPException(status_code=404, detail=str(exc)) from exc
+    finally:
+        session.close()
+
+
+@router.get("/analysis/runs/{run_id}", response_model=AnalysisRunResponse, dependencies=[Depends(_require_auth("viewer"))])
+def analysis_run(run_id: str, request: Request) -> AnalysisRunResponse:
+    session = _session(request)
+    try:
+        data = request.app.state.analysis_service.get_run(session=session, run_id=run_id)
+        return AnalysisRunResponse(**data)
+    except Exception as exc:
+        raise HTTPException(status_code=404, detail=str(exc)) from exc
+    finally:
+        session.close()
+
+
+@router.get("/analysis/runs", dependencies=[Depends(_require_auth("viewer"))])
+def list_analysis_runs(request: Request, limit: int = Query(default=100, ge=1, le=1000)) -> dict:
+    session = _session(request)
+    try:
+        runs = session.scalars(select(AnalysisRun).order_by(AnalysisRun.created_at.desc()).limit(limit)).all()
+        return {
+            "runs": [
+                {
+                    "analysis_run_id": r.id,
+                    "document_id": r.document_id,
+                    "branch_id": r.branch_id,
+                    "mode": r.mode,
+                    "execution_mode": r.execution_mode,
+                    "plugin_profile": r.plugin_profile,
+                    "created_at": r.created_at,
+                }
+                for r in runs
+            ]
+        }
+    finally:
+        session.close()
+
+
+@router.post("/branches/{branch_id}/replay", response_model=BranchReplayResponse, dependencies=[Depends(_require_auth("viewer"))])
+def replay_branch(branch_id: str, request: Request) -> BranchReplayResponse:
+    session = _session(request)
+    try:
+        data = request.app.state.evolution_service.replay_branch(session=session, branch_id=branch_id)
+        return BranchReplayResponse(**data)
+    except Exception as exc:
+        raise HTTPException(status_code=404, detail=str(exc)) from exc
+    finally:
+        session.close()
+
+
+@router.get("/branches/{branch_id}/compare/{other_branch_id}", response_model=BranchCompareResponse, dependencies=[Depends(_require_auth("viewer"))])
+def compare_branch(branch_id: str, other_branch_id: str, request: Request) -> BranchCompareResponse:
+    session = _session(request)
+    try:
+        data = request.app.state.evolution_service.compare_branches(
+            session=session,
+            left_branch_id=branch_id,
+            right_branch_id=other_branch_id,
+        )
+        return BranchCompareResponse(**data)
+    except Exception as exc:
+        raise HTTPException(status_code=404, detail=str(exc)) from exc
+    finally:
+        session.close()
+
+
+@router.get("/hypergraph/query", dependencies=[Depends(_require_auth("viewer"))])
+def hypergraph_query(
+    request: Request,
+    document_id: str | None = Query(default=None),
+    node_id: str | None = Query(default=None),
+    relationship_type: str | None = Query(default=None),
+    limit: int = Query(default=100, ge=1, le=1000),
+) -> dict:
+    return request.app.state.hypergraph.query(
+        document_id=document_id,
+        node_id=node_id,
+        relationship_type=relationship_type,
+        limit=limit,
+    )
+
+
+@router.get("/audit/policy-decisions", dependencies=[Depends(_require_auth("operator"))])
+def audit_policy_decisions(request: Request, limit: int = Query(default=100, ge=1, le=1000)) -> dict:
+    session = _session(request)
+    try:
+        return {"decisions": request.app.state.governance_service.list_policy_decisions(session=session, limit=limit)}
+    finally:
+        session.close()

@@ -49,6 +49,7 @@ Important variables:
 
 ```bash
 uvicorn nexus_babel.main:app --host 0.0.0.0 --port 8000 --reload
+python -m nexus_babel.worker
 ```
 
 Health check:
@@ -85,6 +86,10 @@ curl -X POST http://localhost:8000/api/v1/ingest/batch \
 - `GET /api/v1/ingest/jobs/{job_id}`
 - `GET /app/corpus`
 - `GET /api/v1/hypergraph/documents/{document_id}/integrity`
+- `POST /api/v1/jobs/submit`
+- `GET /api/v1/jobs/{job_id}`
+- `GET /api/v1/analysis/runs/{run_id}`
+- `GET /api/v1/audit/policy-decisions`
 
 ## 6. Governance Modes
 

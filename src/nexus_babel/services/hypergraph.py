@@ -128,3 +128,64 @@ class HypergraphProjector:
             "neo4j_contains_edges": neo_contains_edges,
             "consistent": base["consistent"] and neo_document_nodes == 1 and neo_atom_nodes == expected and neo_contains_edges == expected,
         }
+
+    def query(
+        self,
+        *,
+        document_id: str | None = None,
+        node_id: str | None = None,
+        relationship_type: str | None = None,
+        limit: int = 100,
+    ) -> dict[str, Any]:
+        rel_filter = relationship_type.upper() if relationship_type else None
+        target_node = node_id
+        if not target_node and document_id:
+            target_node = f"doc:{document_id}"
+
+        if target_node and target_node in self.local.nodes:
+            edges = [
+                edge
+                for edge in self.local.edges
+                if (edge["from"] == target_node or edge["to"] == target_node)
+                and (rel_filter is None or edge["type"] == rel_filter)
+            ][:limit]
+            node_ids = {target_node}
+            for edge in edges:
+                node_ids.add(edge["from"])
+                node_ids.add(edge["to"])
+            nodes = [{"id": nid, **self.local.nodes.get(nid, {})} for nid in node_ids]
+            return {
+                "source": "local_cache",
+                "nodes": nodes,
+                "edges": edges,
+                "count": {"nodes": len(nodes), "edges": len(edges)},
+            }
+
+        if self._driver and document_id:
+            with self._driver.session() as neo_session:
+                records = neo_session.run(
+                    "MATCH (d:Document {id: $id})-[r]->(n) "
+                    "RETURN d.id AS doc_id, type(r) AS rel_type, n.id AS node_id "
+                    "LIMIT $limit",
+                    id=document_id,
+                    limit=limit,
+                ).data()
+            edges = [
+                {
+                    "type": r["rel_type"],
+                    "from": f"doc:{r['doc_id']}",
+                    "to": f"atom:{r['node_id']}",
+                }
+                for r in records
+                if rel_filter is None or r["rel_type"] == rel_filter
+            ]
+            node_ids = {edge["from"] for edge in edges} | {edge["to"] for edge in edges}
+            nodes = [{"id": nid} for nid in node_ids]
+            return {
+                "source": "neo4j",
+                "nodes": nodes,
+                "edges": edges,
+                "count": {"nodes": len(nodes), "edges": len(edges)},
+            }
+
+        return {"source": "empty", "nodes": [], "edges": [], "count": {"nodes": 0, "edges": 0}}
