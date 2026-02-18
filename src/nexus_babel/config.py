@@ -17,8 +17,13 @@ class Settings(BaseSettings):
     neo4j_uri: str | None = None
     neo4j_username: str | None = None
     neo4j_password: str | None = None
+    raw_mode_enabled: bool = True
     corpus_root: Path = Field(default_factory=lambda: Path.cwd())
     object_storage_root: Path = Field(default_factory=lambda: Path.cwd() / "object_storage")
+    bootstrap_viewer_key: str = "nexus-dev-viewer-key"
+    bootstrap_operator_key: str = "nexus-dev-operator-key"
+    bootstrap_researcher_key: str = "nexus-dev-researcher-key"
+    bootstrap_admin_key: str = "nexus-dev-admin-key"
     public_blocked_terms: list[str] = Field(
         default_factory=lambda: [
             "kill",

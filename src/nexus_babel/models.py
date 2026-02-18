@@ -39,7 +39,11 @@ class Document(Base):
     ingested: Mapped[bool] = mapped_column(Boolean, default=False)
     ingest_status: Mapped[str] = mapped_column(String(32), default="pending")
     conflict_flag: Mapped[bool] = mapped_column(Boolean, default=False)
+    conflict_reason: Mapped[str | None] = mapped_column(String(256), nullable=True)
     provenance: Mapped[dict] = mapped_column(JSON, default=dict)
+    atom_count: Mapped[int] = mapped_column(Integer, default=0)
+    graph_projected_atom_count: Mapped[int] = mapped_column(Integer, default=0)
+    graph_projection_status: Mapped[str] = mapped_column(String(32), default="pending")
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
     updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow, onupdate=utcnow)
 
@@ -154,6 +158,18 @@ class User(Base):
     username: Mapped[str] = mapped_column(String(128), unique=True)
     role: Mapped[str] = mapped_column(String(64), default="researcher")
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
+
+
+class ApiKey(Base):
+    __tablename__ = "api_keys"
+
+    id: Mapped[str] = mapped_column(String(36), primary_key=True, default=lambda: str(uuid4()))
+    key_hash: Mapped[str] = mapped_column(String(128), unique=True, index=True)
+    owner: Mapped[str] = mapped_column(String(128), index=True)
+    role: Mapped[str] = mapped_column(String(32), index=True)
+    enabled: Mapped[bool] = mapped_column(Boolean, default=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
+    last_used_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
 
 
 class AuditLog(Base):

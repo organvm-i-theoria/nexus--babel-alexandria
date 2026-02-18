@@ -16,19 +16,22 @@ def _normalize_stem(path: str) -> str:
     return stem
 
 
-def apply_canonicalization(session: Session, documents: list[Document]) -> None:
-    document_ids = [d.id for d in documents]
-    if not document_ids:
+def _is_semantic_rlos_equivalent(path: str) -> bool:
+    p = path.lower()
+    return "theoria linguae machina comprehensive design document" in p or "nexus_bable-alexandria" in p
+
+
+def apply_canonicalization(session: Session) -> None:
+    documents = session.scalars(select(Document).where(Document.ingested.is_(True))).all()
+    if not documents:
+        session.execute(delete(DocumentVariant))
         return
 
-    session.execute(delete(DocumentVariant).where(DocumentVariant.document_id.in_(document_ids)))
+    # Deterministic materialization from authoritative corpus snapshot.
+    session.execute(delete(DocumentVariant))
 
     # Known semantic equivalence group for duplicated long-form RLOS specs.
-    semantic_group = []
-    for doc in documents:
-        p = doc.path.lower()
-        if "theoria linguae machina comprehensive design document" in p or "nexus_bable-alexandria" in p:
-            semantic_group.append(doc)
+    semantic_group = [doc for doc in documents if _is_semantic_rlos_equivalent(doc.path)]
 
     for doc in semantic_group:
         session.add(
@@ -79,7 +82,11 @@ def collect_current_corpus_paths(root: Path) -> list[Path]:
         ".flac",
     }
     paths: list[Path] = []
-    for child in sorted(root.iterdir()):
+    skip_dirs = {".git", ".venv", "__pycache__", "object_storage", ".pytest_cache"}
+    paths: list[Path] = []
+    for child in sorted(root.rglob("*")):
+        if any(part in skip_dirs for part in child.parts):
+            continue
         if not child.is_file():
             continue
         if child.name.startswith("."):

@@ -20,6 +20,8 @@ class IngestBatchResponse(BaseModel):
     documents_ingested: int
     atoms_created: int
     provenance_digest: str
+    ingest_scope: str = "partial"
+    warnings: list[str] = Field(default_factory=list)
 
 
 class IngestFileStatus(BaseModel):
@@ -37,6 +39,8 @@ class IngestJobResponse(BaseModel):
     documents_ingested: int
     atoms_created: int
     provenance_digest: str
+    ingest_scope: str = "partial"
+    warnings: list[str] = Field(default_factory=list)
 
 
 class AnalyzeRequest(BaseModel):

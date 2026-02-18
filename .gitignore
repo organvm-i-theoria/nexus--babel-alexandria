@@ -45,6 +45,8 @@ Thumbs.db
 .env
 .env.local
 .env.*.local
+nexus_babel.db
+object_storage/
 
 # Build
 dist/
@@ -59,4 +61,3 @@ coverage.xml
 *.cover
 .pytest_cache/
 .nyc_output/
-

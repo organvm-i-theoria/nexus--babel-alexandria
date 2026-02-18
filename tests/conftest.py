@@ -12,8 +12,8 @@ from nexus_babel.main import create_app
 
 
 @pytest.fixture
-def client(tmp_path: Path):
-    settings = Settings(
+def test_settings(tmp_path: Path) -> Settings:
+    return Settings(
         environment="test",
         database_url=f"sqlite:///{tmp_path / 'test.db'}",
         corpus_root=tmp_path,
@@ -22,6 +22,21 @@ def client(tmp_path: Path):
         neo4j_username=None,
         neo4j_password=None,
     )
+
+
+@pytest.fixture
+def auth_headers(test_settings: Settings) -> dict[str, dict[str, str]]:
+    return {
+        "viewer": {"X-Nexus-API-Key": test_settings.bootstrap_viewer_key},
+        "operator": {"X-Nexus-API-Key": test_settings.bootstrap_operator_key},
+        "researcher": {"X-Nexus-API-Key": test_settings.bootstrap_researcher_key},
+        "admin": {"X-Nexus-API-Key": test_settings.bootstrap_admin_key},
+    }
+
+
+@pytest.fixture
+def client(test_settings: Settings):
+    settings = test_settings
     app = create_app(settings)
     with TestClient(app) as test_client:
         yield test_client

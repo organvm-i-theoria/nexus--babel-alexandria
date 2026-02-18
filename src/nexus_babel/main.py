@@ -11,6 +11,7 @@ from nexus_babel.config import Settings, get_settings
 from nexus_babel.db import DBManager
 from nexus_babel.models import Base
 from nexus_babel.services.analysis import AnalysisService
+from nexus_babel.services.auth import AuthService
 from nexus_babel.services.evolution import EvolutionService
 from nexus_babel.services.governance import GovernanceService
 from nexus_babel.services.hypergraph import HypergraphProjector
@@ -27,6 +28,15 @@ def create_app(settings_override: Settings | None = None) -> FastAPI:
         app.state.db.create_all(Base.metadata)
         session = app.state.db.session()
         try:
+            app.state.auth_service.ensure_default_api_keys(
+                session,
+                [
+                    ("dev-viewer", "viewer", settings.bootstrap_viewer_key),
+                    ("dev-operator", "operator", settings.bootstrap_operator_key),
+                    ("dev-researcher", "researcher", settings.bootstrap_researcher_key),
+                    ("dev-admin", "admin", settings.bootstrap_admin_key),
+                ],
+            )
             app.state.governance_service.ensure_default_policies(session, settings.public_blocked_terms)
             session.commit()
         finally:
@@ -39,6 +49,7 @@ def create_app(settings_override: Settings | None = None) -> FastAPI:
     app.state.settings = settings
     app.state.db = DBManager(settings.database_url)
     app.state.hypergraph = HypergraphProjector(settings.neo4j_uri, settings.neo4j_username, settings.neo4j_password)
+    app.state.auth_service = AuthService()
     app.state.rhetorical_analyzer = RhetoricalAnalyzer()
     app.state.analysis_service = AnalysisService(app.state.rhetorical_analyzer)
     app.state.governance_service = GovernanceService()

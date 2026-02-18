@@ -17,6 +17,7 @@ Install app:
 
 ```bash
 python3 -m pip install -e .[dev,postgres]
+make db-upgrade
 ```
 
 ## 2. Configuration
@@ -35,6 +36,14 @@ Important variables:
 - `NEXUS_NEO4J_PASSWORD`
 - `NEXUS_CORPUS_ROOT`
 - `NEXUS_OBJECT_STORAGE_ROOT`
+- `NEXUS_RAW_MODE_ENABLED`
+- `NEXUS_BOOTSTRAP_VIEWER_KEY`
+- `NEXUS_BOOTSTRAP_OPERATOR_KEY`
+- `NEXUS_BOOTSTRAP_RESEARCHER_KEY`
+- `NEXUS_BOOTSTRAP_ADMIN_KEY`
+
+> [!WARNING]
+> `.env.example` and `docker-compose.yml` use local-only placeholder credentials. Do not reuse them outside local development.
 
 ## 3. Start Service
 
@@ -48,6 +57,12 @@ Health check:
 curl http://localhost:8000/healthz
 ```
 
+Who am I:
+
+```bash
+curl -H 'X-Nexus-API-Key: nexus-dev-viewer-key' http://localhost:8000/api/v1/auth/whoami # allow-secret
+```
+
 ## 4. Ingest Corpus
 
 ```bash
@@ -57,7 +72,9 @@ python scripts/ingest_corpus.py
 Or direct API call:
 
 ```bash
+api_key='nexus-dev-operator-key' # allow-secret
 curl -X POST http://localhost:8000/api/v1/ingest/batch \
+  -H "X-Nexus-API-Key: ${api_key}" \
   -H 'Content-Type: application/json' \
   -d '{"source_paths":[],"modalities":[],"parse_options":{"atomize":true}}'
 ```
@@ -67,18 +84,31 @@ curl -X POST http://localhost:8000/api/v1/ingest/batch \
 - `GET /api/v1/documents`
 - `GET /api/v1/ingest/jobs/{job_id}`
 - `GET /app/corpus`
+- `GET /api/v1/hypergraph/documents/{document_id}/integrity`
 
 ## 6. Governance Modes
 
 - `PUBLIC`: hard blocks on blocked terms
-- `RAW`: allows output but logs policy hits
+- `RAW`: researcher/admin only; allows output but logs policy hits
 
 Evaluate sample:
 
 ```bash
+api_key='nexus-dev-operator-key' # allow-secret
 curl -X POST http://localhost:8000/api/v1/governance/evaluate \
+  -H "X-Nexus-API-Key: ${api_key}" \
   -H 'Content-Type: application/json' \
   -d '{"candidate_output":"example text","mode":"PUBLIC"}'
+```
+
+RAW sample:
+
+```bash
+api_key='nexus-dev-researcher-key' # allow-secret
+curl -X POST http://localhost:8000/api/v1/governance/evaluate \
+  -H "X-Nexus-API-Key: ${api_key}" \
+  -H 'Content-Type: application/json' \
+  -d '{"candidate_output":"example text","mode":"RAW"}'
 ```
 
 ## 7. Testing
@@ -93,3 +123,11 @@ python scripts/load_test.py
 - RLOS analysis layers are heuristic MVP implementations, not full ML models yet.
 - Image OCR and advanced audio analysis are represented via metadata paths in this slice.
 - `seed.yaml` conflict markers are intentionally flagged as non-ingestable until resolved.
+- API keys are static bootstrap secrets in MVP mode; rotate in real environments.
+
+## 9. Durability and Recovery
+
+- Canonicalization is rebuilt deterministically from current ingested documents after each ingest job.
+- Hypergraph integrity uses durable SQL counters and optional Neo4j verification.
+- If Neo4j is unavailable, ingestion completes with warning status and sets `graph_projection_status=failed`.
+- Re-run ingestion after graph recovery to reproject counters and graph nodes.

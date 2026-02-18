@@ -1,4 +1,5 @@
 version: '3.9'
+# Local development only. Replace credentials for any shared environment.
 services:
   postgres:
     image: postgres:16

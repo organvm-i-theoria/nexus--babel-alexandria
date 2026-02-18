@@ -1,6 +1,6 @@
 [![ORGAN-I: Theoria](https://img.shields.io/badge/ORGAN--I-Theoria-311b92?style=flat-square)](https://github.com/organvm-i-theoria)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue?style=flat-square)](LICENSE)
-[![Status: Design Document](https://img.shields.io/badge/status-design%20document-yellow?style=flat-square)]()
+[![Status: MVP Scaffold](https://img.shields.io/badge/status-mvp%20scaffold-green?style=flat-square)]()
 [![Specification: 50K words](https://img.shields.io/badge/specification-50%2C000%20words-informational?style=flat-square)]()
 
 # Nexus Babel Alexandria
@@ -19,6 +19,8 @@ This repository now includes an executable MVP scaffold implementing the plan at
 - Canonicalization rules: semantic variant grouping, sibling representation linking, conflict-marker hygiene
 - Test coverage: ingestion, governance mode regression, hypergraph integrity, branch determinism, multimodal linkage, API contracts, UI flow, and baseline load test
 
+Historical context: this repository started as a design-first corpus; the MVP runtime was added later while preserving the original RLOS/ARC4N documents.
+
 ### Quickstart
 
 1. Install dependencies:
@@ -33,6 +35,27 @@ This repository now includes an executable MVP scaffold implementing the plan at
    - `python scripts/ingest_corpus.py`
 6. Run tests:
    - `pytest -q`
+
+### Security Model (MVP)
+
+- All `/api/v1/*` routes require `X-Nexus-API-Key`.
+- Roles:
+  - `viewer`: read-only endpoints.
+  - `operator`: ingest/analyze/governance in `PUBLIC`.
+  - `researcher` and `admin`: all `operator` actions plus `RAW` mode.
+- `RAW` mode can be globally disabled with `NEXUS_RAW_MODE_ENABLED=false`.
+
+### Known Limitations
+
+- API-key auth is the MVP control plane; OAuth/JWT is not included in this slice.
+- Multimodal OCR/prosody paths are metadata-first and intentionally shallow.
+- `seed.yaml` conflict markers are intentionally treated as non-ingestable.
+
+### Durability Guarantees (MVP)
+
+- Document atom totals are stored in SQL (`atom_count`, `graph_projected_atom_count`, `graph_projection_status`).
+- Hypergraph integrity endpoints are derived from durable counters and can optionally verify Neo4j counts.
+- Canonicalization is recomputed deterministically from the authoritative corpus snapshot on each ingest job.
 
 ---
 
@@ -60,7 +83,7 @@ This repository now includes an executable MVP scaffold implementing the plan at
 
 ## Theoretical Purpose
 
-Nexus Babel Alexandria is a pure design-document repository. It contains no source code. What it contains is a 50,000-word architectural specification for a system that does not yet exist — and that specification is the contribution.
+Nexus Babel Alexandria began as a pure design-document repository and still preserves that corpus. It now also includes an MVP implementation of the ingestion, analysis, evolution, governance, and UI shell surfaces described by the original specification.
 
 The document proposes **RLOS (Rhetorical-Linguistic Operating System)**, a nine-layer "plexus architecture" for computational linguistics. Where conventional NLP pipelines process language as a linear sequence of transformations — tokenize, parse, classify, output — RLOS models language as a **bidirectional hypergraph** in which every layer communicates with every other layer simultaneously. A morphological insight can reshape a pragmatic interpretation; a sociolinguistic register shift can rewrite a syntactic parse. The architecture treats language the way language actually behaves: as a living, self-referential system where meaning emerges from the interplay of all levels at once.
 
@@ -259,7 +282,7 @@ The specification draws on Godber and Origgi's framework for **virtuous persuasi
 
 ## Technical Architecture
 
-The design document specifies a complete technology stack — these are design choices documented in the specification, not implemented components:
+The design corpus specifies a long-horizon production stack. The current repository implements an MVP subset:
 
 - **Runtime**: Python 3.11+, FastAPI for service layer
 - **ML Framework**: PyTorch 2.0+ with Hugging Face Transformers
@@ -269,7 +292,7 @@ The design document specifies a complete technology stack — these are design c
 - **Meta-Learning**: MAML for rapid adaptation to new languages and domains
 - **Language Coverage**: 100+ languages targeted, with explicit support tiers
 
-The API specification defines four primary endpoints: `/analyze` (multimodal input to full hypergraph analysis), `/generate` (AMR graph to target modality output), `/visualize` (hypergraph to interactive SVG/HTML), and `/rhetorical_analysis` (text + audience profile to ethos/pathos/logos scores with strategy and fallacy detection).
+Implemented MVP API endpoints are under `/api/v1/*`, including ingest, analyze, branch evolution, rhetorical analysis, governance evaluation, and hypergraph integrity checks.
 
 The visualization system uses a "Semiotic Garden" metaphor — concepts as plants with size proportional to salience, relations as pathways with style encoding type, layers as depth, and discourse unfolding as growth animation. The interface includes accessibility features: screen reader compatibility (ARIA labels), keyboard navigation, high-contrast mode, and alternative text for all visualizations.
 
@@ -279,7 +302,7 @@ The visualization system uses a "Semiotic Garden" metaphor — concepts as plant
 
 ## Cross-Organ Position
 
-Within the eight-organ system, Nexus Babel Alexandria represents **ORGAN-I at its most ambitious**: pure theoretical architecture, rigorous in its formalism, expansive in its scope, and honest about the gap between specification and realization.
+Within the eight-organ system, Nexus Babel Alexandria represents **ORGAN-I at its most ambitious**: a rigorous theoretical corpus now paired with a working MVP scaffold.
 
 The dependency flows are clear:
 
@@ -297,16 +320,21 @@ The dependency flows are clear:
 
 ```
 .
-├── README.md                                    # This document
-├── theoria-linguae-machina.md                   # Full architectural specification (~50KB, 892 lines)
-└── roadmap.md                                   # 10-phase implementation roadmap (200+ tasks)
+├── README.md
+├── roadmap.md
+├── # Theoria Linguae Machina Comprehensive Design Document for the….md
+├── Nexus_Bable-Alexandria.md
+├── src/nexus_babel/                             # FastAPI services + models
+├── tests/                                       # MVP and hardening tests
+├── docs/OPERATOR_RUNBOOK.md
+└── scripts/                                     # local ingest/load utilities
 ```
 
-Two markdown files, ~207KB total, representing the synthesis of category theory, semiotics, rhetoric, and media archaeology into a unified computational linguistics framework.
+The repository contains both the long-form design documents and implementation code used for the current MVP.
 
 The main specification document is organized in twelve parts: Architectural Foundations, Formal Foundations, The 84 Core Functions, Semiotic Engine, Rhetorical Strategy Engine, Multimodal Architecture, Meta-Learning and Evolution, Dual-Mode Governance, Implementation Specifications, Visualization and Interface, Cultural-Technical System, and Future Directions. The roadmap breaks implementation into 10 phases over 12 months with 200+ atomic tasks, each with explicit dependencies, deliverables, and validation criteria.
 
-**Note on repository hygiene:** The open issues and branches visible on GitHub are bot-generated suggestions (automated Jules activity) and do not represent meaningful project activity. The actual intellectual content is the two committed documents.
+**Note on repository hygiene:** The open issues and branches visible on GitHub may include bot-generated suggestions (automated Jules activity). Prioritize committed code and documents in this repository as source of truth.
 
 ---
 
@@ -326,7 +354,7 @@ The specification engages with and extends several active research programs:
 
 ## Contributing
 
-This is a design-document repository. Contributions that engage with the theoretical framework are welcome:
+This repository has both theory documents and an executable MVP. Contributions that engage either surface are welcome:
 
 - **Theoretical critique**: Identify gaps, inconsistencies, or missed connections in the specification.
 - **Formal extensions**: Propose additional categorical structures, semiotic models, or rhetorical formalisms.
