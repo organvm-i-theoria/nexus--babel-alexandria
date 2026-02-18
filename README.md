@@ -52,7 +52,7 @@ Historical context: this repository started as a design-first corpus; the MVP ru
 
 - API-key auth is the MVP control plane; OAuth/JWT is not included in this slice.
 - Multimodal OCR/prosody paths are metadata-first and intentionally shallow.
-- `seed.yaml` conflict markers are intentionally treated as non-ingestable.
+- Files containing Git conflict markers are treated as non-ingestable until resolved.
 
 ### Durability Guarantees (MVP)
 

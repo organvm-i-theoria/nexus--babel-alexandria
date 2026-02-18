@@ -127,7 +127,7 @@ python scripts/load_test.py
 
 - RLOS analysis layers are heuristic MVP implementations, not full ML models yet.
 - Image OCR and advanced audio analysis are represented via metadata paths in this slice.
-- `seed.yaml` conflict markers are intentionally flagged as non-ingestable until resolved.
+- Files containing Git conflict markers are intentionally flagged as non-ingestable until resolved.
 - API keys are static bootstrap secrets in MVP mode; rotate in real environments.
 
 ## 9. Durability and Recovery
