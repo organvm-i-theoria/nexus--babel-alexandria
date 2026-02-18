@@ -29,6 +29,9 @@ First principle:
 - Suggestion ledger (scoped to the two source docs):
   - `docs/alexandria_babel/feature_usecase_ledger.json`
   - `docs/alexandria_babel/feature_usecase_matrix.md`
+- AB-PLAN-01 executable ticket pack:
+  - `docs/alexandria_babel/AB-PLAN-01_Build_Tickets.md`
+  - `docs/alexandria_babel/AB-PLAN-01_Build_Tickets.json`
 - Prototype tracker: `docs/alexandria_babel/Prototype_Tracker.md`
 - Protocol tracker: `docs/alexandria_babel/Protocol_Tracker.md`
 - Save receipt batch: `docs/alexandria_babel/Save_Receipt_2026-02-18.md`
