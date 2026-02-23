@@ -8,6 +8,20 @@ from pydantic import BaseModel, Field
 
 Mode = Literal["RAW", "PUBLIC"]
 ExecutionMode = Literal["sync", "async", "shadow"]
+RemixStrategy = Literal["interleave", "thematic_blend", "temporal_layer", "glyph_collide"]
+
+
+class GlyphSeed(BaseModel):
+    """Rich glyph-seed: active generative glyph matter with metadata."""
+
+    character: str
+    unicode_name: str
+    phoneme_hint: str | None = None
+    historic_forms: list[str] = Field(default_factory=list)
+    visual_mutations: list[str] = Field(default_factory=list)
+    thematic_tags: list[str] = Field(default_factory=list)
+    future_seeds: list[str] = Field(default_factory=list)
+    position: int
 
 
 class IngestBatchRequest(BaseModel):
@@ -208,3 +222,44 @@ class BranchCompareResponse(BaseModel):
     same: bool
     preview_left: str
     preview_right: str
+
+
+class RemixRequest(BaseModel):
+    source_document_id: str | None = None
+    source_branch_id: str | None = None
+    target_document_id: str | None = None
+    target_branch_id: str | None = None
+    strategy: RemixStrategy = "interleave"
+    seed: int = 0
+    mode: Mode = "PUBLIC"
+
+
+class RemixResponse(BaseModel):
+    new_branch_id: str
+    event_id: str
+    strategy: str
+    diff_summary: dict[str, Any]
+
+
+class SeedTextEntry(BaseModel):
+    title: str
+    author: str
+    language: str
+    source_url: str
+    local_path: str | None = None
+    atomization_status: str = "not_provisioned"
+
+
+class SeedTextListResponse(BaseModel):
+    seeds: list[SeedTextEntry]
+
+
+class SeedProvisionRequest(BaseModel):
+    title: str
+
+
+class SeedProvisionResponse(BaseModel):
+    title: str
+    status: str
+    local_path: str | None = None
+    document_id: str | None = None

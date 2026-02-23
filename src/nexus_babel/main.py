@@ -21,7 +21,9 @@ from nexus_babel.services.ingestion import IngestionService
 from nexus_babel.services.jobs import JobService
 from nexus_babel.services.metrics import MetricsService
 from nexus_babel.services.plugins import PluginRegistry
+from nexus_babel.services.remix import RemixService
 from nexus_babel.services.rhetoric import RhetoricalAnalyzer
+from nexus_babel.services.seed_corpus import SeedCorpusService
 
 
 def create_app(settings_override: Settings | None = None) -> FastAPI:
@@ -62,6 +64,8 @@ def create_app(settings_override: Settings | None = None) -> FastAPI:
     app.state.governance_service = GovernanceService()
     app.state.evolution_service = EvolutionService()
     app.state.ingestion_service = IngestionService(settings=settings, hypergraph=app.state.hypergraph)
+    app.state.remix_service = RemixService(evolution_service=app.state.evolution_service)
+    app.state.seed_corpus_service = SeedCorpusService(seeds_dir=settings.corpus_root / "seeds")
     app.state.job_service = JobService(
         settings=settings,
         ingestion_service=app.state.ingestion_service,

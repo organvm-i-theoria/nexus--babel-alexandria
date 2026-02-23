@@ -82,6 +82,7 @@ class Atom(Base):
     ordinal: Mapped[int] = mapped_column(Integer)
     content: Mapped[str] = mapped_column(Text)
     atom_metadata: Mapped[dict] = mapped_column(JSON, default=dict)
+    metadata_json: Mapped[dict | None] = mapped_column(JSON, nullable=True, default=None)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
 
     document: Mapped[Document] = relationship(back_populates="atoms")

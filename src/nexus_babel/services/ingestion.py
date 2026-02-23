@@ -17,7 +17,7 @@ from nexus_babel.config import Settings
 from nexus_babel.models import Atom, Document, IngestJob, ProjectionLedger
 from nexus_babel.services.canonicalization import apply_canonicalization, collect_current_corpus_paths
 from nexus_babel.services.hypergraph import HypergraphProjector
-from nexus_babel.services.text_utils import atomize_text, has_conflict_markers, sha256_file
+from nexus_babel.services.text_utils import ATOM_LEVELS, atomize_text, atomize_text_rich, has_conflict_markers, sha256_file
 
 TEXT_EXT = {".md", ".txt", ".yaml", ".yml"}
 PDF_EXT = {".pdf"}
@@ -40,7 +40,7 @@ class IngestionService:
         ingest_scope = "partial" if source_paths else "full"
         selected_paths = [self._resolve_path(p) for p in source_paths] if source_paths else collect_current_corpus_paths(self.settings.corpus_root)
         modality_filter = {m.lower() for m in modalities} if modalities else set()
-        atom_levels = parse_options.get("atom_levels", ["glyph-seed", "word", "sentence", "paragraph"])
+        atom_levels = parse_options.get("atom_levels", ATOM_LEVELS)
         atomize_enabled = bool(parse_options.get("atomize", True))
         force_reingest = bool(parse_options.get("force", False))
 
@@ -366,14 +366,20 @@ class IngestionService:
     def _create_atoms(self, session: Session, doc: Document, text: str, atom_levels: list[str]) -> list[dict[str, Any]]:
         session.execute(delete(Atom).where(Atom.document_id == doc.id))
         session.execute(delete(ProjectionLedger).where(ProjectionLedger.document_id == doc.id))
-        atoms_map = atomize_text(text)
+        rich = atomize_text_rich(text)
         atoms_to_add: list[Atom] = []
         ledger_rows: list[ProjectionLedger] = []
         payloads: list[dict[str, Any]] = []
         for level in atom_levels:
-            values = atoms_map.get(level, [])
-            for idx, content in enumerate(values, start=1):
+            values = rich.get(level, [])
+            for idx, item in enumerate(values, start=1):
                 atom_id = str(uuid4())
+                if level == "glyph-seed" and hasattr(item, "character"):
+                    content = item.character
+                    metadata_json = item.model_dump()
+                else:
+                    content = str(item)
+                    metadata_json = None
                 atom = Atom(
                     id=atom_id,
                     document_id=doc.id,
@@ -381,6 +387,7 @@ class IngestionService:
                     ordinal=idx,
                     content=content,
                     atom_metadata={"length": len(content)},
+                    metadata_json=metadata_json,
                 )
                 atoms_to_add.append(atom)
                 ledger_rows.append(

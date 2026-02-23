@@ -53,6 +53,9 @@ dist/
 build/
 out/
 
+# Seed texts (downloaded at runtime)
+corpus/seeds/*.txt
+
 # Coverage
 htmlcov/
 .coverage

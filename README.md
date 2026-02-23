@@ -5,22 +5,34 @@
 
 # Nexus Babel Alexandria
 
-**Theoria Linguae Machina — A Nine-Layer Rhetorical-Linguistic Operating System**
+**ARC4N Living Digital Canon — A Breathing Organism for Language Evolution**
 
-> *A comprehensive design document for RLOS: a plexus architecture that replaces linear NLP pipelines with a bidirectional hypergraph network grounded in category theory, Peircean semiotics, and Aristotelian rhetoric.*
+> *A living modular library that atomizes classic and modern literary works down to their molecular level — glyph-seeds, syllables, words, sentences, paragraphs — enabling creative recombination, temporal evolution, and scholarly exploration across a spiral of expansion, compression, and rebirth.*
 
-## MVP Implementation Status (2026-02-18)
+## Vision
 
-This repository now includes an executable MVP scaffold implementing the plan at:
+ARC4N is not a static archive. It is a **synthetic linguistic organism** capable of recording, simulating, accelerating, and inventing the full evolutionary arc of language — from primordial glyph to cosmic song. Every letter is an active generative glyph-seed carrying phonemic, historic, and thematic metadata. Every document can drift naturally through centuries of linguistic change, mutate synthetically at accelerated rates, or remix with other texts to birth entirely new compositions.
 
-- Backend API: `POST /api/v1/ingest/batch`, `GET /api/v1/ingest/jobs/{id}`, `POST /api/v1/analyze`, `POST /api/v1/evolve/branch`, `GET /api/v1/branches/{id}/timeline`, `POST /api/v1/rhetorical_analysis`, `POST /api/v1/governance/evaluate`
-- Wave 2 API additions: `POST /api/v1/jobs/submit`, `GET /api/v1/jobs/{id}`, `GET /api/v1/analysis/runs/{id}`, `POST /api/v1/branches/{id}/replay`, `GET /api/v1/branches/{id}/compare/{other_id}`, `GET /api/v1/hypergraph/query`, `GET /api/v1/audit/policy-decisions`
+The NLP engine underneath (Theoria Linguae Machina) provides 9-layer rhetorical-linguistic analysis through a bidirectional hypergraph architecture grounded in category theory, Peircean semiotics, and Aristotelian rhetoric. The original RLOS design documents are preserved in `docs/corpus/`.
+
+## Canon-Building Capabilities
+
+- **5-Level Atomization**: Glyph-seeds (with phoneme, historic forms, visual mutations, thematic tags) → syllabic clusters → words → sentences → paragraphs
+- **Temporal Evolution**: Natural drift (historic linguistic shifts), synthetic mutation, phase shifts (expansion/peak/compression/rebirth), glyph fusion
+- **Seed Text Provisioning**: Canonical works (Homer, Dante, Whitman, Joyce, Shelley) provisioned from Project Gutenberg
+- **Remix Engine**: Interleave, thematic blend, temporal layer, and glyph collide strategies across documents
+- **Branch Timelines**: Deterministic, replayable evolution forks with seeded RNG
+- **9-Layer Analysis**: Token, morphology, syntax, semantics, pragmatics, discourse, sociolinguistics, rhetoric, semiotic
+- **Dual-Mode Governance**: PUBLIC (content filtering) / RAW (research access with flagging)
+- **Hypergraph Projection**: Neo4j + local cache with integrity verification
+
+## Implementation Status
+
+- Full REST API under `/api/v1/*` with 25+ endpoints
 - UI shells: `/app/corpus`, `/app/hypergraph`, `/app/timeline`, `/app/governance`
-- Storage model: Postgres-compatible SQLAlchemy schema + Neo4j projection adapter
-- Canonicalization rules: semantic variant grouping, sibling representation linking, conflict-marker hygiene
-- Test coverage: ingestion, governance mode regression, hypergraph integrity, branch determinism, multimodal linkage, API contracts, UI flow, and baseline load test
-
-Historical context: this repository started as a design-first corpus; the MVP runtime was added later while preserving the original RLOS/ARC4N documents.
+- Postgres-compatible SQLAlchemy schema + Neo4j projection adapter
+- Async job queue with retry/backoff, canonicalization, multimodal ingestion
+- Test coverage: ingestion, governance, hypergraph integrity, branch determinism, evolution, remix, ARC4N atomization
 
 ### Quickstart
 

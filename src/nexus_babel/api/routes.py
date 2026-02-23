@@ -27,8 +27,14 @@ from nexus_babel.schemas import (
     IngestBatchResponse,
     IngestFileStatus,
     IngestJobResponse,
+    RemixRequest,
+    RemixResponse,
     RhetoricalAnalysisRequest,
     RhetoricalAnalysisResponse,
+    SeedProvisionRequest,
+    SeedProvisionResponse,
+    SeedTextEntry,
+    SeedTextListResponse,
 )
 
 router = APIRouter(prefix="/api/v1")
@@ -625,5 +631,86 @@ def audit_policy_decisions(request: Request, limit: int = Query(default=100, ge=
     session = _session(request)
     try:
         return {"decisions": request.app.state.governance_service.list_policy_decisions(session=session, limit=limit)}
+    finally:
+        session.close()
+
+
+@router.get("/corpus/seeds", response_model=SeedTextListResponse, dependencies=[Depends(_require_auth("viewer"))])
+def list_seed_texts(request: Request) -> SeedTextListResponse:
+    seeds = request.app.state.seed_corpus_service.list_seed_texts()
+    return SeedTextListResponse(seeds=[SeedTextEntry(**s) for s in seeds])
+
+
+@router.post("/corpus/seed", response_model=SeedProvisionResponse)
+def provision_seed_text(
+    payload: SeedProvisionRequest,
+    request: Request,
+    auth_context: AuthContext = Depends(_require_auth("admin")),
+) -> SeedProvisionResponse:
+    session = _session(request)
+    try:
+        _ = auth_context
+        result = request.app.state.seed_corpus_service.provision_seed_text(payload.title)
+        doc_id = None
+        if result.get("local_path") and result["status"] in ("provisioned", "already_provisioned"):
+            from pathlib import Path
+
+            local_path = Path(result["local_path"])
+            if local_path.exists():
+                ingest_result = request.app.state.ingestion_service.ingest_batch(
+                    session=session,
+                    source_paths=[str(local_path)],
+                    modalities=["text"],
+                    parse_options={},
+                )
+                session.commit()
+                files = ingest_result.get("files", [])
+                if files:
+                    doc_id = files[0].get("document_id")
+        return SeedProvisionResponse(
+            title=result["title"],
+            status=result["status"],
+            local_path=result.get("local_path"),
+            document_id=doc_id,
+        )
+    except Exception as exc:
+        session.rollback()
+        raise HTTPException(status_code=400, detail=str(exc)) from exc
+    finally:
+        session.close()
+
+
+@router.post("/remix", response_model=RemixResponse)
+def remix(
+    payload: RemixRequest,
+    request: Request,
+    auth_context: AuthContext = Depends(_require_auth("operator")),
+) -> RemixResponse:
+    session = _session(request)
+    try:
+        _enforce_mode(request, auth_context, payload.mode)
+        branch, event = request.app.state.remix_service.remix(
+            session=session,
+            source_document_id=payload.source_document_id,
+            source_branch_id=payload.source_branch_id,
+            target_document_id=payload.target_document_id,
+            target_branch_id=payload.target_branch_id,
+            strategy=payload.strategy,
+            seed=payload.seed,
+            mode=payload.mode,
+        )
+        session.commit()
+        return RemixResponse(
+            new_branch_id=branch.id,
+            event_id=event.id,
+            strategy=payload.strategy,
+            diff_summary=event.diff_summary,
+        )
+    except HTTPException:
+        session.rollback()
+        raise
+    except Exception as exc:
+        session.rollback()
+        raise HTTPException(status_code=400, detail=str(exc)) from exc
     finally:
         session.close()

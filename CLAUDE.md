@@ -4,7 +4,18 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## What This Is
 
-**Nexus Babel Alexandria** (aka "Theoria Linguae Machina") is an NLP corpus management and analysis platform. It ingests multimodal documents (text, PDF, image, audio), atomizes them into hierarchical units, projects them into a knowledge graph, and provides multi-layer linguistic analysis with dual-mode governance (PUBLIC/RAW).
+**Nexus Babel Alexandria** is the **ARC4N Living Digital Canon** — a breathing organism that atomizes literary works into modular cells for creative recombination, translation, and scholarly exploration. It preserves classic texts at molecular levels and unlocks infinite creative and scholarly recombination through a temporal evolution spiral (expansion → peak → compression → rebirth).
+
+The NLP engine underneath (aka "Theoria Linguae Machina") ingests multimodal documents (text, PDF, image, audio), atomizes them into a 5-level hierarchy (glyph-seed → syllable → word → sentence → paragraph), projects them into a knowledge graph, and provides multi-layer linguistic analysis with dual-mode governance (PUBLIC/RAW).
+
+## ARC4N Concepts
+
+- **5-Level Atomization**: Documents decompose into glyph-seeds (characters with rich metadata: phoneme, historic forms, visual mutations, thematic tags), syllabic clusters, words, sentences, and paragraphs. Each level is independently remixable.
+- **Temporal Evolution Spiral**: Language evolves through cyclical phases — expansion (complexity grows), peak (maximum elaboration), compression (glyphs fuse, syllables collapse), rebirth (new sung-language forms emerge). This mirrors both natural linguistic drift and synthetic acceleration.
+- **Seed Texts**: Canonical literary works (Homer, Dante, Whitman, Joyce, Shelley) serve as foundational material for the living canon. Each is atomized and available for evolution and remix.
+- **Branch Timelines**: Every interaction creates a branch — a deterministic fork of the canon that can drift naturally, mutate synthetically, or remix across documents. Branches are replayable and comparable.
+- **Remix/Recombination**: Atoms from different documents can be interleaved, blended by theme, temporally layered, or fused at the glyph level to create new compositions.
+- **Natural vs Synthetic Drift**: Natural drift models historic linguistic shifts (Latin→Italian, Old English→Modern). Synthetic drift accelerates evolution beyond historical pace via user intervention or automation.
 
 ## Build & Run
 
@@ -84,16 +95,21 @@ src/nexus_babel/
     plugins.py         # Plugin registry with deterministic + ML stub providers
     rhetoric.py        # Rhetorical analysis (ethos/pathos/logos scoring, fallacy detection)
     canonicalization.py # Document variant linking (sibling representations, semantic equivalence)
-    text_utils.py      # Atomization (glyph-seed/word/sentence/paragraph), conflict detection
+    text_utils.py      # Atomization (5-level: glyph-seed/syllable/word/sentence/paragraph), conflict detection
+    glyph_data.py      # Static lookup tables for glyph-seed metadata (phonemes, historic forms, thematic tags)
+    seed_corpus.py     # Seed text registry and Project Gutenberg provisioning
+    remix.py           # Remix/recombination engine (interleave, thematic_blend, temporal_layer, glyph_collide)
     metrics.py         # In-memory counters + timing histograms
 ```
 
 ### Core Data Flow
 
-1. **Ingest** (`POST /api/v1/ingest/batch`) — files resolved against `corpus_root`, checksummed, parsed by modality, atomized into 4 levels, projected to hypergraph, canonicalization applied
+1. **Ingest** (`POST /api/v1/ingest/batch`) — files resolved against `corpus_root`, checksummed, parsed by modality, atomized into 5 levels (with rich glyph-seed metadata), projected to hypergraph, canonicalization applied
 2. **Analyze** (`POST /api/v1/analyze`) — runs 9 linguistic analysis layers (token, morphology, syntax, semantics, pragmatics, discourse, sociolinguistics, rhetoric, semiotic) against a document or branch, through the plugin chain
-3. **Evolve** (`POST /api/v1/evolve/branch`) — creates branching text evolution (natural_drift, synthetic_mutation, phase_shift, glyph_fusion) with deterministic replay via seeded RNG
-4. **Governance** (`POST /api/v1/governance/evaluate`) — evaluates text against mode-specific policies; PUBLIC blocks on first hit, RAW allows with flagging
+3. **Evolve** (`POST /api/v1/evolve/branch`) — creates branching text evolution (natural_drift, synthetic_mutation, phase_shift, glyph_fusion, remix) with deterministic replay via seeded RNG. Natural drift covers ~25 historic linguistic shifts.
+4. **Remix** (`POST /api/v1/remix`) — recombines atoms across documents using strategies: interleave, thematic_blend, temporal_layer, glyph_collide
+5. **Provision** (`POST /api/v1/corpus/seed`) — provisions canonical seed texts from Project Gutenberg for atomization
+6. **Governance** (`POST /api/v1/governance/evaluate`) — evaluates text against mode-specific policies; PUBLIC blocks on first hit, RAW allows with flagging
 
 ### Key Design Patterns
 
@@ -147,6 +163,9 @@ Non-API routes (no auth): `GET /healthz` (health check), `GET /metrics` (in-memo
 | GET | `/hypergraph/documents/{id}/integrity` | viewer | Verify graph consistency |
 | GET | `/auth/whoami` | viewer | Current auth context |
 | GET | `/audit/policy-decisions` | operator | List governance decisions |
+| POST | `/corpus/seed` | admin | Provision and ingest a seed text |
+| GET | `/corpus/seeds` | viewer | List seed text registry with status |
+| POST | `/remix` | operator | Create a remix from two document/branch sources |
 
 <!-- ORGANVM:AUTO:START -->
 ## System Context (auto-generated — do not edit)

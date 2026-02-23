@@ -23,14 +23,54 @@ class DriftResult:
 
 class EvolutionService:
     NATURAL_MAP = {
+        # Original 5
         "th": "þ",
         "ae": "æ",
         "ph": "f",
         "ck": "k",
         "tion": "cion",
+        # Latin → Italian
+        "ct": "tt",
+        "pl": "pi",
+        "fl": "fi",
+        "cl": "chi",
+        "x": "ss",
+        "li": "gli",
+        "ni": "gn",
+        # Old English → Modern English
+        "sc": "sh",
+        "cw": "qu",
+        "hw": "wh",
+        # Great Vowel Shift approximations
+        "oo": "ou",
+        "ee": "ea",
+        "igh": "eye",
+        # Common phonetic drifts
+        "ght": "t",
+        "ough": "ow",
+        "wh": "w",
+        "kn": "n",
+        "wr": "r",
+        "mb": "m",
+        "gn": "n",
     }
 
-    GLYPH_POOL = ["∆", "Æ", "Ω", "§", "☲", "⟁"]
+    REVERSE_NATURAL_MAP = {
+        "þ": "th",
+        "æ": "ae",
+        "f": "ph",
+        "k": "ck",
+        "cion": "tion",
+        "tt": "ct",
+        "pi": "pl",
+        "fi": "fl",
+        "chi": "cl",
+        "ss": "x",
+        "sh": "sc",
+        "qu": "cw",
+    }
+
+    GLYPH_POOL = ["∆", "Æ", "Ω", "§", "☲", "⟁", "Ψ", "Φ", "Θ", "Ξ"]
     PHASES = {"expansion", "peak", "compression", "rebirth"}
 
     def evolve_branch(
@@ -243,6 +283,11 @@ class EvolutionService:
             data.setdefault("seed", 0)
             return data
 
+        if event_type == "remix":
+            data.setdefault("seed", 0)
+            data.setdefault("strategy", "interleave")
+            return data
+
         raise ValueError(f"Unsupported event_type: {event_type}")
 
     def _apply_event(self, text: str, event_type: str, event_payload: dict[str, Any]) -> DriftResult:
@@ -271,22 +316,54 @@ class EvolutionService:
 
         if event_type == "phase_shift":
             phase = str(event_payload.get("phase", "expansion")).lower()
+            acceleration = float(event_payload.get("acceleration", 1.0))
+            phase_order = ["expansion", "peak", "compression", "rebirth"]
+            phase_idx = phase_order.index(phase) if phase in phase_order else 0
+            # Acceleration multiplier: expansion/peak accelerate, compression/rebirth decelerate
+            if phase in ("expansion", "peak"):
+                intensity = min(acceleration * (1.0 + phase_idx * 0.5), 5.0)
+            else:
+                intensity = max(acceleration * (1.0 - (phase_idx - 2) * 0.3), 0.2)
+
             if phase == "compression":
-                out = re.sub(r"([aeiouAEIOU])", "", text)
+                # Remove vowels proportional to intensity
+                chars = list(text)
+                removals = 0
+                for i in range(len(chars) - 1, -1, -1):
+                    if chars[i].lower() in "aeiou" and rng.random() < min(intensity * 0.6, 1.0):
+                        chars.pop(i)
+                        removals += 1
+                out = "".join(chars)
             elif phase == "rebirth":
-                compressed = re.sub(r"([aeiouAEIOU])", "", text)
-                out = f"{compressed}\n\n⟁ SONG-BIRTH ⟁"
+                chars = list(text)
+                removals = 0
+                for i in range(len(chars) - 1, -1, -1):
+                    if chars[i].lower() in "aeiou" and rng.random() < min(intensity * 0.4, 1.0):
+                        chars.pop(i)
+                        removals += 1
+                out = f"{''.join(chars)}\n\n⟁ SONG-BIRTH ⟁"
             elif phase == "peak":
                 out = text.upper()
+                # At high intensity, also expand with mythic insertions
+                if intensity > 1.5:
+                    words = out.split()
+                    expanded = []
+                    interval = max(1, int(7 / intensity))
+                    for i, w in enumerate(words):
+                        expanded.append(w)
+                        if i % interval == 0:
+                            expanded.append("MYTHIC")
+                    out = " ".join(expanded)
             else:
                 words = text.split()
                 expanded = []
+                interval = max(1, int(7 / intensity))
                 for i, w in enumerate(words):
                     expanded.append(w)
-                    if i % 7 == 0:
+                    if i % interval == 0:
                         expanded.append("mythic")
                 out = " ".join(expanded)
-            return DriftResult(out, {"event": event_type, "phase": phase, "before_chars": before_chars, "after_chars": len(out)})
+            return DriftResult(out, {"event": event_type, "phase": phase, "acceleration": acceleration, "intensity": intensity, "before_chars": before_chars, "after_chars": len(out)})
 
         if event_type == "glyph_fusion":
             left = str(event_payload.get("left", "A"))
@@ -296,6 +373,12 @@ class EvolutionService:
             count = text.count(pair)
             out = text.replace(pair, fused)
             return DriftResult(out, {"event": event_type, "fusions": count, "pair": pair, "fused": fused, "before_chars": before_chars, "after_chars": len(out)})
+
+        if event_type == "remix":
+            # Remix events carry pre-computed text from RemixService
+            remixed_text = str(event_payload.get("remixed_text", text))
+            strategy = str(event_payload.get("strategy", "interleave"))
+            return DriftResult(remixed_text, {"event": event_type, "strategy": strategy, "before_chars": before_chars, "after_chars": len(remixed_text)})
 
         return DriftResult(text, {"event": event_type, "before_chars": before_chars, "after_chars": len(text), "note": "no-op"})
 
