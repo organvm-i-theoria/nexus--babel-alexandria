@@ -323,17 +323,17 @@ The dependency flows are clear:
 
 ```
 .
-├── README.md
-├── roadmap.md
-├── # Theoria Linguae Machina Comprehensive Design Document for the….md
-├── Nexus_Bable-Alexandria.md
 ├── src/nexus_babel/                             # FastAPI services + models
 ├── tests/                                       # MVP and hardening tests
-├── docs/OPERATOR_RUNBOOK.md
-└── scripts/                                     # local ingest/load utilities
+├── scripts/                                     # local ingest/load utilities
+├── docs/
+│   ├── OPERATOR_RUNBOOK.md
+│   ├── roadmap.md
+│   └── corpus/                                  # original RLOS/ARC4N design documents
+└── .github/                                     # workflows, community health files
 ```
 
-The repository contains both the long-form design documents and implementation code used for the current MVP.
+The repository contains both the long-form design documents (in `docs/corpus/`) and implementation code used for the current MVP.
 
 The main specification document is organized in twelve parts: Architectural Foundations, Formal Foundations, The 84 Core Functions, Semiotic Engine, Rhetorical Strategy Engine, Multimodal Architecture, Meta-Learning and Evolution, Dual-Mode Governance, Implementation Specifications, Visualization and Interface, Cultural-Technical System, and Future Directions. The roadmap breaks implementation into 10 phases over 12 months with 200+ atomic tasks, each with explicit dependencies, deliverables, and validation criteria.
 
