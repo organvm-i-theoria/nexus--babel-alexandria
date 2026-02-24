@@ -201,5 +201,5 @@ Non-API routes (no auth): `GET /healthz` (health check), `GET /metrics` (in-memo
 ### Governance
 - Foundational theory layer. No upstream dependencies.
 
-*Last synced: 2026-02-19T00:57:56Z*
+*Last synced: 2026-02-24T12:41:28Z*
 <!-- ORGANVM:AUTO:END -->
