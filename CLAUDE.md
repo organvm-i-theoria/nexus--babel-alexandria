@@ -31,9 +31,10 @@ pip install -e ".[dev,postgres]"     # add PostgreSQL support
 make dev                             # uvicorn on :8000 with --reload
 
 # Tests
-make test                            # pytest -q
-pytest tests/test_mvp.py -v          # MVP test suite
-pytest tests/test_wave2.py -v        # Wave-2 async jobs/evolution tests
+make test                            # pytest -q (all 3 suites)
+pytest tests/test_mvp.py -v          # MVP: ingestion, analysis, evolution, governance
+pytest tests/test_wave2.py -v        # Wave-2: async jobs, plugins, metrics
+pytest tests/test_arc4n.py -v        # ARC4N: glyph-seeds, remix, seed corpus
 pytest tests/test_mvp.py::test_ingestion_completeness -v  # single test
 
 # Database migrations (Alembic, targets SQLite by default via alembic.ini)
@@ -55,6 +56,8 @@ python scripts/repo_certainty_audit.py  # repo certainty audit
 ```
 
 No linter or type checker is configured in pyproject.toml yet. CI (`ci-minimal.yml`) only validates repo structure (README exists, markdown files present) — it does not run tests or lint.
+
+SDD specifications for all 9 feature domains live in `specs/NN-domain-name/{spec,plan,tasks}.md`. `MANIFEST.yaml` has the full annotated project history (files, threads, relations).
 
 ## Environment
 
@@ -127,11 +130,26 @@ Four roles in ascending order: `viewer` → `operator` → `researcher` → `adm
 
 SQLAlchemy 2.0 with `mapped_column`. SQLite for dev/test, PostgreSQL for docker. Key models: `Document`, `Atom`, `Branch`, `BranchEvent`, `AnalysisRun`, `LayerOutput`, `Job`, `JobAttempt`, `ModePolicy`, `PolicyDecision`, `AuditLog`, `ProjectionLedger`, `DocumentVariant`.
 
-Alembic migrations in `alembic/versions/` (`20260218_0001_initial`, `20260218_0002_wave2_alpha`). The `alembic.ini` defaults to SQLite; for PostgreSQL, set `sqlalchemy.url` or use the `NEXUS_DATABASE_URL` env var in `alembic/env.py`.
+Alembic migrations in `alembic/versions/`: `20260218_0001_initial` (core tables), `20260218_0002_wave2_alpha` (jobs + checkpoints), `20260223_0003_add_atom_metadata` (glyph-seed metadata column on atoms). The `alembic.ini` defaults to SQLite; for PostgreSQL, set `sqlalchemy.url` or use the `NEXUS_DATABASE_URL` env var in `alembic/env.py`. Migration naming: `YYYYMMDD_NNNN_description.py`.
+
+### Service Dependency Chain
+
+Services are manually wired in `create_app()` onto `app.state` (no DI container). Key dependency flows:
+
+- `ingestion.py` → `text_utils.py` → `glyph_data.py` (atomization chain)
+- `ingestion.py` → `canonicalization.py` (variant linking after ingest)
+- `ingestion.py` → `hypergraph.py` (graph projection)
+- `analysis.py` → `plugins.py` → `rhetoric.py` (plugin fallback chain)
+- `remix.py` → `evolution.py` (remix creates branch events)
+- `worker.py` → `jobs.py` (polls and executes queued jobs)
+
+### Route Endpoint Pattern
+
+All endpoints in `api/routes.py` follow a consistent pattern: acquire session via `_session(request)` → authenticate via `_require_auth(min_role)` dependency → enforce mode via `_enforce_mode()` → delegate to service → `session.commit()` → return Pydantic response. Errors trigger `session.rollback()`. Sessions are always closed in `finally` blocks. Add new endpoints by following this same pattern.
 
 ### Testing Approach
 
-Tests use `FastAPI.TestClient` with an isolated SQLite database per test via `tmp_path`. The `conftest.py` provides `test_settings`, `client`, `auth_headers` (all 4 roles), and `sample_corpus` (text, yaml, conflict yaml, PDF, image, WAV) fixtures.
+Tests use `FastAPI.TestClient` with an isolated SQLite database per test via `tmp_path`. The `conftest.py` provides `test_settings`, `client`, `auth_headers` (all 4 roles), and `sample_corpus` (text, yaml, conflict yaml, PDF, image, WAV) fixtures. Write new tests by depending on these fixtures — `client` yields a `TestClient` bound to a fresh app with its own DB. Use `auth_headers["operator"]` (or appropriate role) as the `headers` kwarg on requests.
 
 ## Routes
 
