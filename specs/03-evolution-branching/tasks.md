@@ -422,7 +422,7 @@
   - File: `tests/test_evolution.py`
   - AC: Checkpointed replay `text_hash` == full replay `text_hash`.
 
-- [ ] **T15-03** [S] [Story T15-01] Write benchmark test `test_checkpoint_replay_faster_than_full` comparing replay time for a 50-event lineage with and without checkpoint acceleration.
+- [x] **T15-03** [S] [Story T15-01] Write benchmark test `test_checkpoint_replay_faster_than_full` comparing replay time for a 50-event lineage with and without checkpoint acceleration.
   - File: `tests/test_evolution.py`
   - AC: Checkpointed replay is faster. Mark `@pytest.mark.slow`.
 
@@ -450,19 +450,19 @@
 
 ### S03-17: Branch Merging
 
-- [ ] **T17-01** [P] Implement `_find_lca(session, left_branch, right_branch)` that finds the lowest common ancestor by walking both lineages and finding the intersection.
+- [x] **T17-01** [P] Implement `_find_lca(session, left_branch, right_branch)` that finds the lowest common ancestor by walking both lineages and finding the intersection.
   - File: `src/nexus_babel/services/evolution.py`
   - AC: Returns the LCA Branch or None if branches share no common ancestor.
 
-- [ ] **T17-02** [S] [Story T17-01] Implement `merge_branches(session, left_id, right_id, strategy)` that replays both branches, applies merge strategy (`left_wins`, `right_wins`, `interleave`), creates a new branch.
+- [x] **T17-02** [S] [Story T17-01] Implement `merge_branches(session, left_id, right_id, strategy)` that replays both branches, applies merge strategy (`left_wins`, `right_wins`, `interleave`), creates a new branch.
   - File: `src/nexus_babel/services/evolution.py`
   - AC: New branch created with `event_type="merge"`. Both parent IDs referenced in `event_payload`.
 
-- [ ] **T17-03** [S] [Story T17-02] Add `POST /api/v1/branches/merge` route with operator auth.
+- [x] **T17-03** [S] [Story T17-02] Add `POST /api/v1/branches/merge` route with operator auth.
   - File: `src/nexus_babel/api/routes.py`
   - AC: Route accepts `{left_branch_id, right_branch_id, strategy, mode}`, returns new branch info.
 
-- [ ] **T17-04** [S] [Story T17-03] Write integration test `test_branch_merge_interleave` that creates two divergent branches from the same root, merges them with `interleave` strategy, and verifies the result contains text from both.
+- [x] **T17-04** [S] [Story T17-03] Write integration test `test_branch_merge_interleave` that creates two divergent branches from the same root, merges them with `interleave` strategy, and verifies the result contains text from both.
   - File: `tests/test_evolution.py`
   - AC: Merged text contains words/phrases from both left and right branches.
 

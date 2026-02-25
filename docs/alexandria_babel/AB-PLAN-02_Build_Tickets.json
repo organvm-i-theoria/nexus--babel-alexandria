@@ -70,7 +70,7 @@
       "id": "AB02-T015",
       "title": "Checkpoint-Accelerated Replay",
       "priority": "P1",
-      "status": "in_progress",
+      "status": "implemented",
       "spec_refs": [
         "specs/03-evolution-branching/tasks.md:T15-01",
         "specs/03-evolution-branching/tasks.md:T15-03"
@@ -78,7 +78,7 @@
       "acceptance_criteria": [
         "timeline replay can start from most recent lineage checkpoint",
         "checkpoint-assisted replay hash matches full replay hash",
-        "benchmark test remains pending and non-gating"
+        "benchmark test is present and marked slow/non-gating"
       ]
     },
     {
@@ -99,10 +99,15 @@
       "id": "AB02-T017",
       "title": "Branch Merge Primitives + API",
       "priority": "P2",
-      "status": "planned",
+      "status": "implemented",
       "spec_refs": [
         "specs/03-evolution-branching/tasks.md:T17-01",
         "specs/03-evolution-branching/tasks.md:T17-04"
+      ],
+      "acceptance_criteria": [
+        "_find_lca returns branch LCA or None",
+        "merge_branches supports left_wins, right_wins, interleave",
+        "POST /api/v1/branches/merge creates merge branch and event"
       ]
     }
   ]

@@ -17,8 +17,9 @@ Legend:
 | Branch Replay + Compare | Implemented | `src/nexus_babel/api/routes.py` (`/branches/{id}/replay`, `/compare`) |
 | Reverse Drift Event Type | Implemented | `src/nexus_babel/services/evolution.py` (`reverse_drift`), `tests/test_evolution.py` |
 | Multi-Evolve Batch Endpoint | Implemented | `src/nexus_babel/api/routes/branches.py` (`POST /api/v1/evolve/multi`), `tests/test_evolution_api.py` |
-| Checkpoint-Accelerated Replay | Implemented (benchmark pending) | `src/nexus_babel/services/evolution.py` (`get_timeline` checkpoint path), `tests/test_evolution_api.py` |
+| Checkpoint-Accelerated Replay | Implemented (benchmark non-gating) | `src/nexus_babel/services/evolution.py` (`get_timeline` checkpoint path), `tests/test_evolution_api.py` |
 | Evolution Visualization Graph Endpoint | Implemented | `src/nexus_babel/api/routes/branches.py` (`GET /api/v1/branches/{id}/visualization`), `tests/test_evolution_api.py` |
+| Branch Merge Primitives + API | Implemented | `src/nexus_babel/services/evolution.py` (`_find_lca`, `merge_branches`), `src/nexus_babel/api/routes/branches.py` (`POST /api/v1/branches/merge`) |
 | Cartridge Master Index | Planned | `AB-PLAN-04 Governance + Artifact Ops` |
 | UX Explorer Thread Scaffolds | Planned | `AB-PLAN-03 Explorer UX + Interaction` |
 | Academic Outreach Thread Scaffolds | Planned | `AB-PLAN-05 Academic + Funding` |
