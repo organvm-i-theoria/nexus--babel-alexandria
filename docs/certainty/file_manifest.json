@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-02-25T14:33:13.768628+00:00",
+  "generated_at": "2026-02-25T15:20:20.251716+00:00",
   "root": "/Users/4jp/Workspace/organvm-i-theoria/nexus--babel-alexandria-",
   "summary": {
     "files_total": 158,
@@ -1042,10 +1042,10 @@
     },
     {
       "path": "src/nexus_babel/api/routes/branches.py",
-      "sha256": "0d95cd7a4be37643977f47c452d13289d54b9e677619c1d342c5e50c72045d0e",
-      "size_bytes": 8114,
+      "sha256": "ed4cac4a0144c08248a58127c235d43c9a73801ffa924ba3c6236e3dc0e4064d",
+      "size_bytes": 8209,
       "kind": "text",
-      "lines": 225,
+      "lines": 226,
       "pdf_pages": null,
       "pdf_text_chars": null,
       "conflict_markers": false
@@ -1152,10 +1152,10 @@
     },
     {
       "path": "src/nexus_babel/schemas.py",
-      "sha256": "cc887134b3fd5439bb75f45370926f28b38143e719d9c56058f3a569036486f3",
-      "size_bytes": 11352,
+      "sha256": "e60fa6fa8b280baaf2c0e90bda7c66717ff253422906a8f16d30168b68f65d06",
+      "size_bytes": 11598,
       "kind": "text",
-      "lines": 429,
+      "lines": 434,
       "pdf_pages": null,
       "pdf_text_chars": null,
       "conflict_markers": false
@@ -1202,10 +1202,10 @@
     },
     {
       "path": "src/nexus_babel/services/evolution.py",
-      "sha256": "0f4f9ea1a2b4ff93a0ed587ee8f88e06f4f2327e68ec5474318504ea07f26de9",
-      "size_bytes": 28346,
+      "sha256": "e71a98484cbf53eb985de1b280d9c6584d7064baa3f1829c8639bf44c80396cd",
+      "size_bytes": 35977,
       "kind": "text",
-      "lines": 693,
+      "lines": 853,
       "pdf_pages": null,
       "pdf_text_chars": null,
       "conflict_markers": false
@@ -1472,10 +1472,10 @@
     },
     {
       "path": "tests/snapshots/openapi_contract_normalized.json",
-      "sha256": "eae33231fee2fc7934ff797d94888e8e6295ae5f1ea4d17e94bcd33bd33dadb9",
-      "size_bytes": 85514,
+      "sha256": "ff2b7db1c287c46815f032d891aeb4621c5447e9f5642aad576a195003074d37",
+      "size_bytes": 86070,
       "kind": "text",
-      "lines": 3700,
+      "lines": 3720,
       "pdf_pages": null,
       "pdf_text_chars": null,
       "conflict_markers": false
@@ -1512,10 +1512,10 @@
     },
     {
       "path": "tests/test_evolution_api.py",
-      "sha256": "b8e0cf0d6a668e8b97e8953347c65ae782398c256d10684871e674b92cc3cb71",
-      "size_bytes": 14991,
+      "sha256": "8b0e47d609b65dec40f560cb64a5186d9f6ce13057737ae713d2fd3a31c66015",
+      "size_bytes": 17542,
       "kind": "text",
-      "lines": 402,
+      "lines": 470,
       "pdf_pages": null,
       "pdf_text_chars": null,
       "conflict_markers": false
