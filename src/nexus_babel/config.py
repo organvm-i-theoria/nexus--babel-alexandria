@@ -26,6 +26,7 @@ class Settings(BaseSettings):
     worker_name: str = "nexus-worker"
     corpus_root: Path = Field(default_factory=lambda: Path.cwd())
     object_storage_root: Path = Field(default_factory=lambda: Path.cwd() / "object_storage")
+    seed_registry_path: Path = Field(default_factory=lambda: Path.cwd() / "docs" / "alexandria_babel" / "seed_corpus_registry.yaml")
     bootstrap_viewer_key: str = "nexus-dev-viewer-key"
     bootstrap_operator_key: str = "nexus-dev-operator-key"
     bootstrap_researcher_key: str = "nexus-dev-researcher-key"

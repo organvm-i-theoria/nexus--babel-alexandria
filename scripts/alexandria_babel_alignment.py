@@ -47,6 +47,42 @@ PLAN_BUCKETS: list[tuple[str, str, list[str]]] = [
     ("AB-PLAN-06", "Mythic + Cultural Layer", ["mythic", "babel", "rebirth", "ritual", "civilizations", "sung"]),
 ]
 
+SCAFFOLD_TEMPLATES: dict[str, str] = {
+    "Thread_Plan_UX.md": """# Thread Plan: UX
+
+## Intent
+- Capture interaction and explorer UX workstreams for Alexandria-Babel.
+
+## Current Focus
+- Define user-facing thread/cartridge flows.
+
+## Next Actions
+- Record concrete UX slices and dependencies.
+""",
+    "Thread_Plan_Academic.md": """# Thread Plan: Academic
+
+## Intent
+- Track scholarship-facing outputs, evidence, and framing for Alexandria-Babel.
+
+## Current Focus
+- Maintain juror/reviewer-readable documentation and evidence links.
+
+## Next Actions
+- Add publication, citation, and narrative milestones.
+""",
+    "Thread_Plan_Funding.md": """# Thread Plan: Funding
+
+## Intent
+- Track grants, submissions, and sponsor-facing packaging for Alexandria-Babel.
+
+## Current Focus
+- Maintain deadlines, assets, and proposal requirements.
+
+## Next Actions
+- Add funding targets, required assets, and submission status.
+""",
+}
+
 
 @dataclass
 class SourceDigest:
@@ -211,37 +247,111 @@ def _write_markdown(
     out_path.write_text("\n".join(lines), encoding="utf-8")
 
 
+def ensure_scaffold(out_dir: Path) -> dict[str, Any]:
+    created: list[str] = []
+    existing: list[str] = []
+    for filename, content in SCAFFOLD_TEMPLATES.items():
+        path = out_dir / filename
+        if path.exists():
+            existing.append(filename)
+            continue
+        path.write_text(content, encoding="utf-8")
+        created.append(filename)
+    return {"created": created, "existing": existing, "required": sorted(SCAFFOLD_TEMPLATES)}
+
+
+def build_scaffold_index(out_dir: Path) -> dict[str, Any]:
+    entries: list[dict[str, Any]] = []
+    for path in sorted(out_dir.iterdir(), key=lambda p: p.name.lower()):
+        if not path.is_file():
+            continue
+        if path.name == "index.md":
+            continue
+        stat = path.stat()
+        entries.append(
+            {
+                "name": path.name,
+                "mtime_utc": datetime.fromtimestamp(stat.st_mtime, tz=timezone.utc).isoformat(),
+                "size_bytes": stat.st_size,
+            }
+        )
+
+    lines = ["# Alexandria-Babel Cartridge Index", "", f"- Generated: `{datetime.now(timezone.utc).isoformat()}`", ""]
+    lines.append("| File | Modified (UTC) | Size (bytes) |")
+    lines.append("|---|---|---:|")
+    for entry in entries:
+        lines.append(f"| `{entry['name']}` | `{entry['mtime_utc']}` | {entry['size_bytes']} |")
+    lines.append("")
+    index_path = out_dir / "index.md"
+    index_path.write_text("\n".join(lines), encoding="utf-8")
+    return {"index_path": str(index_path), "entries": entries}
+
+
+def check_scaffold(out_dir: Path) -> dict[str, Any]:
+    missing = [name for name in sorted(SCAFFOLD_TEMPLATES) if not (out_dir / name).exists()]
+    index_path = out_dir / "index.md"
+    index_exists = index_path.exists()
+    index_text = index_path.read_text(encoding="utf-8") if index_exists else ""
+    missing_from_index = [name for name in sorted(SCAFFOLD_TEMPLATES) if index_exists and name not in index_text]
+    return {
+        "missing": missing,
+        "index_exists": index_exists,
+        "missing_from_index": missing_from_index,
+    }
+
+
 def main() -> None:
-    parser = argparse.ArgumentParser(description="Build a scoped feature/use-case matrix for Alexandria-Babel source docs.")
+    parser = argparse.ArgumentParser(description="Alexandria-Babel alignment, ledger, and scaffold tooling.")
     parser.add_argument("--root", default=".", help="Repository root path")
     parser.add_argument("--out-dir", default="docs/alexandria_babel", help="Output directory")
+    parser.add_argument(
+        "--mode",
+        default="ledger",
+        choices=["ledger", "scaffold", "check-scaffold", "all"],
+        help="ledger: build feature/use-case matrix; scaffold: ensure thread-plan templates + index; check-scaffold: validate required scaffold files; all: run ledger + scaffold",
+    )
     args = parser.parse_args()
 
     repo_root = Path(args.root).resolve()
     out_dir = (repo_root / args.out_dir).resolve()
     out_dir.mkdir(parents=True, exist_ok=True)
 
-    generated_at = datetime.now(timezone.utc).isoformat()
-    routes = _load_routes(repo_root)
-    entries, digests = _extract_entries(repo_root, routes)
+    result: dict[str, Any] = {"mode": args.mode, "out_dir": str(out_dir)}
+    if args.mode in {"ledger", "all"}:
+        generated_at = datetime.now(timezone.utc).isoformat()
+        routes = _load_routes(repo_root)
+        entries, digests = _extract_entries(repo_root, routes)
+        payload = {
+            "generated_at": generated_at,
+            "scope": SOURCE_FILES,
+            "source_digests": [digest.__dict__ for digest in digests],
+            "entries": entries,
+            "summary": {
+                "total": len(entries),
+                "implemented": sum(1 for item in entries if item["status"] == "implemented"),
+                "planned": sum(1 for item in entries if item["status"] == "planned"),
+            },
+        }
+        json_path = out_dir / "feature_usecase_ledger.json"
+        md_path = out_dir / "feature_usecase_matrix.md"
+        json_path.write_text(json.dumps(payload, indent=2, ensure_ascii=False), encoding="utf-8")
+        _write_markdown(md_path, generated_at, entries, digests)
+        result["ledger"] = {"ledger": str(json_path), "matrix": str(md_path), "summary": payload["summary"]}
 
-    payload = {
-        "generated_at": generated_at,
-        "scope": SOURCE_FILES,
-        "source_digests": [digest.__dict__ for digest in digests],
-        "entries": entries,
-        "summary": {
-            "total": len(entries),
-            "implemented": sum(1 for item in entries if item["status"] == "implemented"),
-            "planned": sum(1 for item in entries if item["status"] == "planned"),
-        },
-    }
+    if args.mode in {"scaffold", "all"}:
+        scaffold_result = ensure_scaffold(out_dir)
+        index_result = build_scaffold_index(out_dir)
+        result["scaffold"] = {"templates": scaffold_result, "index": index_result}
 
-    json_path = out_dir / "feature_usecase_ledger.json"
-    md_path = out_dir / "feature_usecase_matrix.md"
-    json_path.write_text(json.dumps(payload, indent=2, ensure_ascii=False), encoding="utf-8")
-    _write_markdown(md_path, generated_at, entries, digests)
-    print(json.dumps({"ledger": str(json_path), "matrix": str(md_path), "summary": payload["summary"]}, indent=2))
+    if args.mode == "check-scaffold":
+        check_result = check_scaffold(out_dir)
+        result["check_scaffold"] = check_result
+        print(json.dumps(result, indent=2))
+        if check_result["missing"] or not check_result["index_exists"] or check_result["missing_from_index"]:
+            raise SystemExit(1)
+        return
+
+    print(json.dumps(result, indent=2))
 
 
 if __name__ == "__main__":

@@ -52,6 +52,7 @@ object_storage/
 dist/
 build/
 out/
+artifacts/
 
 # Seed texts (downloaded at runtime)
 corpus/seeds/*.txt

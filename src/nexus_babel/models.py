@@ -141,6 +141,56 @@ class BranchEvent(Base):
     branch: Mapped[Branch] = relationship(back_populates="events")
 
 
+class RemixArtifact(Base):
+    __tablename__ = "remix_artifacts"
+
+    id: Mapped[str] = mapped_column(String(36), primary_key=True, default=lambda: str(uuid4()))
+    source_document_id: Mapped[str | None] = mapped_column(ForeignKey("documents.id", ondelete="SET NULL"), nullable=True, index=True)
+    source_branch_id: Mapped[str | None] = mapped_column(ForeignKey("branches.id", ondelete="SET NULL"), nullable=True, index=True)
+    target_document_id: Mapped[str | None] = mapped_column(ForeignKey("documents.id", ondelete="SET NULL"), nullable=True, index=True)
+    target_branch_id: Mapped[str | None] = mapped_column(ForeignKey("branches.id", ondelete="SET NULL"), nullable=True, index=True)
+    strategy: Mapped[str] = mapped_column(String(64), index=True)
+    seed: Mapped[int] = mapped_column(Integer, default=0)
+    mode: Mapped[str] = mapped_column(String(16), default="PUBLIC", index=True)
+    remixed_text: Mapped[str] = mapped_column(Text)
+    text_hash: Mapped[str] = mapped_column(String(128), index=True)
+    rng_seed_hex: Mapped[str] = mapped_column(String(128))
+    payload_hash: Mapped[str] = mapped_column(String(128), index=True)
+    create_branch: Mapped[bool] = mapped_column(Boolean, default=True)
+    branch_id: Mapped[str | None] = mapped_column(ForeignKey("branches.id", ondelete="SET NULL"), nullable=True, index=True)
+    branch_event_id: Mapped[str | None] = mapped_column(ForeignKey("branch_events.id", ondelete="SET NULL"), nullable=True, index=True)
+    governance_decision_id: Mapped[str | None] = mapped_column(
+        ForeignKey("policy_decisions.id", ondelete="SET NULL"),
+        nullable=True,
+        index=True,
+    )
+    lineage_graph_refs: Mapped[dict] = mapped_column(JSON, default=dict)
+    artifact_metadata: Mapped[dict] = mapped_column(JSON, default=dict)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow, index=True)
+
+    source_links: Mapped[list[RemixSourceLink]] = relationship(back_populates="remix_artifact", cascade="all, delete-orphan")
+
+
+class RemixSourceLink(Base):
+    __tablename__ = "remix_source_links"
+
+    id: Mapped[str] = mapped_column(String(36), primary_key=True, default=lambda: str(uuid4()))
+    remix_artifact_id: Mapped[str] = mapped_column(ForeignKey("remix_artifacts.id", ondelete="CASCADE"), index=True)
+    role: Mapped[str] = mapped_column(String(16), index=True)
+    document_id: Mapped[str | None] = mapped_column(ForeignKey("documents.id", ondelete="SET NULL"), nullable=True, index=True)
+    branch_id: Mapped[str | None] = mapped_column(ForeignKey("branches.id", ondelete="SET NULL"), nullable=True, index=True)
+    atom_level: Mapped[str | None] = mapped_column(String(32), nullable=True)
+    atom_count: Mapped[int] = mapped_column(Integer, default=0)
+    atom_refs: Mapped[list] = mapped_column(JSON, default=list)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
+
+    remix_artifact: Mapped[RemixArtifact] = relationship(back_populates="source_links")
+
+    __table_args__ = (
+        UniqueConstraint("remix_artifact_id", "role", name="uq_remix_source_role"),
+    )
+
+
 class ModePolicy(Base):
     __tablename__ = "mode_policies"
 

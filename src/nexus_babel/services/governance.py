@@ -125,12 +125,14 @@ class GovernanceService:
             audit_id=audit.id,
         )
         session.add(decision)
+        session.flush()
 
         return {
             "allow": allow,
             "policy_hits": policy_hits,
             "redactions": redactions,
             "audit_id": audit.id,
+            "decision_id": decision.id,
             "redacted_text": redacted_text,
             "decision_trace": decision_trace,
         }

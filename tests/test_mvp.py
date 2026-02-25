@@ -1,6 +1,11 @@
 from __future__ import annotations
 
+import json
 import math
+import os
+from pathlib import Path
+import subprocess
+import sys
 import time
 from statistics import mean
 
@@ -9,7 +14,8 @@ from sqlalchemy import select
 
 from nexus_babel.config import Settings
 from nexus_babel.main import create_app
-from nexus_babel.models import Document, DocumentVariant
+from nexus_babel.models import Atom, Document, DocumentVariant, IngestJob
+from nexus_babel.services.text_utils import ATOM_FILENAME_SCHEMA_VERSION
 
 
 def _p95(values: list[float]) -> float:
@@ -107,6 +113,166 @@ def test_ingestion_completeness(client, sample_corpus, auth_headers):
         assert "checksum" in detail["provenance"]
         assert detail["atom_count"] == detail["graph_projected_atom_count"]
         assert detail["graph_projection_status"] in {"complete", "pending"}
+
+
+def test_seed_profile_cli_dry_run_and_invalid_profile(tmp_path: Path):
+    repo_root = Path(__file__).resolve().parents[1]
+    script_path = repo_root / "scripts" / "ingest_corpus.py"
+    env = {
+        **os.environ,
+        "NEXUS_CORPUS_ROOT": str(tmp_path),
+        "NEXUS_OBJECT_STORAGE_ROOT": str(tmp_path / "object_storage"),
+        "NEXUS_DATABASE_URL": f"sqlite:///{tmp_path / 'cli_test.db'}",
+    }
+
+    ok = subprocess.run(
+        [sys.executable, str(script_path), "--profile", "arc4n-seed", "--dry-run"],
+        cwd=repo_root,
+        capture_output=True,
+        text=True,
+        env=env,
+        check=False,
+    )
+    assert ok.returncode == 0, ok.stderr
+    payload = json.loads(ok.stdout)
+    assert payload["status"] == "dry_run"
+    assert payload["profile"] == "arc4n-seed"
+    assert "atom_tracks" in payload["parse_options"]
+
+    bad = subprocess.run(
+        [sys.executable, str(script_path), "--profile", "missing-profile", "--dry-run"],
+        cwd=repo_root,
+        capture_output=True,
+        text=True,
+        env=env,
+        check=False,
+    )
+    assert bad.returncode != 0
+    assert "Unknown ingest profile" in bad.stderr
+
+
+def test_ingest_atom_tracks_recorded_in_job_and_provenance(client, sample_corpus, auth_headers):
+    response = client.post(
+        "/api/v1/ingest/batch",
+        headers=auth_headers["operator"],
+        json={
+            "source_paths": [str(sample_corpus["text"])],
+            "modalities": [],
+            "parse_options": {"atomize": True, "ingest_profile": "arc4n-seed"},
+            "atom_tracks": ["literary", "glyphic_seed"],
+        },
+    )
+    assert response.status_code == 200, response.text
+    ingest_job_id = response.json()["ingest_job_id"]
+
+    session = client.app.state.db.session()
+    try:
+        job = session.scalar(select(IngestJob).where(IngestJob.id == ingest_job_id))
+        assert job is not None
+        parse_options = (job.request_payload or {}).get("parse_options", {})
+        assert parse_options.get("ingest_profile") == "arc4n-seed"
+        assert parse_options.get("atom_tracks") == ["literary", "glyphic_seed"]
+        assert parse_options.get("atom_levels")
+    finally:
+        session.close()
+
+    job_payload = client.get(f"/api/v1/ingest/jobs/{ingest_job_id}", headers=auth_headers["viewer"]).json()
+    doc_id = job_payload["files"][0]["document_id"]
+    detail = client.get(f"/api/v1/documents/{doc_id}", headers=auth_headers["viewer"]).json()
+    atomization = detail["provenance"]["atomization"]
+    assert atomization["atom_tracks"] == ["literary", "glyphic_seed"]
+    assert atomization["filename_schema_version"] == ATOM_FILENAME_SCHEMA_VERSION
+    assert set(atomization["active_atom_levels"]) >= {"glyph-seed", "syllable", "word", "sentence", "paragraph"}
+
+
+def test_atom_track_counts_differ_predictably(client, tmp_path: Path, auth_headers):
+    literary_path = tmp_path / "literary.md"
+    glyphic_path = tmp_path / "glyphic.md"
+    content = "Alpha beta gamma. Delta epsilon zeta."
+    literary_path.write_text(content, encoding="utf-8")
+    glyphic_path.write_text(content, encoding="utf-8")
+
+    r1 = client.post(
+        "/api/v1/ingest/batch",
+        headers=auth_headers["operator"],
+        json={"source_paths": [str(literary_path)], "atom_tracks": ["literary"], "parse_options": {"atomize": True}},
+    )
+    r2 = client.post(
+        "/api/v1/ingest/batch",
+        headers=auth_headers["operator"],
+        json={"source_paths": [str(glyphic_path)], "atom_tracks": ["glyphic_seed"], "parse_options": {"atomize": True}},
+    )
+    assert r1.status_code == 200, r1.text
+    assert r2.status_code == 200, r2.text
+
+    session = client.app.state.db.session()
+    try:
+        docs = session.scalars(select(Document).where(Document.path.in_([str(literary_path.resolve()), str(glyphic_path.resolve())]))).all()
+        by_path = {d.path: d for d in docs}
+        literary_doc = by_path[str(literary_path.resolve())]
+        glyphic_doc = by_path[str(glyphic_path.resolve())]
+        assert literary_doc.atom_count != glyphic_doc.atom_count
+
+        literary_atoms = session.scalars(select(Atom).where(Atom.document_id == literary_doc.id)).all()
+        glyphic_atoms = session.scalars(select(Atom).where(Atom.document_id == glyphic_doc.id)).all()
+        assert {a.atom_level for a in literary_atoms} == {"word", "sentence", "paragraph"}
+        assert {a.atom_level for a in glyphic_atoms} == {"glyph-seed", "syllable"}
+    finally:
+        session.close()
+
+
+def test_deterministic_atom_filename_metadata_is_stable(client, sample_corpus, auth_headers):
+    first = client.post(
+        "/api/v1/ingest/batch",
+        headers=auth_headers["operator"],
+        json={"source_paths": [str(sample_corpus["text"])], "parse_options": {"atomize": True, "force": True}},
+    )
+    second = client.post(
+        "/api/v1/ingest/batch",
+        headers=auth_headers["operator"],
+        json={"source_paths": [str(sample_corpus["text"])], "parse_options": {"atomize": True, "force": True}},
+    )
+    assert first.status_code == 200, first.text
+    assert second.status_code == 200, second.text
+
+    session = client.app.state.db.session()
+    try:
+        doc = session.scalar(select(Document).where(Document.path == str(sample_corpus["text"].resolve())))
+        assert doc is not None
+        atoms = session.scalars(select(Atom).where(Atom.document_id == doc.id)).all()
+        filenames = [
+            (
+                a.atom_level,
+                a.ordinal,
+                (a.atom_metadata or {}).get("filename"),
+                (a.atom_metadata or {}).get("filename_schema_version"),
+            )
+            for a in atoms
+        ]
+        assert filenames
+        assert all(name for _, _, name, _ in filenames)
+        assert all(version == ATOM_FILENAME_SCHEMA_VERSION for _, _, _, version in filenames)
+
+        # Re-read after a third force ingest and ensure filenames remain identical.
+        third = client.post(
+            "/api/v1/ingest/batch",
+            headers=auth_headers["operator"],
+            json={"source_paths": [str(sample_corpus["text"])], "parse_options": {"atomize": True, "force": True}},
+        )
+        assert third.status_code == 200, third.text
+        atoms_again = session.scalars(select(Atom).where(Atom.document_id == doc.id)).all()
+        filenames_again = [
+            (
+                a.atom_level,
+                a.ordinal,
+                (a.atom_metadata or {}).get("filename"),
+                (a.atom_metadata or {}).get("filename_schema_version"),
+            )
+            for a in atoms_again
+        ]
+        assert filenames_again == filenames
+    finally:
+        session.close()
 
 
 def test_conflict_hygiene_and_analyze_409(client, sample_corpus, auth_headers):

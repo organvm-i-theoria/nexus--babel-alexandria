@@ -22,8 +22,15 @@ PARAGRAPH_SPLIT = re.compile(r"\n\s*\n+")
 CONFLICT_MARKER = re.compile(r"^(<<<<<<<|=======|>>>>>>>|\|\|\|\|\|\|\|)", flags=re.MULTILINE)
 
 ATOM_LEVELS = ["glyph-seed", "syllable", "word", "sentence", "paragraph"]
+ATOM_TRACK_PRESETS: dict[str, list[str]] = {
+    "full": ATOM_LEVELS.copy(),
+    "literary": ["word", "sentence", "paragraph"],
+    "glyphic_seed": ["glyph-seed", "syllable"],
+}
+ATOM_FILENAME_SCHEMA_VERSION = "ab01-v1"
 
 VOWELS = set("aeiouyAEIOUY")
+ATOM_FILENAME_TOKEN_RE = re.compile(r"[^a-z0-9]+")
 
 
 def sha256_file(path: Path) -> str:
@@ -36,6 +43,60 @@ def sha256_file(path: Path) -> str:
 
 def has_conflict_markers(text: str) -> bool:
     return bool(CONFLICT_MARKER.search(text))
+
+
+def resolve_atomization_selection(
+    atom_tracks: list[str] | None = None,
+    atom_levels: list[str] | None = None,
+) -> tuple[list[str], list[str]]:
+    requested_tracks = [str(t).strip().lower().replace("-", "_") for t in (atom_tracks or []) if str(t).strip()]
+    requested_levels = [str(v).strip() for v in (atom_levels or []) if str(v).strip()]
+
+    unknown_tracks = [t for t in requested_tracks if t not in ATOM_TRACK_PRESETS]
+    if unknown_tracks:
+        known = ", ".join(sorted(ATOM_TRACK_PRESETS))
+        raise ValueError(f"Unknown atom_tracks: {unknown_tracks}. Known tracks: {known}")
+
+    unknown_levels = [lvl for lvl in requested_levels if lvl not in ATOM_LEVELS]
+    if unknown_levels:
+        raise ValueError(f"Unknown atom_levels: {unknown_levels}. Known levels: {ATOM_LEVELS}")
+
+    if requested_tracks:
+        merged = set(requested_levels)
+        for track in requested_tracks:
+            merged.update(ATOM_TRACK_PRESETS[track])
+        active_levels = [lvl for lvl in ATOM_LEVELS if lvl in merged]
+        return requested_tracks, active_levels
+
+    if requested_levels:
+        return [], [lvl for lvl in ATOM_LEVELS if lvl in set(requested_levels)]
+
+    return [], ATOM_LEVELS.copy()
+
+
+def normalize_atom_token(content: str, *, max_len: int = 48) -> str:
+    normalized = unicodedata.normalize("NFKD", content)
+    ascii_only = normalized.encode("ascii", "ignore").decode("ascii").lower()
+    slug = ATOM_FILENAME_TOKEN_RE.sub("_", ascii_only).strip("_")
+    if not slug:
+        slug = "empty"
+    return slug[:max_len] or "empty"
+
+
+def deterministic_atom_filename(
+    *,
+    document_title: str,
+    atom_level: str,
+    ordinal: int,
+    content: str,
+    duplicate_index: int = 1,
+) -> str:
+    doc_stem = Path(document_title).stem
+    doc_slug = normalize_atom_token(doc_stem, max_len=16).upper()
+    level_slug = atom_level.replace("-", "_").upper()
+    token_slug = normalize_atom_token(content, max_len=48)
+    duplicate_suffix = "" if duplicate_index <= 1 else f"_d{duplicate_index:02d}"
+    return f"{doc_slug}_{level_slug}_{ordinal:06d}_{token_slug}{duplicate_suffix}.txt"
 
 
 def syllabify(word: str) -> list[str]:

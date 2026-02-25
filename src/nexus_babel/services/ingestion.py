@@ -17,7 +17,17 @@ from nexus_babel.config import Settings
 from nexus_babel.models import Atom, Document, IngestJob, ProjectionLedger
 from nexus_babel.services.canonicalization import apply_canonicalization, collect_current_corpus_paths
 from nexus_babel.services.hypergraph import HypergraphProjector
-from nexus_babel.services.text_utils import ATOM_LEVELS, atomize_text, atomize_text_rich, has_conflict_markers, sha256_file
+from nexus_babel.services.text_utils import (
+    ATOM_FILENAME_SCHEMA_VERSION,
+    ATOM_LEVELS,
+    atomize_text,
+    atomize_text_rich,
+    deterministic_atom_filename,
+    has_conflict_markers,
+    normalize_atom_token,
+    resolve_atomization_selection,
+    sha256_file,
+)
 
 TEXT_EXT = {".md", ".txt", ".yaml", ".yml"}
 PDF_EXT = {".pdf"}
@@ -40,11 +50,28 @@ class IngestionService:
         ingest_scope = "partial" if source_paths else "full"
         selected_paths = [self._resolve_path(p) for p in source_paths] if source_paths else collect_current_corpus_paths(self.settings.corpus_root)
         modality_filter = {m.lower() for m in modalities} if modalities else set()
-        atom_levels = parse_options.get("atom_levels", ATOM_LEVELS)
+        atom_tracks, atom_levels = resolve_atomization_selection(
+            atom_tracks=parse_options.get("atom_tracks"),
+            atom_levels=parse_options.get("atom_levels"),
+        )
         atomize_enabled = bool(parse_options.get("atomize", True))
         force_reingest = bool(parse_options.get("force", False))
+        normalized_parse_options = {
+            **parse_options,
+            "atom_tracks": atom_tracks,
+            "atom_levels": atom_levels,
+            "atomize": atomize_enabled,
+            "force": force_reingest,
+        }
 
-        job = IngestJob(status="running", request_payload={"source_paths": [str(p) for p in selected_paths], "modalities": modalities, "parse_options": parse_options})
+        job = IngestJob(
+            status="running",
+            request_payload={
+                "source_paths": [str(p) for p in selected_paths],
+                "modalities": modalities,
+                "parse_options": normalized_parse_options,
+            },
+        )
         session.add(job)
         session.flush()
 
@@ -160,6 +187,11 @@ class IngestionService:
                     "segments": segments,
                     "hypergraph": hypergraph_ids,
                     "ingest_scope": ingest_scope,
+                    "atomization": {
+                        "atom_tracks": atom_tracks,
+                        "active_atom_levels": atom_levels,
+                        "filename_schema_version": ATOM_FILENAME_SCHEMA_VERSION,
+                    },
                 }
                 doc.modality_status = {
                     **(doc.modality_status or {}),
@@ -370,6 +402,7 @@ class IngestionService:
         atoms_to_add: list[Atom] = []
         ledger_rows: list[ProjectionLedger] = []
         payloads: list[dict[str, Any]] = []
+        filename_seen: dict[tuple[str, str], int] = {}
         for level in atom_levels:
             values = rich.get(level, [])
             for idx, item in enumerate(values, start=1):
@@ -380,13 +413,30 @@ class IngestionService:
                 else:
                     content = str(item)
                     metadata_json = None
+                normalized_token = normalize_atom_token(content)
+                dedupe_key = (level, normalized_token)
+                duplicate_index = filename_seen.get(dedupe_key, 0) + 1
+                filename_seen[dedupe_key] = duplicate_index
+                filename = deterministic_atom_filename(
+                    document_title=doc.title,
+                    atom_level=level,
+                    ordinal=idx,
+                    content=content,
+                    duplicate_index=duplicate_index,
+                )
                 atom = Atom(
                     id=atom_id,
                     document_id=doc.id,
                     atom_level=level,
                     ordinal=idx,
                     content=content,
-                    atom_metadata={"length": len(content)},
+                    atom_metadata={
+                        "length": len(content),
+                        "filename": filename,
+                        "filename_schema_version": ATOM_FILENAME_SCHEMA_VERSION,
+                        "normalized_token": normalized_token,
+                        "duplicate_index": duplicate_index,
+                    },
                     metadata_json=metadata_json,
                 )
                 atoms_to_add.append(atom)
@@ -405,6 +455,7 @@ class IngestionService:
                         "atom_level": level,
                         "ordinal": idx,
                         "content": content,
+                        "filename": filename,
                     }
                 )
         if atoms_to_add:

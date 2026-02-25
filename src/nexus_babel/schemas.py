@@ -28,6 +28,7 @@ class IngestBatchRequest(BaseModel):
     source_paths: list[str] = Field(default_factory=list)
     modalities: list[str] = Field(default_factory=list)
     parse_options: dict[str, Any] = Field(default_factory=dict)
+    atom_tracks: list[str] | None = None
 
 
 class IngestBatchResponse(BaseModel):
@@ -239,6 +240,96 @@ class RemixResponse(BaseModel):
     event_id: str
     strategy: str
     diff_summary: dict[str, Any]
+
+
+class RemixAtomRef(BaseModel):
+    atom_id: str
+    atom_level: str
+    ordinal: int
+    role: str
+
+
+class RemixComposeRequest(BaseModel):
+    source_document_id: str | None = None
+    source_branch_id: str | None = None
+    target_document_id: str | None = None
+    target_branch_id: str | None = None
+    strategy: RemixStrategy = "interleave"
+    seed: int = 0
+    mode: Mode = "PUBLIC"
+    atom_levels: list[str] = Field(default_factory=list)
+    create_branch: bool = True
+    persist_artifact: bool = True
+
+
+class RemixComposeResponse(BaseModel):
+    strategy: str
+    seed: int
+    mode: Mode
+    remixed_text: str
+    text_hash: str
+    payload_hash: str
+    source_atom_refs: list[RemixAtomRef] = Field(default_factory=list)
+    remix_artifact_id: str | None = None
+    governance_decision_id: str | None = None
+    governance_trace: dict[str, Any] = Field(default_factory=dict)
+    create_branch: bool = True
+    new_branch_id: str | None = None
+    event_id: str | None = None
+    diff_summary: dict[str, Any] = Field(default_factory=dict)
+
+
+class RemixSourceLinkView(BaseModel):
+    role: str
+    document_id: str | None = None
+    branch_id: str | None = None
+    atom_level: str | None = None
+    atom_count: int = 0
+    atom_refs: list[dict[str, Any]] = Field(default_factory=list)
+
+
+class RemixArtifactResponse(BaseModel):
+    remix_artifact_id: str
+    strategy: str
+    seed: int
+    mode: Mode
+    remixed_text: str
+    text_hash: str
+    payload_hash: str
+    rng_seed_hex: str
+    create_branch: bool
+    source_document_id: str | None = None
+    source_branch_id: str | None = None
+    target_document_id: str | None = None
+    target_branch_id: str | None = None
+    branch_id: str | None = None
+    branch_event_id: str | None = None
+    governance_decision_id: str | None = None
+    governance_trace: dict[str, Any] = Field(default_factory=dict)
+    lineage_graph_refs: dict[str, Any] = Field(default_factory=dict)
+    source_links: list[RemixSourceLinkView] = Field(default_factory=list)
+    created_at: datetime
+
+
+class RemixArtifactListItem(BaseModel):
+    remix_artifact_id: str
+    strategy: str
+    seed: int
+    mode: Mode
+    text_hash: str
+    create_branch: bool
+    branch_id: str | None = None
+    governance_decision_id: str | None = None
+    source_document_id: str | None = None
+    target_document_id: str | None = None
+    created_at: datetime
+
+
+class RemixArtifactListResponse(BaseModel):
+    remixes: list[RemixArtifactListItem] = Field(default_factory=list)
+    total: int
+    offset: int
+    limit: int
 
 
 class SeedTextEntry(BaseModel):

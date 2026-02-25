@@ -64,8 +64,14 @@ def create_app(settings_override: Settings | None = None) -> FastAPI:
     app.state.governance_service = GovernanceService()
     app.state.evolution_service = EvolutionService()
     app.state.ingestion_service = IngestionService(settings=settings, hypergraph=app.state.hypergraph)
-    app.state.remix_service = RemixService(evolution_service=app.state.evolution_service)
-    app.state.seed_corpus_service = SeedCorpusService(seeds_dir=settings.corpus_root / "seeds")
+    app.state.remix_service = RemixService(
+        evolution_service=app.state.evolution_service,
+        governance_service=app.state.governance_service,
+    )
+    app.state.seed_corpus_service = SeedCorpusService(
+        seeds_dir=settings.corpus_root / "seeds",
+        registry_path=settings.seed_registry_path,
+    )
     app.state.job_service = JobService(
         settings=settings,
         ingestion_service=app.state.ingestion_service,
