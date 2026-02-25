@@ -64,6 +64,11 @@ This repository is an active MVP implementation with a preserved theoretical cor
    - `pytest -q`
 8. Regenerate normalized OpenAPI contract snapshot after intentional API changes:
    - `make openapi-snapshot` (or `.venv/bin/python scripts/generate_openapi_contract_snapshot.py`)
+9. Regenerate and verify certainty artifacts after changes that affect repo structure, route inventory, docs, or roadmap references:
+   - `make certainty`
+   - `make certainty-check`
+10. Run a local verification bundle (optional, recommended before PRs):
+   - `make verify`
 
 ### Security Model (MVP)
 
@@ -389,6 +394,32 @@ This repository has both theory documents and an executable MVP. Contributions t
 - **Formal extensions**: Propose additional categorical structures, semiotic models, or rhetorical formalisms.
 - **Implementation prototypes**: Build proof-of-concept implementations of individual functions or subsystems.
 - **Cross-linguistic validation**: Assess the architecture's claims about multilingual coverage against specific languages.
+
+### Certainty Artifacts (When to Regenerate)
+
+Regenerate the committed certainty artifacts when a change affects repository truth surfaces, including:
+
+- files or paths included in the repository manifest
+- `/api/v1` route modules or documented endpoint references
+- `README.md`, `docs/OPERATOR_RUNBOOK.md`, or `docs/roadmap.md`
+- generated evidence/reporting scripts under `scripts/`
+
+Commands:
+
+- `make certainty` to regenerate `docs/certainty/*`
+- `make certainty-check` to verify committed artifacts are current
+- `make verify` to run lint + certainty freshness + tests before a PR
+
+### `uv.lock` Hygiene (When to Regenerate)
+
+Regenerate `/Users/4jp/Workspace/organvm-i-theoria/nexus--babel-alexandria-/uv.lock` when dependency metadata changes, such as:
+
+- `pyproject.toml` dependency/extra additions or version range updates
+- intentional lock refreshes or package upgrades
+- new tools added to the dev extra that CI/local `uv run` workflows rely on
+
+Do not churn `uv.lock` for pure code/docs/test changes that do not modify dependency declarations.
+If you intentionally refresh it, validate with `make verify` before committing.
 
 Please open an issue to discuss substantial contributions before submitting a pull request.
 

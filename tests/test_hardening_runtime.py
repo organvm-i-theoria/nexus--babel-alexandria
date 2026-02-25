@@ -111,8 +111,28 @@ def test_runbook_make_targets_exist():
     runbook = (repo_root / "docs" / "OPERATOR_RUNBOOK.md").read_text(encoding="utf-8")
     makefile = (repo_root / "Makefile").read_text(encoding="utf-8")
 
-    for command in ("make db-upgrade", "make test", "make lint", "make openapi-snapshot", "make run-api", "make run-worker"):
+    for command in (
+        "make db-upgrade",
+        "make test",
+        "make lint",
+        "make openapi-snapshot",
+        "make certainty",
+        "make certainty-check",
+        "make verify",
+        "make run-api",
+        "make run-worker",
+    ):
         assert command in runbook
 
-    for target in ("db-upgrade", "test", "lint", "openapi-snapshot", "run-api", "run-worker"):
+    for target in (
+        "db-upgrade",
+        "test",
+        "lint",
+        "openapi-snapshot",
+        "certainty",
+        "certainty-check",
+        "verify",
+        "run-api",
+        "run-worker",
+    ):
         assert re.search(rf"^{re.escape(target)}:\s*$", makefile, flags=re.MULTILINE)

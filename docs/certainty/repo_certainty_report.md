@@ -1,7 +1,7 @@
 # Repository Certainty Report
 
-- Generated: `2026-02-25T01:54:26.636731+00:00`
-- Files processed: `144`
+- Generated: `2026-02-25T13:46:19.441171+00:00`
+- Files processed: `154`
 - Feature/use-case entries: `95`
 - Feature status split: `{'implemented': 10, 'planned': 85}`
 
@@ -39,8 +39,8 @@
 | `GEMINI.md` | `text` | 957 | 19 | `06f4ee20523b516b296c427463c6ad891e9f242f3bc8693b18fdbee13011f0ac` |
 | `LICENSE` | `text` | 1064 | 22 | `6d319436c6a6428d1cfa592e3386aef31cb02e04d67731a577b68395c5e963fc` |
 | `MANIFEST.yaml` | `text` | 73790 | 1931 | `eabc9892bf75038588d9e77eec64f4b4dd28cf28bbee7c376d4654b95def5d08` |
-| `Makefile` | `text` | 491 | 27 | `fe109810491c89d1a4c8bbe54c84d5840963af5d5f4c4fb1001647f861a55490` |
-| `README.md` | `text` | 40290 | 410 | `3e2ec4cb329c172e4d07435b63bdef0da50bf7af90cbf1467806c39fc6c82622` |
+| `Makefile` | `text` | 1099 | 54 | `76dc33feefc2cf499c9b0764a250c4ed6804e388bb5a9e96ba05d6a6d7cb3991` |
+| `README.md` | `text` | 41701 | 441 | `4e55cef95ef16aad3d659b91c65fc5f194cb74fcffe8932d99add216309362a2` |
 | `alembic.ini` | `text` | 570 | 38 | `10cbd807a4fd691b24ef067c98e10ca269c0455c11f3fdd16dcf9c2bf30bc4fc` |
 | `alembic/env.py` | `text` | 1258 | 48 | `ca979c9c3923b76f89d216b92636f6c759cffee075b8f7c0117f984b020356ae` |
 | `alembic/script.py.mako` | `text` | 546 | 27 | `45b179250bf89ed063fb4304fa9e0c23979e7126daf8937177e85b6cbcd10829` |
@@ -51,7 +51,7 @@
 | `corpus/seeds/.gitkeep` | `text` | 0 | 0 | `e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855` |
 | `docker-compose.yml` | `text` | 621 | 30 | `54cdfe4abe9f459b2ab433d0ad9aa73c3da37f844a420953b8ea97980301bd36` |
 | `docs/.nojekyll` | `text` | 0 | 0 | `e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855` |
-| `docs/OPERATOR_RUNBOOK.md` | `text` | 4149 | 168 | `8f1cd1cdec11d300239fd73cc6d3f6a644b8285c7f856488595d8829c999c4e8` |
+| `docs/OPERATOR_RUNBOOK.md` | `text` | 4505 | 173 | `71ede55e6b3211f61913bf052889cc134eb808c37489b20a4493a00c0d365397` |
 | `docs/alexandria_babel/AB-PLAN-01_Build_Tickets.json` | `text` | 7205 | 193 | `7dcd8b8ef592e01361f3ee5212962b4637d264ce23df6cccae6057d470bc2a80` |
 | `docs/alexandria_babel/AB-PLAN-01_Build_Tickets.md` | `text` | 9201 | 271 | `1725a01824fa9c0330574249cc02c47137d01f2b2d96e3941c3d92ebf65f658b` |
 | `docs/alexandria_babel/Organism_Blueprint.md` | `text` | 1820 | 44 | `e54874fb6e1d72bd12aadefdc2bd538d6dbc3e53ef799b1c6175b2bef6fab563` |
@@ -147,16 +147,24 @@
 | `src/nexus_babel/services/glyph_data.py` | `text` | 6157 | 164 | `56f6188f1a6428ed74361926f2e1f4a4922f61af995b7a5347e1deb324483fa6` |
 | `src/nexus_babel/services/governance.py` | `text` | 5639 | 155 | `86b4f9dd65d484260b3049316609c716b8a4395a049e747161637f749d5534fd` |
 | `src/nexus_babel/services/hypergraph.py` | `text` | 7519 | 192 | `d15c3de807e56ec9b26010086b1293929909bf1659134c4f90c82bca19465f2a` |
-| `src/nexus_babel/services/ingestion.py` | `text` | 17567 | 425 | `de312c55c832a4a91b68e41864b72cb35f5a74cb08d9f163953fc2cc21a29035` |
+| `src/nexus_babel/services/ingestion.py` | `text` | 4769 | 123 | `90f4652faa7695937f8cd224fdc523962b4faf50538fa61fa6c642420421d316` |
+| `src/nexus_babel/services/ingestion_atoms.py` | `text` | 3064 | 86 | `2769cf16da03ff5aa490cfe77ad3d6bfd1b985e65b0d556434f33025f5540a5d` |
+| `src/nexus_babel/services/ingestion_batch_pipeline.py` | `text` | 9016 | 237 | `1f54f82857648ced1594b4e4a0931d88f920cdf3df75d238a11b61fde695b133` |
+| `src/nexus_babel/services/ingestion_documents.py` | `text` | 2034 | 72 | `ac2a04c354f6de8a45781769eaa40f7dd29041459c2f1edbf3d8c99f2f04d200` |
 | `src/nexus_babel/services/ingestion_media.py` | `text` | 4225 | 130 | `ca7747b977439c2e50590e6bdd45dc07ac54bd2800724271073d6e584264edd1` |
 | `src/nexus_babel/services/ingestion_projection.py` | `text` | 2658 | 76 | `dc3dc8bd75f46d5badc3dc0f0e38a658bb3755f079458d26952fcceea7ee8767` |
+| `src/nexus_babel/services/ingestion_types.py` | `text` | 789 | 31 | `2ff0f02c15876c286706bd715cd6e68b6de762933eb46274045847bc9363de2d` |
 | `src/nexus_babel/services/jobs.py` | `text` | 10834 | 279 | `d3b1d60d200c5177ea1357519f56ad471c8825b2434b73dd733295252cf7dc56` |
 | `src/nexus_babel/services/metrics.py` | `text` | 1199 | 32 | `609b794428ac883f274015830d2a58baed634ee6fa993b8079b6182efda09a3a` |
 | `src/nexus_babel/services/plugins.py` | `text` | 4955 | 158 | `ccf9e18b523a395828821c599a056e08cff5d8f729bbd98f44585cdfa36d7dd9` |
-| `src/nexus_babel/services/remix.py` | `text` | 16764 | 417 | `c36ad5e9e4fe45a5ed7ab49cab71d7725e475ccfe9b223fe1b76f74547a2e3b8` |
+| `src/nexus_babel/services/remix.py` | `text` | 11529 | 301 | `a4706628e65cedbf2c6c9381a439dcfde1d0aea09cd23b4a11739b4cdd8673f1` |
 | `src/nexus_babel/services/remix_artifact_persistence.py` | `text` | 2720 | 89 | `fda68072192d41d59176f872ea0c9cb4d03528420573f9303c1b28e0de4cf58f` |
 | `src/nexus_babel/services/remix_artifact_serialization.py` | `text` | 3128 | 87 | `1fb776c59d552bb942adf3555432482f6f9475b0d83a2e6e7b073c074dbb1b43` |
+| `src/nexus_babel/services/remix_compose.py` | `text` | 1950 | 50 | `d79d9db55b4cf66353d3f5fe449a57463712b2ddf567d252a8657b5619148ec0` |
+| `src/nexus_babel/services/remix_context.py` | `text` | 3561 | 98 | `91b03984f49f0e6e2188e05f03cdbaa3ca85e5ff9cab9d9b83ad1a49d62863f9` |
+| `src/nexus_babel/services/remix_hashing.py` | `text` | 1747 | 72 | `c0690f88df19a94f2d07d9dd7b775df67eedcac4749853e1497c30d5364093a1` |
 | `src/nexus_babel/services/remix_strategies.py` | `text` | 2670 | 70 | `9a23c3515cacee743201322f4ba9411040c373e5c20bfe5b67b17fe6ccfa840e` |
+| `src/nexus_babel/services/remix_types.py` | `text` | 509 | 27 | `c7859639da4bddaf354111801b4092023947d10f07626153dcc60a79dbe89778` |
 | `src/nexus_babel/services/rhetoric.py` | `text` | 2333 | 71 | `8dc30544e676ea5c07c670f684fc7567d849ff2633eb3bfaf66d051119a7ba7c` |
 | `src/nexus_babel/services/seed_corpus.py` | `text` | 7179 | 197 | `d109d425a1675acbbd6bebb2a9a60fd39c76c063586c003030c0836bb7b96ee9` |
 | `src/nexus_babel/services/text_utils.py` | `text` | 7685 | 230 | `fc6442f25ccda3197de01c33295e7e3cf11c53e3d45b5710b28548fc71e31de9` |
@@ -165,12 +173,14 @@
 | `tests/snapshots/openapi_contract_normalized.json` | `text` | 74795 | 3234 | `f50ddf53a140771d26af9e94b5925c502252906c7235e3f5d5e80ec50a19b6c7` |
 | `tests/test_ab_plan_01.py` | `text` | 14172 | 374 | `baf9e44ba6c6e9e869a6167e48928a108fcbc6a1318af401128cd99ad7525721` |
 | `tests/test_arc4n.py` | `text` | 14924 | 409 | `9bf04cefc72cfd8b5bdf24ed4956de627269653a7a88db4c4cd526d7ed394adf` |
-| `tests/test_hardening_runtime.py` | `text` | 4174 | 119 | `2e74927f3475515d9fab15c3a3a49d6d41b4a92242d412fefa939068b6ba747b` |
+| `tests/test_hardening_runtime.py` | `text` | 4431 | 139 | `368e90aea6e74b76f9c5bd4b1d6684ad1c4387eb4246996994903099e39d34b0` |
+| `tests/test_ingestion_helpers.py` | `text` | 2147 | 57 | `00f2f40ed0cb49af207bd515908a8acdd64b5661c760d25a9c8ff03888943a92` |
 | `tests/test_mvp.py` | `text` | 20828 | 509 | `c31329955f277c7173e3f869ac0139debf3e23ac944068ffcaae877824eac950` |
 | `tests/test_openapi_contract_snapshot.py` | `text` | 545 | 17 | `bf1b7ee69ca442cf49b9f1c7980ba001c52be0cfc65e7d710261a4bad801be66` |
 | `tests/test_plugins.py` | `text` | 1633 | 45 | `89783f06b2af0d02412b00de8c6feee6cea6603089b78621daf30f8628a19771` |
+| `tests/test_remix_helpers.py` | `text` | 3641 | 106 | `c8425c7cb60a0aeaeebfc080c602f9b5388ee66a03002c7f6b392a24cab48f91` |
 | `tests/test_wave2.py` | `text` | 5588 | 152 | `17c2ed71e00b559bcae1d9b4f2bab4c428480668f0996df906f29918d93e38d2` |
-| `uv.lock` | `text` | 326885 | 1514 | `19c9eccc9e192e8ca230c71c3f48fd78c0c0a146855fafc23645bd89b9b93d18` |
+| `uv.lock` | `text` | 332744 | 1541 | `ffee93fe4c0c746356a4f199c2e7705e2408d147245888289ec3b0f50928bc39` |
 
 ## Feature/Use-Case Ledger
 

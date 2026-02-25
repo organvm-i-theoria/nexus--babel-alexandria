@@ -146,10 +146,15 @@ Also available:
 make test
 make lint
 make openapi-snapshot
+make certainty
+make certainty-check
+make verify
 ```
 
 Use `make openapi-snapshot` after intentional `/api/v1` contract changes to regenerate the normalized OpenAPI snapshot used by the test suite.
 If you are not running inside the project environment, use `.venv/bin/python scripts/generate_openapi_contract_snapshot.py`.
+Use `make certainty` after changes that affect repository structure, route inventory, documented endpoints, or roadmap references, and `make certainty-check` to confirm the committed `docs/certainty/*` artifacts are current.
+Use `make verify` for a local pre-PR bundle (`lint` + `certainty-check` + `test`).
 
 ## 8. Known Constraints
 
