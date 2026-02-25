@@ -1,10 +1,10 @@
 {
-  "generated_at": "2026-02-25T15:20:20.251716+00:00",
+  "generated_at": "2026-02-25T17:34:13.794679+00:00",
   "root": "/Users/4jp/Workspace/organvm-i-theoria/nexus--babel-alexandria-",
   "summary": {
-    "files_total": 158,
+    "files_total": 167,
     "files_by_kind": {
-      "text": 156,
+      "text": 165,
       "pdf": 2
     },
     "features_total": 95,
@@ -142,10 +142,10 @@
     },
     {
       "path": "Makefile",
-      "sha256": "3ace454949ff8263c92695c4833c601d59712860673c0afa81ff0c6943b97595",
-      "size_bytes": 1121,
+      "sha256": "88dbeff2a11f74f73e4ce9a01f2eaf78e64d30d0f4f65dfe9ae06db2bf2999e1",
+      "size_bytes": 1316,
       "kind": "text",
-      "lines": 54,
+      "lines": 61,
       "pdf_pages": null,
       "pdf_text_chars": null,
       "conflict_markers": false
@@ -262,10 +262,10 @@
     },
     {
       "path": "docs/OPERATOR_RUNBOOK.md",
-      "sha256": "71ede55e6b3211f61913bf052889cc134eb808c37489b20a4493a00c0d365397",
-      "size_bytes": 4505,
+      "sha256": "a7e65df0678b5d8596033114c4d66e53828468abe847525ffc13bf9346eece7f",
+      "size_bytes": 4672,
       "kind": "text",
-      "lines": 173,
+      "lines": 175,
       "pdf_pages": null,
       "pdf_text_chars": null,
       "conflict_markers": false
@@ -562,10 +562,10 @@
     },
     {
       "path": "docs/roadmap_mvp_next.md",
-      "sha256": "a45932ee18364030d3810987395fce63eb6d38a15212ad28f23666f15a42020e",
-      "size_bytes": 4544,
+      "sha256": "ecec78412332cf299807ef91e84d76a5f93eb8dfa1c94d0866c0545753516edc",
+      "size_bytes": 5710,
       "kind": "text",
-      "lines": 145,
+      "lines": 167,
       "pdf_pages": null,
       "pdf_text_chars": null,
       "conflict_markers": false
@@ -1202,10 +1202,60 @@
     },
     {
       "path": "src/nexus_babel/services/evolution.py",
-      "sha256": "e71a98484cbf53eb985de1b280d9c6584d7064baa3f1829c8639bf44c80396cd",
-      "size_bytes": 35977,
+      "sha256": "8aae5b6b2433eb4517fb554ddb92dd6f245ad5a53a9f865e94ea0150c1ca739e",
+      "size_bytes": 16396,
       "kind": "text",
-      "lines": 853,
+      "lines": 389,
+      "pdf_pages": null,
+      "pdf_text_chars": null,
+      "conflict_markers": false
+    },
+    {
+      "path": "src/nexus_babel/services/evolution_events.py",
+      "sha256": "5fa847141e2548770b15ce7aa219f4ff48e01eb230528168291bc15a8ffd0b84",
+      "size_bytes": 9684,
+      "kind": "text",
+      "lines": 269,
+      "pdf_pages": null,
+      "pdf_text_chars": null,
+      "conflict_markers": false
+    },
+    {
+      "path": "src/nexus_babel/services/evolution_merge.py",
+      "sha256": "4e0a4a9b2c74343156ba226dd5a4a62e9c69145451d7976915bf1e24c09f3207",
+      "size_bytes": 3891,
+      "kind": "text",
+      "lines": 122,
+      "pdf_pages": null,
+      "pdf_text_chars": null,
+      "conflict_markers": false
+    },
+    {
+      "path": "src/nexus_babel/services/evolution_replay.py",
+      "sha256": "cb44fc438970cb4acf55ee09593d55d7944c06b25c30b70f017da1941cd9c125",
+      "size_bytes": 4411,
+      "kind": "text",
+      "lines": 121,
+      "pdf_pages": null,
+      "pdf_text_chars": null,
+      "conflict_markers": false
+    },
+    {
+      "path": "src/nexus_babel/services/evolution_types.py",
+      "sha256": "8b0e2ced2dd163d3d9de60ff33311906b39a6835fdebe9c72ba966883afd4fc3",
+      "size_bytes": 1268,
+      "kind": "text",
+      "lines": 61,
+      "pdf_pages": null,
+      "pdf_text_chars": null,
+      "conflict_markers": false
+    },
+    {
+      "path": "src/nexus_babel/services/evolution_visualization.py",
+      "sha256": "a663b7ddb0a4e7fd00dafc1211aab3edab1b26ad185f658f816f4e1cda844724",
+      "size_bytes": 4740,
+      "kind": "text",
+      "lines": 121,
       "pdf_pages": null,
       "pdf_text_chars": null,
       "conflict_markers": false
@@ -1512,20 +1562,60 @@
     },
     {
       "path": "tests/test_evolution_api.py",
-      "sha256": "8b0e47d609b65dec40f560cb64a5186d9f6ce13057737ae713d2fd3a31c66015",
-      "size_bytes": 17542,
+      "sha256": "49724398f933df2b7e47791458eead1b1893f6492a577b4461a3a21f43733dd4",
+      "size_bytes": 18164,
       "kind": "text",
-      "lines": 470,
+      "lines": 485,
+      "pdf_pages": null,
+      "pdf_text_chars": null,
+      "conflict_markers": false
+    },
+    {
+      "path": "tests/test_evolution_event_helpers.py",
+      "sha256": "e7a565a62d2553ec15997bb9f362f31a1f1f34ff92490eb08238f2ed99c2c9eb",
+      "size_bytes": 3424,
+      "kind": "text",
+      "lines": 105,
+      "pdf_pages": null,
+      "pdf_text_chars": null,
+      "conflict_markers": false
+    },
+    {
+      "path": "tests/test_evolution_merge_helpers.py",
+      "sha256": "611a48aed87f201acaed09676ed44812b3016ca3588c6edbc31c0ede355edc06",
+      "size_bytes": 2793,
+      "kind": "text",
+      "lines": 92,
+      "pdf_pages": null,
+      "pdf_text_chars": null,
+      "conflict_markers": false
+    },
+    {
+      "path": "tests/test_evolution_replay_helpers.py",
+      "sha256": "ede4c3a73177380a64f1b6ddfb09eb2f6d7646895b7d74bd310a4e962890c9c4",
+      "size_bytes": 3810,
+      "kind": "text",
+      "lines": 100,
+      "pdf_pages": null,
+      "pdf_text_chars": null,
+      "conflict_markers": false
+    },
+    {
+      "path": "tests/test_evolution_visualization_helpers.py",
+      "sha256": "212e6b3bb4837374f7e2fab377ec6179d5b228c0023cc7e22749a52067e71ffc",
+      "size_bytes": 3678,
+      "kind": "text",
+      "lines": 117,
       "pdf_pages": null,
       "pdf_text_chars": null,
       "conflict_markers": false
     },
     {
       "path": "tests/test_hardening_runtime.py",
-      "sha256": "1497d11e55350f727421368bc656894d2243636363a2f04d7c129ba3c0b91701",
-      "size_bytes": 4431,
+      "sha256": "a18fd44766edbac424c434cd2122ccfd226078b8c82cb87922bfd2a85ea42611",
+      "size_bytes": 5592,
       "kind": "text",
-      "lines": 139,
+      "lines": 168,
       "pdf_pages": null,
       "pdf_text_chars": null,
       "conflict_markers": false
