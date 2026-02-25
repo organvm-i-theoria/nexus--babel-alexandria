@@ -1,4 +1,4 @@
-.PHONY: test lint openapi-snapshot certainty certainty-check verify db-upgrade db-downgrade run-api run-worker
+.PHONY: test lint openapi-snapshot certainty certainty-check evolution-contract-test verify db-upgrade db-downgrade run-api run-worker
 
 test:
 	@if [ -x .venv/bin/pytest ]; then \
@@ -33,6 +33,13 @@ certainty-check:
 		.venv/bin/python scripts/repo_certainty_audit.py --check; \
 	else \
 		python scripts/repo_certainty_audit.py --check; \
+	fi
+
+evolution-contract-test:
+	@if [ -x .venv/bin/pytest ]; then \
+		.venv/bin/pytest -q tests/test_evolution_api.py; \
+	else \
+		pytest -q tests/test_evolution_api.py; \
 	fi
 
 verify:

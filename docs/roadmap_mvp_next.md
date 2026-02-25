@@ -12,9 +12,9 @@ The goal is to improve reliability, developer velocity, and extension readiness 
 ## Current Baseline (2026-02-25)
 
 - FastAPI service + worker + Alembic migrations are implemented
-- `28` `/api/v1` operations are available
-- Contract + integration + logic tests are green (`82` tests before hardening additions)
-- Major maintainability hotspots are the API route surface and large service modules (`ingestion.py`, `remix.py`)
+- `31` `/api/v1` operations are available
+- Contract + integration + logic tests are green (`129` tests before the next evolution modularity wave)
+- Major maintainability hotspot is now `src/nexus_babel/services/evolution.py` (branching/replay/merge/checkpoint/visualization orchestration)
 
 ## Phase 1 — Trust and Operational Hardening
 
@@ -60,7 +60,7 @@ Outcomes:
 - Standardized exception mapping helpers and domain error types
 - Route parity validation via tests/OpenAPI operation-count checks
 
-### 2.2 Contract Governance (Next)
+### 2.2 Contract Governance (Active)
 
 Targets:
 - `tests/test_hardening_runtime.py` (extend)
@@ -68,9 +68,10 @@ Targets:
 - optional `scripts/check_openapi_contract.py`
 
 Outcomes:
-- OpenAPI snapshot or normalized operation registry check
+- OpenAPI snapshot / normalized contract checks
 - Error payload compatibility checks (`detail` retained)
 - Route/module parity guardrails during future refactors
+- Evolution branch-route presence and response-shape guardrails during service decomposition
 
 ## Phase 3 — CI and Developer Velocity
 
@@ -96,7 +97,7 @@ Deferred until a type policy and acceptable false-positive tolerance are defined
 
 ## Phase 4 — Service Boundary Cleanup (Acceleration)
 
-### 4.1 Remix Service Decomposition
+### 4.1 Remix Service Decomposition (Completed)
 
 Primary target:
 - `src/nexus_babel/services/remix.py`
@@ -107,12 +108,12 @@ Extractable units:
 - lineage graph ref construction
 - context resolution and atom-level selection helpers
 
-Success criteria:
-- `compose()` and `remix()` signatures unchanged
-- existing remix tests remain green
-- reduced file size and improved unit test granularity
+Delivered:
+- `compose()` and `remix()` signatures preserved
+- remix helper modules extracted (`remix_context`, `remix_compose`, `remix_hashing`, `remix_types`)
+- focused helper tests added
 
-### 4.2 Ingestion Service Decomposition
+### 4.2 Ingestion Service Decomposition (Completed)
 
 Primary target:
 - `src/nexus_babel/services/ingestion.py`
@@ -123,18 +124,39 @@ Extractable units:
 - atom/projection ledger routines
 - cross-modal linking helpers
 
+Delivered:
+- `ingest_batch()` and `get_job_status()` signatures preserved
+- ingestion helper modules extracted (`ingestion_batch_pipeline`, `ingestion_documents`, `ingestion_atoms`, `ingestion_types`)
+- projection/canonicalization semantics preserved with regression coverage
+
+### 4.3 Evolution Service Decomposition + Contract Freeze (Next)
+
+Primary target:
+- `src/nexus_babel/services/evolution.py`
+
+Extractable units:
+- event payload validation and deterministic event application semantics
+- lineage traversal / replay / checkpoint mechanics
+- merge comparison and conflict semantics helpers
+- visualization graph assembly helpers
+
 Success criteria:
-- `ingest_batch()` and `get_job_status()` signatures unchanged
-- ingestion contract tests remain green
-- projection/canonicalization semantics preserved
+- public `EvolutionService` method signatures unchanged
+- branch/replay/merge/visualization API payloads unchanged
+- replay/checkpoint/merge provenance semantics preserved
+- file size reduced and helper-unit tests added for extracted logic
 
 ## Phase 5 — MVP-Next Feature Extensions (After Hardening)
 
-Candidates to accelerate once boundaries are cleaner:
+Candidates to accelerate once evolution boundaries are cleaner:
 - richer plugin providers beyond `ml_stub`
 - stronger audit/report generation automation (`docs/certainty/*` as CI artifact)
 - more explicit graph/query contracts and integrity verification modes
 - operator-facing health/report endpoints (non-breaking additive)
+
+## Hotspot Rotation Rule
+
+When a major refactor wave completes, update this roadmap's "Current Baseline" hotspot callout and the relevant phase status labels (`Completed`, `Active`, `Next`) so the document stays aligned with the codebase reality.
 
 ## Non-Goals (This MVP-Next Roadmap)
 

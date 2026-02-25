@@ -273,6 +273,16 @@ def test_branch_visualization_endpoint(client, sample_corpus, auth_headers):
     response = client.get(f"/api/v1/branches/{target_branch}/visualization", headers=auth_headers["viewer"])
     assert response.status_code == 200, response.text
     payload = response.json()
+    assert {
+        "branch_id",
+        "root_document_id",
+        "nodes",
+        "edges",
+        "summary",
+    }.issubset(payload.keys())
+    assert {"event_count", "edge_count", "lineage_depth", "secondary_lineage_branch_count", "merge_secondary_edge_count"}.issubset(
+        payload["summary"].keys()
+    )
 
     assert payload["branch_id"] == target_branch
     assert payload["root_document_id"] == doc_id
@@ -357,6 +367,9 @@ def test_branch_merge_interleave(client, sample_corpus, auth_headers):
     )
     assert merge_resp.status_code == 200, merge_resp.text
     merge_payload = merge_resp.json()
+    assert {"new_branch_id", "event_id", "strategy", "lca_branch_id", "conflict_semantics", "diff_summary"}.issubset(
+        merge_payload.keys()
+    )
     assert merge_payload["strategy"] == "interleave"
     assert merge_payload["new_branch_id"]
     assert merge_payload["event_id"]
@@ -372,7 +385,9 @@ def test_branch_merge_interleave(client, sample_corpus, auth_headers):
 
     replay_resp = client.post(f"/api/v1/branches/{merge_payload['new_branch_id']}/replay", headers=auth_headers["viewer"])
     assert replay_resp.status_code == 200, replay_resp.text
-    merged_preview = replay_resp.json()["preview"]
+    replay_payload = replay_resp.json()
+    assert {"branch_id", "event_count", "text_hash", "preview", "replay_snapshot"}.issubset(replay_payload.keys())
+    merged_preview = replay_payload["preview"]
 
     left_replay = client.post(f"/api/v1/branches/{left_branch}/replay", headers=auth_headers["viewer"]).json()["preview"]
     right_replay = client.post(f"/api/v1/branches/{right_branch}/replay", headers=auth_headers["viewer"]).json()["preview"]

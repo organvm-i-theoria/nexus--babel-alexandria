@@ -11,6 +11,9 @@ from nexus_babel.config import Settings
 from nexus_babel.main import create_app
 from nexus_babel.models import ApiKey, ModePolicy
 
+API_V1_OPERATION_COUNT = 31
+MVP_NEXT_ROADMAP_BASELINE_TEST_COUNT = 129
+
 
 def _prod_settings(tmp_path: Path, **overrides) -> Settings:
     return Settings(
@@ -103,7 +106,21 @@ def test_api_route_count_parity(client):
         if not path.startswith("/api/v1/"):
             continue
         operations += sum(1 for method in spec if method in http_methods)
-    assert operations == 31
+    assert operations == API_V1_OPERATION_COUNT
+
+
+def test_evolution_branch_routes_present_in_openapi(client):
+    paths = client.app.openapi()["paths"]
+    expected = {
+        "/api/v1/evolve/branch",
+        "/api/v1/evolve/multi",
+        "/api/v1/branches/{branch_id}/timeline",
+        "/api/v1/branches/{branch_id}/replay",
+        "/api/v1/branches/{branch_id}/compare/{other_branch_id}",
+        "/api/v1/branches/merge",
+        "/api/v1/branches/{branch_id}/visualization",
+    }
+    assert expected.issubset(paths.keys())
 
 
 def test_runbook_make_targets_exist():
@@ -118,6 +135,7 @@ def test_runbook_make_targets_exist():
         "make openapi-snapshot",
         "make certainty",
         "make certainty-check",
+        "make evolution-contract-test",
         "make verify",
         "make run-api",
         "make run-worker",
@@ -131,8 +149,19 @@ def test_runbook_make_targets_exist():
         "openapi-snapshot",
         "certainty",
         "certainty-check",
+        "evolution-contract-test",
         "verify",
         "run-api",
         "run-worker",
     ):
         assert re.search(rf"^{re.escape(target)}:\s*$", makefile, flags=re.MULTILINE)
+
+
+def test_mvp_next_roadmap_baseline_smoke_alignment():
+    repo_root = Path(__file__).resolve().parents[1]
+    roadmap = (repo_root / "docs" / "roadmap_mvp_next.md").read_text(encoding="utf-8")
+
+    assert f"`{API_V1_OPERATION_COUNT}` `/api/v1` operations are available" in roadmap
+    assert f"`{MVP_NEXT_ROADMAP_BASELINE_TEST_COUNT}` tests before the next evolution modularity wave" in roadmap
+    assert "src/nexus_babel/services/evolution.py" in roadmap
+    assert "## Hotspot Rotation Rule" in roadmap
