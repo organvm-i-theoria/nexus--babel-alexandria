@@ -2,18 +2,20 @@
 
 from __future__ import annotations
 
-import hashlib
-import json
 import random
 from typing import Any
 
 from sqlalchemy import func, select
 from sqlalchemy.orm import Session
 
-from nexus_babel.models import Atom, Branch, BranchEvent, Document, RemixArtifact
+from nexus_babel.models import Branch, BranchEvent, RemixArtifact
 from nexus_babel.services import remix_artifact_persistence, remix_artifact_serialization, remix_strategies
 from nexus_babel.services.evolution import EvolutionService
 from nexus_babel.services.governance import GovernanceService
+from nexus_babel.services.remix_compose import compose_text
+from nexus_babel.services.remix_context import branch_root_doc, resolve_context, resolve_text
+from nexus_babel.services.remix_hashing import build_payload_hash, build_remix_rng, sha256_text
+from nexus_babel.services.remix_types import RemixContext
 
 
 class RemixService:
@@ -66,19 +68,20 @@ class RemixService:
         create_branch: bool = True,
         persist_artifact: bool = True,
     ) -> dict[str, Any]:
-        source_ctx = self._resolve_context(
+        atom_levels = atom_levels or []
+        source_ctx = resolve_context(
             session=session,
             role="source",
             document_id=source_document_id,
             branch_id=source_branch_id,
-            atom_levels=atom_levels or [],
+            atom_levels=atom_levels,
         )
-        target_ctx = self._resolve_context(
+        target_ctx = resolve_context(
             session=session,
             role="target",
             document_id=target_document_id,
             branch_id=target_branch_id,
-            atom_levels=atom_levels or [],
+            atom_levels=atom_levels,
         )
 
         source_text = source_ctx["text"]
@@ -86,41 +89,35 @@ class RemixService:
         if not source_text or not target_text:
             raise ValueError("Both source and target must resolve to non-empty text")
 
-        seed_input = (
-            f"remix:{strategy}:{seed}:"
-            f"{hashlib.sha256(source_text.encode('utf-8')).hexdigest()}:"
-            f"{hashlib.sha256(target_text.encode('utf-8')).hexdigest()}:"
-            f"{','.join(atom_levels or [])}"
+        rng, rng_seed_hex = build_remix_rng(
+            strategy=strategy,
+            seed=int(seed),
+            source_text=source_text,
+            target_text=target_text,
+            atom_levels=atom_levels,
         )
-        rng_seed_hex = hashlib.sha256(seed_input.encode("utf-8")).hexdigest()
-        rng = random.Random(int(rng_seed_hex, 16) % (2**32))
 
-        remixed, source_atom_refs = self._compose_text(
+        remixed, source_atom_refs = compose_text(
             source_text=source_text,
             target_text=target_text,
             strategy=strategy,
             rng=rng,
             source_ctx=source_ctx,
             target_ctx=target_ctx,
-            atom_levels=atom_levels or [],
+            atom_levels=atom_levels,
         )
-        text_hash = hashlib.sha256(remixed.encode("utf-8")).hexdigest()
-        payload_hash = hashlib.sha256(
-            json.dumps(
-                {
-                    "strategy": strategy,
-                    "seed": int(seed),
-                    "mode": mode.upper(),
-                    "source_document_id": source_document_id,
-                    "source_branch_id": source_branch_id,
-                    "target_document_id": target_document_id,
-                    "target_branch_id": target_branch_id,
-                    "atom_levels": atom_levels or [],
-                    "text_hash": text_hash,
-                },
-                sort_keys=True,
-            ).encode("utf-8")
-        ).hexdigest()
+        text_hash = sha256_text(remixed)
+        payload_hash = build_payload_hash(
+            strategy=strategy,
+            seed=int(seed),
+            mode=mode,
+            source_document_id=source_document_id,
+            source_branch_id=source_branch_id,
+            target_document_id=target_document_id,
+            target_branch_id=target_branch_id,
+            atom_levels=atom_levels,
+            text_hash=text_hash,
+        )
 
         governance_result: dict[str, Any] = {}
         governance_decision_id: str | None = None
@@ -165,7 +162,7 @@ class RemixService:
                     "target_document_id": target_document_id,
                     "source_branch_id": source_branch_id,
                     "target_branch_id": target_branch_id,
-                    "atom_levels": atom_levels or [],
+                    "atom_levels": atom_levels,
                     "remix_artifact_id": artifact.id if artifact else None,
                 },
                 mode=mode,
@@ -228,110 +225,6 @@ class RemixService:
     def _artifact_to_dict(self, artifact: RemixArtifact) -> dict[str, Any]:
         return remix_artifact_serialization.artifact_to_dict(artifact)
 
-    def _resolve_context(
-        self,
-        *,
-        session: Session,
-        role: str,
-        document_id: str | None,
-        branch_id: str | None,
-        atom_levels: list[str],
-    ) -> dict[str, Any]:
-        text = ""
-        root_document_id: str | None = None
-        branch: Branch | None = None
-        document: Document | None = None
-        if branch_id:
-            branch = session.scalar(select(Branch).where(Branch.id == branch_id))
-            if not branch:
-                raise LookupError(f"{role} branch {branch_id} not found")
-            text = str((branch.state_snapshot or {}).get("current_text", ""))
-            root_document_id = branch.root_document_id
-        if document_id:
-            document = session.scalar(select(Document).where(Document.id == document_id))
-            if not document:
-                raise LookupError(f"{role} document {document_id} not found")
-            if not text:
-                text = str((document.provenance or {}).get("extracted_text", ""))
-            root_document_id = root_document_id or document.id
-
-        atoms_by_level: dict[str, list[Atom]] = {}
-        if document and atom_levels:
-            atoms = session.scalars(
-                select(Atom)
-                .where(Atom.document_id == document.id, Atom.atom_level.in_(atom_levels))
-                .order_by(Atom.atom_level, Atom.ordinal, Atom.id)
-            ).all()
-            for atom in atoms:
-                atoms_by_level.setdefault(atom.atom_level, []).append(atom)
-
-        return {
-            "role": role,
-            "document_id": document_id,
-            "branch_id": branch_id,
-            "root_document_id": root_document_id,
-            "text": text,
-            "atoms_by_level": atoms_by_level,
-        }
-
-    def _compose_text(
-        self,
-        *,
-        source_text: str,
-        target_text: str,
-        strategy: str,
-        rng: random.Random,
-        source_ctx: dict[str, Any],
-        target_ctx: dict[str, Any],
-        atom_levels: list[str],
-    ) -> tuple[str, list[dict[str, Any]]]:
-        source_atom_refs: list[dict[str, Any]] = []
-        target_atom_refs: list[dict[str, Any]] = []
-        if atom_levels:
-            preferred = self._preferred_levels_for_strategy(strategy)
-            selected_source = self._pick_atom_level(source_ctx.get("atoms_by_level", {}), preferred)
-            selected_target = self._pick_atom_level(target_ctx.get("atoms_by_level", {}), preferred)
-            if selected_source and selected_target:
-                source_atoms = source_ctx["atoms_by_level"][selected_source]
-                target_atoms = target_ctx["atoms_by_level"][selected_target]
-                source_text = self._join_atoms_for_strategy(source_atoms, selected_source)
-                target_text = self._join_atoms_for_strategy(target_atoms, selected_target)
-                source_atom_refs = [
-                    {"atom_id": a.id, "atom_level": a.atom_level, "ordinal": a.ordinal, "role": "source"}
-                    for a in source_atoms
-                ]
-                target_atom_refs = [
-                    {"atom_id": a.id, "atom_level": a.atom_level, "ordinal": a.ordinal, "role": "target"}
-                    for a in target_atoms
-                ]
-
-        remixed = self._apply_strategy(source_text, target_text, strategy, rng)
-        return remixed, source_atom_refs + target_atom_refs
-
-    def _preferred_levels_for_strategy(self, strategy: str) -> list[str]:
-        if strategy == "thematic_blend":
-            return ["sentence", "word", "paragraph", "glyph-seed", "syllable"]
-        if strategy == "temporal_layer":
-            return ["paragraph", "sentence", "word", "glyph-seed", "syllable"]
-        if strategy == "glyph_collide":
-            return ["glyph-seed", "word", "syllable", "sentence", "paragraph"]
-        return ["word", "sentence", "paragraph", "glyph-seed", "syllable"]
-
-    def _pick_atom_level(self, atoms_by_level: dict[str, list[Atom]], preferred_levels: list[str]) -> str | None:
-        for level in preferred_levels:
-            if atoms_by_level.get(level):
-                return level
-        return None
-
-    def _join_atoms_for_strategy(self, atoms: list[Atom], atom_level: str) -> str:
-        if atom_level == "paragraph":
-            return "\n\n".join(a.content for a in atoms)
-        if atom_level == "sentence":
-            return " ".join(a.content for a in atoms)
-        if atom_level == "glyph-seed":
-            return "".join(a.content for a in atoms)
-        return " ".join(a.content for a in atoms)
-
     def _create_artifact(
         self,
         *,
@@ -346,8 +239,8 @@ class RemixService:
         create_branch: bool,
         governance_decision_id: str | None,
         governance_trace: dict[str, Any],
-        source_ctx: dict[str, Any],
-        target_ctx: dict[str, Any],
+        source_ctx: RemixContext,
+        target_ctx: RemixContext,
         source_atom_refs: list[dict[str, Any]],
     ) -> RemixArtifact:
         return remix_artifact_persistence.create_artifact(
@@ -370,8 +263,8 @@ class RemixService:
     def _build_lineage_graph_refs(
         self,
         *,
-        source_ctx: dict[str, Any],
-        target_ctx: dict[str, Any],
+        source_ctx: RemixContext,
+        target_ctx: RemixContext,
         branch_id: str | None,
         branch_event_id: str | None,
         remix_artifact_id: str,
@@ -385,19 +278,10 @@ class RemixService:
         )
 
     def _resolve_text(self, session: Session, document_id: str | None, branch_id: str | None) -> str:
-        if branch_id:
-            branch = session.scalar(select(Branch).where(Branch.id == branch_id))
-            if branch:
-                return str((branch.state_snapshot or {}).get("current_text", ""))
-        if document_id:
-            doc = session.scalar(select(Document).where(Document.id == document_id))
-            if doc:
-                return str((doc.provenance or {}).get("extracted_text", ""))
-        return ""
+        return resolve_text(session, document_id, branch_id)
 
     def _branch_root_doc(self, session: Session, branch_id: str) -> str | None:
-        branch = session.scalar(select(Branch).where(Branch.id == branch_id))
-        return branch.root_document_id if branch else None
+        return branch_root_doc(session, branch_id)
 
     def _apply_strategy(self, source: str, target: str, strategy: str, rng: random.Random) -> str:
         return remix_strategies.apply_strategy(source=source, target=target, strategy=strategy, rng=rng)
