@@ -1,6 +1,9 @@
 from __future__ import annotations
 
 import hashlib
+import time
+
+import pytest
 
 from sqlalchemy import func, select
 
@@ -21,6 +24,22 @@ def _ingest_one(client, sample_corpus, headers) -> str:
     job = client.get(f"/api/v1/ingest/jobs/{response.json()['ingest_job_id']}", headers=headers)
     assert job.status_code == 200, job.text
     return job.json()["files"][0]["document_id"]
+
+
+def _evolve(client, headers, *, root_document_id=None, parent_branch_id=None, event_type: str, event_payload: dict, mode: str = "PUBLIC") -> str:
+    response = client.post(
+        "/api/v1/evolve/branch",
+        headers=headers,
+        json={
+            "root_document_id": root_document_id,
+            "parent_branch_id": parent_branch_id,
+            "event_type": event_type,
+            "event_payload": event_payload,
+            "mode": mode,
+        },
+    )
+    assert response.status_code == 200, response.text
+    return response.json()["new_branch_id"]
 
 
 def test_evolve_branch_reverse_drift_supported(client, sample_corpus, auth_headers):
@@ -263,3 +282,120 @@ def test_branch_visualization_endpoint(client, sample_corpus, auth_headers):
     assert payload["summary"]["lineage_depth"] == 3
     assert all("event_type" in node for node in payload["nodes"])
     assert all("metadata" in node for node in payload["nodes"])
+
+
+@pytest.mark.slow
+def test_checkpoint_replay_faster_than_full(client, sample_corpus, auth_headers, monkeypatch):
+    doc_id = _ingest_one(client, sample_corpus, auth_headers["operator"])
+    service = client.app.state.evolution_service
+
+    parent_branch_id = None
+    for seed in range(50):
+        parent_branch_id = _evolve(
+            client,
+            auth_headers["operator"],
+            root_document_id=doc_id if parent_branch_id is None else None,
+            parent_branch_id=parent_branch_id,
+            event_type="natural_drift",
+            event_payload={"seed": seed},
+        )
+    assert parent_branch_id is not None
+
+    session = client.app.state.db.session()
+    try:
+        target_branch = session.scalar(select(Branch).where(Branch.id == parent_branch_id))
+        assert target_branch is not None
+
+        original_apply = service._apply_event
+
+        def _slow_apply(text: str, event_type: str, event_payload: dict):
+            time.sleep(0.0004)
+            return original_apply(text, event_type, event_payload)
+
+        monkeypatch.setattr(service, "_apply_event", _slow_apply)
+
+        t0 = time.perf_counter()
+        full_text, _, _ = service._replay_lineage_text(session, target_branch, use_checkpoints=False)
+        full_elapsed = time.perf_counter() - t0
+
+        t1 = time.perf_counter()
+        checkpoint_text, _, _ = service._replay_lineage_text(session, target_branch, use_checkpoints=True)
+        checkpoint_elapsed = time.perf_counter() - t1
+    finally:
+        session.close()
+
+    assert hashlib.sha256(full_text.encode("utf-8")).hexdigest() == hashlib.sha256(checkpoint_text.encode("utf-8")).hexdigest()
+    assert checkpoint_elapsed < full_elapsed
+
+
+def test_branch_merge_interleave(client, sample_corpus, auth_headers):
+    doc_id = _ingest_one(client, sample_corpus, auth_headers["operator"])
+    left_branch = _evolve(
+        client,
+        auth_headers["operator"],
+        root_document_id=doc_id,
+        event_type="phase_shift",
+        event_payload={"phase": "peak", "seed": 1},
+    )
+    right_branch = _evolve(
+        client,
+        auth_headers["operator"],
+        root_document_id=doc_id,
+        event_type="reverse_drift",
+        event_payload={"seed": 2},
+    )
+
+    merge_resp = client.post(
+        "/api/v1/branches/merge",
+        headers=auth_headers["operator"],
+        json={
+            "left_branch_id": left_branch,
+            "right_branch_id": right_branch,
+            "strategy": "interleave",
+            "mode": "PUBLIC",
+        },
+    )
+    assert merge_resp.status_code == 200, merge_resp.text
+    merge_payload = merge_resp.json()
+    assert merge_payload["strategy"] == "interleave"
+    assert merge_payload["new_branch_id"]
+    assert merge_payload["event_id"]
+    assert merge_payload["diff_summary"]["event"] == "merge"
+    assert merge_payload["diff_summary"]["left_branch_id"] == left_branch
+    assert merge_payload["diff_summary"]["right_branch_id"] == right_branch
+
+    replay_resp = client.post(f"/api/v1/branches/{merge_payload['new_branch_id']}/replay", headers=auth_headers["viewer"])
+    assert replay_resp.status_code == 200, replay_resp.text
+    merged_preview = replay_resp.json()["preview"]
+
+    left_replay = client.post(f"/api/v1/branches/{left_branch}/replay", headers=auth_headers["viewer"]).json()["preview"]
+    right_replay = client.post(f"/api/v1/branches/{right_branch}/replay", headers=auth_headers["viewer"]).json()["preview"]
+
+    left_word = next((w for w in left_replay.split() if w.isalpha()), None)
+    right_word = next((w for w in right_replay.split() if w.isalpha()), None)
+    assert left_word is not None and left_word in merged_preview
+    assert right_word is not None and right_word in merged_preview
+
+
+def test_branch_merge_requires_operator(client, sample_corpus, auth_headers):
+    doc_id = _ingest_one(client, sample_corpus, auth_headers["operator"])
+    left_branch = _evolve(
+        client,
+        auth_headers["operator"],
+        root_document_id=doc_id,
+        event_type="natural_drift",
+        event_payload={"seed": 1},
+    )
+    right_branch = _evolve(
+        client,
+        auth_headers["operator"],
+        root_document_id=doc_id,
+        event_type="reverse_drift",
+        event_payload={"seed": 1},
+    )
+    merge_resp = client.post(
+        "/api/v1/branches/merge",
+        headers=auth_headers["viewer"],
+        json={"left_branch_id": left_branch, "right_branch_id": right_branch, "strategy": "left_wins", "mode": "PUBLIC"},
+    )
+    assert merge_resp.status_code == 403

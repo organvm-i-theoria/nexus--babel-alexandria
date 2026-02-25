@@ -39,6 +39,9 @@ where = ["src"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
+markers = [
+  "slow: non-gating benchmark or performance-oriented tests",
+]
 filterwarnings = [
   "ignore::DeprecationWarning:pypdf.*",
 ]

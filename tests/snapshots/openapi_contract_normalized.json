@@ -342,6 +342,152 @@
         ],
         "type": "object"
       },
+      "BranchVisualizationEdge": {
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "source": {
+            "type": "string"
+          },
+          "target": {
+            "type": "string"
+          },
+          "type": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "source",
+          "target",
+          "type"
+        ],
+        "type": "object"
+      },
+      "BranchVisualizationNode": {
+        "properties": {
+          "branch_id": {
+            "type": "string"
+          },
+          "created_at": {
+            "format": "date-time",
+            "type": "string"
+          },
+          "event_index": {
+            "type": "integer"
+          },
+          "event_type": {
+            "type": "string"
+          },
+          "id": {
+            "type": "string"
+          },
+          "kind": {
+            "type": "string"
+          },
+          "metadata": {
+            "additionalProperties": true,
+            "type": "object"
+          },
+          "mode": {
+            "type": "string"
+          },
+          "parent_branch_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "phase": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "root_document_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "required": [
+          "branch_id",
+          "created_at",
+          "event_index",
+          "event_type",
+          "id",
+          "kind",
+          "mode"
+        ],
+        "type": "object"
+      },
+      "BranchVisualizationResponse": {
+        "properties": {
+          "branch_id": {
+            "type": "string"
+          },
+          "edges": {
+            "items": {
+              "$ref": "#/components/schemas/BranchVisualizationEdge"
+            },
+            "type": "array"
+          },
+          "nodes": {
+            "items": {
+              "$ref": "#/components/schemas/BranchVisualizationNode"
+            },
+            "type": "array"
+          },
+          "root_document_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "required": [
+          "branch_id",
+          "summary"
+        ],
+        "type": "object"
+      },
+      "BranchVisualizationSummary": {
+        "properties": {
+          "edge_count": {
+            "type": "integer"
+          },
+          "event_count": {
+            "type": "integer"
+          },
+          "lineage_depth": {
+            "type": "integer"
+          }
+        },
+        "required": [
+          "edge_count",
+          "event_count",
+          "lineage_depth"
+        ],
+        "type": "object"
+      },
       "EvolveBranchRequest": {
         "properties": {
           "event_payload": {
@@ -897,6 +1043,76 @@
           "job_id",
           "job_type",
           "status"
+        ],
+        "type": "object"
+      },
+      "MergeBranchesRequest": {
+        "properties": {
+          "left_branch_id": {
+            "type": "string"
+          },
+          "mode": {
+            "default": "PUBLIC",
+            "enum": [
+              "PUBLIC",
+              "RAW"
+            ],
+            "type": "string"
+          },
+          "right_branch_id": {
+            "type": "string"
+          },
+          "strategy": {
+            "default": "interleave",
+            "enum": [
+              "interleave",
+              "left_wins",
+              "right_wins"
+            ],
+            "type": "string"
+          }
+        },
+        "required": [
+          "left_branch_id",
+          "right_branch_id"
+        ],
+        "type": "object"
+      },
+      "MergeBranchesResponse": {
+        "properties": {
+          "diff_summary": {
+            "additionalProperties": true,
+            "type": "object"
+          },
+          "event_id": {
+            "type": "string"
+          },
+          "lca_branch_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "new_branch_id": {
+            "type": "string"
+          },
+          "strategy": {
+            "enum": [
+              "interleave",
+              "left_wins",
+              "right_wins"
+            ],
+            "type": "string"
+          }
+        },
+        "required": [
+          "event_id",
+          "new_branch_id",
+          "strategy"
         ],
         "type": "object"
       },
@@ -2085,6 +2301,60 @@
         "tags": []
       }
     },
+    "/api/v1/branches/merge": {
+      "post": {
+        "operationId": "merge_branches_api_v1_branches_merge_post",
+        "parameters": [
+          {
+            "in": "header",
+            "name": "X-Nexus-API-Key",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/MergeBranchesRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MergeBranchesResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        },
+        "security": [],
+        "tags": []
+      }
+    },
     "/api/v1/branches/{branch_id}/compare/{other_branch_id}": {
       "get": {
         "operationId": "compare_branch_api_v1_branches__branch_id__compare__other_branch_id__get",
@@ -2286,8 +2556,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "additionalProperties": true,
-                  "type": "object"
+                  "$ref": "#/components/schemas/BranchVisualizationResponse"
                 }
               }
             }
