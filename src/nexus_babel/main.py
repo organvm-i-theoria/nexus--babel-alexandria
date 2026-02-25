@@ -1,7 +1,10 @@
 from __future__ import annotations
 
+import logging
+import os
 import time
 from contextlib import asynccontextmanager
+from pathlib import Path
 from uuid import uuid4
 
 from fastapi import FastAPI, Request
@@ -9,6 +12,7 @@ from fastapi.responses import HTMLResponse, RedirectResponse
 from fastapi.templating import Jinja2Templates
 
 from nexus_babel.api.routes import router as api_router
+from nexus_babel.api.errors import register_exception_handlers
 from nexus_babel.config import Settings, get_settings
 from nexus_babel.db import DBManager
 from nexus_babel.models import Base
@@ -25,16 +29,54 @@ from nexus_babel.services.remix import RemixService
 from nexus_babel.services.rhetoric import RhetoricalAnalyzer
 from nexus_babel.services.seed_corpus import SeedCorpusService
 
+logger = logging.getLogger(__name__)
 
-def create_app(settings_override: Settings | None = None) -> FastAPI:
-    settings = settings_override or get_settings()
-    templates = Jinja2Templates(directory="src/nexus_babel/frontend/templates")
 
-    @asynccontextmanager
-    async def lifespan(app: FastAPI):
+def _warn_runtime_default_paths(settings: Settings) -> None:
+    if settings.environment == "dev":
+        return
+    cwd = Path.cwd().resolve()
+    default_corpus = cwd
+    default_object_storage = cwd / "object_storage"
+
+    corpus_env_set = "NEXUS_CORPUS_ROOT" in os.environ
+    object_env_set = "NEXUS_OBJECT_STORAGE_ROOT" in os.environ
+    if settings.corpus_root.resolve() == default_corpus and not corpus_env_set:
+        logger.warning(
+            "Non-dev environment '%s' is using default-like corpus_root=%s; set NEXUS_CORPUS_ROOT explicitly",
+            settings.environment,
+            settings.corpus_root,
+        )
+    if settings.object_storage_root.resolve() == default_object_storage and not object_env_set:
+        logger.warning(
+            "Non-dev environment '%s' is using default-like object_storage_root=%s; set NEXUS_OBJECT_STORAGE_ROOT explicitly",
+            settings.environment,
+            settings.object_storage_root,
+        )
+
+
+def _initialize_schema_and_seeds(app: FastAPI) -> None:
+    settings: Settings = app.state.settings
+    schema_mode = settings.resolved_schema_management_mode()
+    if schema_mode == "auto_create":
         app.state.db.create_all(Base.metadata)
-        session = app.state.db.session()
-        try:
+    elif schema_mode == "migrate_only":
+        logger.info("Schema management mode is migrate_only; skipping create_all() at startup")
+    elif schema_mode == "off":
+        logger.info("Schema management mode is off; skipping create_all() at startup")
+
+    if not app.state.db.has_all_tables(Base.metadata):
+        logger.warning(
+            "Database schema is not ready for startup seeding; skipping bootstrap keys and policy initialization "
+            "(mode=%s, database_url=%s)",
+            schema_mode,
+            settings.database_url,
+        )
+        return
+
+    session = app.state.db.session()
+    try:
+        if settings.resolved_bootstrap_keys_enabled():
             app.state.auth_service.ensure_default_api_keys(
                 session,
                 [
@@ -44,16 +86,29 @@ def create_app(settings_override: Settings | None = None) -> FastAPI:
                     ("dev-admin", "admin", settings.bootstrap_admin_key, True),
                 ],
             )
-            app.state.governance_service.ensure_default_policies(session, settings.public_blocked_terms)
-            session.commit()
-        finally:
-            session.close()
+        else:
+            logger.info("Bootstrap API key seeding disabled for environment=%s", settings.environment)
+        app.state.governance_service.ensure_default_policies(session, settings.public_blocked_terms)
+        session.commit()
+    finally:
+        session.close()
+
+
+def create_app(settings_override: Settings | None = None) -> FastAPI:
+    settings = settings_override or get_settings()
+    templates = Jinja2Templates(directory="src/nexus_babel/frontend/templates")
+
+    @asynccontextmanager
+    async def lifespan(app: FastAPI):
+        _initialize_schema_and_seeds(app)
         yield
         app.state.hypergraph.close()
 
     app = FastAPI(title=settings.app_name, lifespan=lifespan)
+    register_exception_handlers(app)
 
     app.state.settings = settings
+    _warn_runtime_default_paths(settings)
     app.state.db = DBManager(settings.database_url)
     app.state.hypergraph = HypergraphProjector(settings.neo4j_uri, settings.neo4j_username, settings.neo4j_password)
     app.state.metrics = MetricsService()

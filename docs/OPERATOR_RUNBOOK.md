@@ -20,6 +20,12 @@ python3 -m pip install -e .[dev,postgres]
 make db-upgrade
 ```
 
+If `make` is unavailable:
+
+```bash
+alembic upgrade head
+```
+
 ## 2. Configuration
 
 Copy and edit:
@@ -31,12 +37,14 @@ cp .env.example .env
 Important variables:
 
 - `NEXUS_DATABASE_URL`
+- `NEXUS_SCHEMA_MANAGEMENT_MODE` (`auto_create`, `migrate_only`, `off`)
 - `NEXUS_NEO4J_URI`
 - `NEXUS_NEO4J_USERNAME`
 - `NEXUS_NEO4J_PASSWORD`
 - `NEXUS_CORPUS_ROOT`
 - `NEXUS_OBJECT_STORAGE_ROOT`
 - `NEXUS_RAW_MODE_ENABLED`
+- `NEXUS_BOOTSTRAP_KEYS_ENABLED`
 - `NEXUS_BOOTSTRAP_VIEWER_KEY`
 - `NEXUS_BOOTSTRAP_OPERATOR_KEY`
 - `NEXUS_BOOTSTRAP_RESEARCHER_KEY`
@@ -44,12 +52,21 @@ Important variables:
 
 > [!WARNING]
 > `.env.example` and `docker-compose.yml` use local-only placeholder credentials. Do not reuse them outside local development.
+>
+> For production-like environments, set `NEXUS_SCHEMA_MANAGEMENT_MODE=migrate_only` and `NEXUS_BOOTSTRAP_KEYS_ENABLED=false`.
 
 ## 3. Start Service
 
 ```bash
 uvicorn nexus_babel.main:app --host 0.0.0.0 --port 8000 --reload
 python -m nexus_babel.worker
+```
+
+Equivalent `make` targets:
+
+```bash
+make run-api
+make run-worker
 ```
 
 Health check:
@@ -123,12 +140,24 @@ pytest -q
 python scripts/load_test.py
 ```
 
+Also available:
+
+```bash
+make test
+make lint
+make openapi-snapshot
+```
+
+Use `make openapi-snapshot` after intentional `/api/v1` contract changes to regenerate the normalized OpenAPI snapshot used by the test suite.
+If you are not running inside the project environment, use `.venv/bin/python scripts/generate_openapi_contract_snapshot.py`.
+
 ## 8. Known Constraints
 
 - RLOS analysis layers are heuristic MVP implementations, not full ML models yet.
 - Image OCR and advanced audio analysis are represented via metadata paths in this slice.
 - Files containing Git conflict markers are intentionally flagged as non-ingestable until resolved.
 - API keys are static bootstrap secrets in MVP mode; rotate in real environments.
+- In non-dev environments, set explicit corpus/object storage paths to avoid cwd-dependent defaults at startup.
 
 ## 9. Durability and Recovery
 

@@ -1,15 +1,11 @@
 from __future__ import annotations
 
 import hashlib
-import re
 import shutil
-import wave
-from collections import defaultdict
 from pathlib import Path
 from typing import Any
 from uuid import uuid4
 
-from pypdf import PdfReader
 from sqlalchemy import delete, select
 from sqlalchemy.orm import Session
 
@@ -17,10 +13,22 @@ from nexus_babel.config import Settings
 from nexus_babel.models import Atom, Document, IngestJob, ProjectionLedger
 from nexus_babel.services.canonicalization import apply_canonicalization, collect_current_corpus_paths
 from nexus_babel.services.hypergraph import HypergraphProjector
+from nexus_babel.services.ingestion_media import (
+    AUDIO_EXT,
+    IMAGE_EXT,
+    PDF_EXT,
+    TEXT_EXT,
+    derive_modality_status,
+    derive_text_segments,
+    detect_modality,
+    extract_audio_metadata,
+    extract_image_metadata,
+    extract_pdf_text,
+    pdf_page_count,
+)
+from nexus_babel.services import ingestion_projection
 from nexus_babel.services.text_utils import (
     ATOM_FILENAME_SCHEMA_VERSION,
-    ATOM_LEVELS,
-    atomize_text,
     atomize_text_rich,
     deterministic_atom_filename,
     has_conflict_markers,
@@ -28,11 +36,6 @@ from nexus_babel.services.text_utils import (
     resolve_atomization_selection,
     sha256_file,
 )
-
-TEXT_EXT = {".md", ".txt", ".yaml", ".yml"}
-PDF_EXT = {".pdf"}
-IMAGE_EXT = {".png", ".jpg", ".jpeg", ".webp"}
-AUDIO_EXT = {".wav", ".mp3", ".flac"}
 
 
 class IngestionService:
@@ -91,7 +94,7 @@ class IngestionService:
                     errors.append(f"File not found: {path}")
                     continue
 
-                modality = self._detect_modality(path)
+                modality = detect_modality(path)
                 if modality_filter and modality not in modality_filter:
                     files.append({"path": str(path), "status": "skipped", "error": None, "document_id": None})
                     continue
@@ -125,18 +128,18 @@ class IngestionService:
                         "line_count": extracted_text.count("\n") + 1,
                         "char_count": len(extracted_text),
                     }
-                    segments.update(self._derive_text_segments(extracted_text, is_pdf=False))
+                    segments.update(derive_text_segments(extracted_text, is_pdf=False))
                 elif path.suffix.lower() in PDF_EXT:
-                    extracted_text = self._extract_pdf_text(path)
+                    extracted_text = extract_pdf_text(path)
                     segments = {
                         "char_count": len(extracted_text),
-                        "page_count": self._pdf_page_count(path),
+                        "page_count": pdf_page_count(path),
                     }
-                    segments.update(self._derive_text_segments(extracted_text, is_pdf=True))
+                    segments.update(derive_text_segments(extracted_text, is_pdf=True))
                 elif path.suffix.lower() in IMAGE_EXT:
-                    segments = self._extract_image_metadata(path)
+                    segments = extract_image_metadata(path)
                 elif path.suffix.lower() in AUDIO_EXT:
-                    segments = self._extract_audio_metadata(path)
+                    segments = extract_audio_metadata(path)
 
                 doc = self._upsert_document(
                     session=session,
@@ -195,7 +198,7 @@ class IngestionService:
                 }
                 doc.modality_status = {
                     **(doc.modality_status or {}),
-                    doc.modality: self._derive_modality_status(doc.modality, projection_warning, segments),
+                    doc.modality: derive_modality_status(doc.modality, projection_warning, segments),
                 }
                 doc.provider_summary = {
                     **(doc.provider_summary or {}),
@@ -271,79 +274,6 @@ class IngestionService:
             return True
         except ValueError:
             return False
-
-    def _detect_modality(self, path: Path) -> str:
-        ext = path.suffix.lower()
-        if ext in TEXT_EXT:
-            return "text"
-        if ext in PDF_EXT:
-            return "pdf"
-        if ext in IMAGE_EXT:
-            return "image"
-        if ext in AUDIO_EXT:
-            return "audio"
-        return "binary"
-
-    def _extract_pdf_text(self, path: Path) -> str:
-        reader = PdfReader(str(path))
-        chunks = []
-        for page in reader.pages:
-            chunks.append(page.extract_text() or "")
-        return "\n".join(chunks)
-
-    def _pdf_page_count(self, path: Path) -> int:
-        reader = PdfReader(str(path))
-        return len(reader.pages)
-
-    def _extract_image_metadata(self, path: Path) -> dict[str, Any]:
-        metadata = {
-            "filename": path.name,
-            "size_bytes": path.stat().st_size,
-            "ocr_spans": [],
-            "caption_candidate": path.stem.replace("-", " ").replace("_", " ").strip(),
-            "embedding_ref": f"image:{sha256_file(path)[:16]}",
-        }
-        try:
-            from PIL import Image  # type: ignore
-
-            with Image.open(path) as img:
-                metadata.update({"width": img.width, "height": img.height, "mode": img.mode})
-        except Exception:
-            metadata.update({"width": None, "height": None})
-        return metadata
-
-    def _extract_audio_metadata(self, path: Path) -> dict[str, Any]:
-        metadata = {
-            "filename": path.name,
-            "size_bytes": path.stat().st_size,
-            "transcription_segments": [],
-            "prosody_summary": {},
-        }
-        if path.suffix.lower() == ".wav":
-            with wave.open(str(path), "rb") as wav:
-                frames = wav.getnframes()
-                rate = wav.getframerate()
-                duration = frames / float(rate) if rate else 0.0
-                metadata.update(
-                    {
-                        "sample_rate": rate,
-                        "channels": wav.getnchannels(),
-                        "duration_seconds": duration,
-                        "transcription_segments": [
-                            {
-                                "start": 0.0,
-                                "end": round(duration, 3),
-                                "text": "",
-                                "speaker": "speaker_0",
-                            }
-                        ],
-                        "prosody_summary": {
-                            "avg_intensity": None,
-                            "tempo_hint": None,
-                        },
-                    }
-                )
-        return metadata
 
     def _upsert_document(
         self,
@@ -473,40 +403,6 @@ class IngestionService:
             shutil.copy2(source_path, destination)
         return destination
 
-    def _derive_text_segments(self, text: str, *, is_pdf: bool) -> dict[str, Any]:
-        paragraphs = [chunk.strip() for chunk in re.split(r"\n\s*\n", text) if chunk.strip()]
-        heading_candidates = []
-        for line in text.splitlines():
-            stripped = line.strip()
-            if not stripped:
-                continue
-            if len(stripped) <= 80 and (stripped.isupper() or stripped == stripped.title()):
-                heading_candidates.append(stripped)
-        citation_markers = []
-        citation_markers.extend(re.findall(r"\[[0-9]{1,3}\]", text))
-        citation_markers.extend(re.findall(r"\([A-Z][A-Za-z]+,\s*[0-9]{4}\)", text))
-        paragraph_blocks = [
-            {"index": idx + 1, "char_count": len(block), "preview": block[:160]}
-            for idx, block in enumerate(paragraphs[:200])
-        ]
-        return {
-            "paragraph_blocks": paragraph_blocks,
-            "heading_candidates": heading_candidates[:100],
-            "citation_markers": citation_markers[:100],
-            "pdf_like_layout": bool(is_pdf),
-        }
-
-    def _derive_modality_status(self, modality: str, projection_warning: str | None, segments: dict[str, Any]) -> str:
-        if projection_warning:
-            return "partial"
-        if modality in {"text", "pdf"}:
-            return "complete" if int(segments.get("char_count", 0)) > 0 else "partial"
-        if modality == "image":
-            return "complete" if segments.get("width") and segments.get("height") else "partial"
-        if modality == "audio":
-            return "complete" if float(segments.get("duration_seconds", 0.0)) > 0 else "partial"
-        return "pending"
-
     def _update_projection_ledger(
         self,
         session: Session,
@@ -516,57 +412,13 @@ class IngestionService:
         status: str,
         error: str | None = None,
     ) -> None:
-        if not atom_payloads:
-            return
-        atom_ids = [p["id"] for p in atom_payloads]
-        rows = session.scalars(
-            select(ProjectionLedger).where(
-                ProjectionLedger.document_id == document_id,
-                ProjectionLedger.atom_id.in_(atom_ids),
-            )
-        ).all()
-        for row in rows:
-            row.status = status
-            row.attempt_count = int(row.attempt_count) + 1
-            row.last_error = error
+        ingestion_projection.update_projection_ledger(
+            session,
+            document_id=document_id,
+            atom_payloads=atom_payloads,
+            status=status,
+            error=error,
+        )
 
     def _apply_cross_modal_links(self, session: Session, updated_doc_ids: set[str]) -> None:
-        if not updated_doc_ids:
-            return
-        docs = session.scalars(select(Document).where(Document.id.in_(updated_doc_ids))).all()
-        if not docs:
-            return
-
-        groups: dict[str, list[Document]] = defaultdict(list)
-        for doc in docs:
-            stem = Path(doc.path).stem.lower()
-            groups[stem].append(doc)
-
-        for _, group in groups.items():
-            text_docs = [d for d in group if d.modality in {"text", "pdf"}]
-            media_docs = [d for d in group if d.modality in {"image", "audio"}]
-            if not text_docs or not media_docs:
-                continue
-            for text_doc in text_docs:
-                links = []
-                for media_doc in media_docs:
-                    links.append(
-                        {
-                            "target_document_id": media_doc.id,
-                            "target_modality": media_doc.modality,
-                            "text_anchor": {"start": 0, "end": min(120, len(str((text_doc.provenance or {}).get("extracted_text", ""))))},
-                            "target_anchor": {"region": "full" if media_doc.modality == "image" else "0.0-1.0"},
-                        }
-                    )
-                text_doc.provenance = {**(text_doc.provenance or {}), "cross_modal_links": links}
-            for media_doc in media_docs:
-                links = []
-                for text_doc in text_docs:
-                    links.append(
-                        {
-                            "target_document_id": text_doc.id,
-                            "target_modality": text_doc.modality,
-                            "target_anchor": {"start": 0, "end": 120},
-                        }
-                    )
-                media_doc.provenance = {**(media_doc.provenance or {}), "cross_modal_links": links}
+        ingestion_projection.apply_cross_modal_links(session, updated_doc_ids=updated_doc_ids)

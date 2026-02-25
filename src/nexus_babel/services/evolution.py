@@ -391,8 +391,8 @@ class EvolutionService:
         length = max(len(left), len(right))
         distance = 0
         for idx in range(length):
-            l = left[idx] if idx < len(left) else ""
+            left_char = left[idx] if idx < len(left) else ""
             r = right[idx] if idx < len(right) else ""
-            if l != r:
+            if left_char != r:
                 distance += 1
         return distance

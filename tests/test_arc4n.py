@@ -261,9 +261,6 @@ class TestRemixStrategies:
         self.remix = RemixService(evolution_service=EvolutionService())
 
     def test_interleave(self):
-        import random
-
-        rng = random.Random(42)
         result = self.remix._interleave("one two three", "alpha beta gamma")
         words = result.split()
         assert "one" in words

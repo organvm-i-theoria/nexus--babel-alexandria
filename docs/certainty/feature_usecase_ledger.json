@@ -1,20 +1,19 @@
 {
-  "generated_at": "2026-02-18T14:22:04.297312+00:00",
+  "generated_at": "2026-02-25T01:54:26.636731+00:00",
   "root": "/Users/4jp/Workspace/organvm-i-theoria/nexus--babel-alexandria-",
   "summary": {
-    "files_total": 64,
+    "files_total": 144,
     "files_by_kind": {
-      "text": 61,
-      "binary": 1,
+      "text": 142,
       "pdf": 2
     },
-    "features_total": 105,
+    "features_total": 95,
     "features_by_status": {
-      "implemented": 20,
+      "implemented": 10,
       "planned": 85
     },
     "features_by_type": {
-      "api_endpoint": 20,
+      "api_endpoint": 10,
       "roadmap_task": 48,
       "suggested_feature_or_use_case": 37
     },
@@ -22,146 +21,29 @@
   },
   "entries": [
     {
-      "id": "endpoint::/api/v1/analyze",
+      "id": "endpoint::/api/v1/auth/whoami",
       "type": "api_endpoint",
       "status": "implemented",
-      "source_file": "README.md",
-      "line": 16,
-      "text": "/api/v1/analyze",
-      "evidence": "/api/v1/analyze"
-    },
-    {
-      "id": "endpoint::/api/v1/branches/{id}/timeline",
-      "type": "api_endpoint",
-      "status": "implemented",
-      "source_file": "README.md",
-      "line": 16,
-      "text": "/api/v1/branches/{id}/timeline",
-      "evidence": "/api/v1/branches/{id}/timeline"
-    },
-    {
-      "id": "endpoint::/api/v1/evolve/branch",
-      "type": "api_endpoint",
-      "status": "implemented",
-      "source_file": "README.md",
-      "line": 16,
-      "text": "/api/v1/evolve/branch",
-      "evidence": "/api/v1/evolve/branch"
-    },
-    {
-      "id": "endpoint::/api/v1/governance/evaluate",
-      "type": "api_endpoint",
-      "status": "implemented",
-      "source_file": "README.md",
-      "line": 16,
-      "text": "/api/v1/governance/evaluate",
-      "evidence": "/api/v1/governance/evaluate"
+      "source_file": "docs/OPERATOR_RUNBOOK.md",
+      "line": 81,
+      "text": "/api/v1/auth/whoami",
+      "evidence": "/api/v1/auth/whoami"
     },
     {
       "id": "endpoint::/api/v1/ingest/batch",
       "type": "api_endpoint",
       "status": "implemented",
-      "source_file": "README.md",
-      "line": 16,
+      "source_file": "docs/OPERATOR_RUNBOOK.md",
+      "line": 94,
       "text": "/api/v1/ingest/batch",
       "evidence": "/api/v1/ingest/batch"
-    },
-    {
-      "id": "endpoint::/api/v1/ingest/jobs/{id}",
-      "type": "api_endpoint",
-      "status": "implemented",
-      "source_file": "README.md",
-      "line": 16,
-      "text": "/api/v1/ingest/jobs/{id}",
-      "evidence": "/api/v1/ingest/jobs/{id}"
-    },
-    {
-      "id": "endpoint::/api/v1/rhetorical_analysis",
-      "type": "api_endpoint",
-      "status": "implemented",
-      "source_file": "README.md",
-      "line": 16,
-      "text": "/api/v1/rhetorical_analysis",
-      "evidence": "/api/v1/rhetorical_analysis"
-    },
-    {
-      "id": "endpoint::/api/v1/analysis/runs/{id}",
-      "type": "api_endpoint",
-      "status": "implemented",
-      "source_file": "README.md",
-      "line": 17,
-      "text": "/api/v1/analysis/runs/{id}",
-      "evidence": "/api/v1/analysis/runs/{id}"
-    },
-    {
-      "id": "endpoint::/api/v1/audit/policy-decisions",
-      "type": "api_endpoint",
-      "status": "implemented",
-      "source_file": "README.md",
-      "line": 17,
-      "text": "/api/v1/audit/policy-decisions",
-      "evidence": "/api/v1/audit/policy-decisions"
-    },
-    {
-      "id": "endpoint::/api/v1/branches/{id}/compare/{other_id}",
-      "type": "api_endpoint",
-      "status": "implemented",
-      "source_file": "README.md",
-      "line": 17,
-      "text": "/api/v1/branches/{id}/compare/{other_id}",
-      "evidence": "/api/v1/branches/{id}/compare/{other_id}"
-    },
-    {
-      "id": "endpoint::/api/v1/branches/{id}/replay",
-      "type": "api_endpoint",
-      "status": "implemented",
-      "source_file": "README.md",
-      "line": 17,
-      "text": "/api/v1/branches/{id}/replay",
-      "evidence": "/api/v1/branches/{id}/replay"
-    },
-    {
-      "id": "endpoint::/api/v1/hypergraph/query",
-      "type": "api_endpoint",
-      "status": "implemented",
-      "source_file": "README.md",
-      "line": 17,
-      "text": "/api/v1/hypergraph/query",
-      "evidence": "/api/v1/hypergraph/query"
-    },
-    {
-      "id": "endpoint::/api/v1/jobs/submit",
-      "type": "api_endpoint",
-      "status": "implemented",
-      "source_file": "README.md",
-      "line": 17,
-      "text": "/api/v1/jobs/submit",
-      "evidence": "/api/v1/jobs/submit"
-    },
-    {
-      "id": "endpoint::/api/v1/jobs/{id}",
-      "type": "api_endpoint",
-      "status": "implemented",
-      "source_file": "README.md",
-      "line": 17,
-      "text": "/api/v1/jobs/{id}",
-      "evidence": "/api/v1/jobs/{id}"
-    },
-    {
-      "id": "endpoint::/api/v1/auth/whoami",
-      "type": "api_endpoint",
-      "status": "implemented",
-      "source_file": "docs/OPERATOR_RUNBOOK.md",
-      "line": 64,
-      "text": "/api/v1/auth/whoami",
-      "evidence": "/api/v1/auth/whoami"
     },
     {
       "id": "endpoint::/api/v1/documents",
       "type": "api_endpoint",
       "status": "implemented",
       "source_file": "docs/OPERATOR_RUNBOOK.md",
-      "line": 85,
+      "line": 102,
       "text": "/api/v1/documents",
       "evidence": "/api/v1/documents"
     },
@@ -170,7 +52,7 @@
       "type": "api_endpoint",
       "status": "implemented",
       "source_file": "docs/OPERATOR_RUNBOOK.md",
-      "line": 86,
+      "line": 103,
       "text": "/api/v1/ingest/jobs/{job_id}",
       "evidence": "/api/v1/ingest/jobs/{job_id}"
     },
@@ -179,16 +61,25 @@
       "type": "api_endpoint",
       "status": "implemented",
       "source_file": "docs/OPERATOR_RUNBOOK.md",
-      "line": 88,
+      "line": 105,
       "text": "/api/v1/hypergraph/documents/{document_id}/integrity",
       "evidence": "/api/v1/hypergraph/documents/{document_id}/integrity"
+    },
+    {
+      "id": "endpoint::/api/v1/jobs/submit",
+      "type": "api_endpoint",
+      "status": "implemented",
+      "source_file": "docs/OPERATOR_RUNBOOK.md",
+      "line": 106,
+      "text": "/api/v1/jobs/submit",
+      "evidence": "/api/v1/jobs/submit"
     },
     {
       "id": "endpoint::/api/v1/jobs/{job_id}",
       "type": "api_endpoint",
       "status": "implemented",
       "source_file": "docs/OPERATOR_RUNBOOK.md",
-      "line": 90,
+      "line": 107,
       "text": "/api/v1/jobs/{job_id}",
       "evidence": "/api/v1/jobs/{job_id}"
     },
@@ -197,15 +88,33 @@
       "type": "api_endpoint",
       "status": "implemented",
       "source_file": "docs/OPERATOR_RUNBOOK.md",
-      "line": 91,
+      "line": 108,
       "text": "/api/v1/analysis/runs/{run_id}",
       "evidence": "/api/v1/analysis/runs/{run_id}"
+    },
+    {
+      "id": "endpoint::/api/v1/audit/policy-decisions",
+      "type": "api_endpoint",
+      "status": "implemented",
+      "source_file": "docs/OPERATOR_RUNBOOK.md",
+      "line": 109,
+      "text": "/api/v1/audit/policy-decisions",
+      "evidence": "/api/v1/audit/policy-decisions"
+    },
+    {
+      "id": "endpoint::/api/v1/governance/evaluate",
+      "type": "api_endpoint",
+      "status": "implemented",
+      "source_file": "docs/OPERATOR_RUNBOOK.md",
+      "line": 120,
+      "text": "/api/v1/governance/evaluate",
+      "evidence": "/api/v1/governance/evaluate"
     },
     {
       "id": "ENV-001",
       "type": "roadmap_task",
       "status": "planned",
-      "source_file": "roadmap.md",
+      "source_file": "docs/roadmap.md",
       "line": 21,
       "text": "Task ENV-001"
     },
@@ -213,7 +122,7 @@
       "id": "ENV-002",
       "type": "roadmap_task",
       "status": "planned",
-      "source_file": "roadmap.md",
+      "source_file": "docs/roadmap.md",
       "line": 66,
       "text": "Task ENV-002"
     },
@@ -221,7 +130,7 @@
       "id": "ENV-003",
       "type": "roadmap_task",
       "status": "planned",
-      "source_file": "roadmap.md",
+      "source_file": "docs/roadmap.md",
       "line": 82,
       "text": "Task ENV-003"
     },
@@ -229,7 +138,7 @@
       "id": "DEP-001",
       "type": "roadmap_task",
       "status": "planned",
-      "source_file": "roadmap.md",
+      "source_file": "docs/roadmap.md",
       "line": 102,
       "text": "Task DEP-001"
     },
@@ -237,7 +146,7 @@
       "id": "DEP-002",
       "type": "roadmap_task",
       "status": "planned",
-      "source_file": "roadmap.md",
+      "source_file": "docs/roadmap.md",
       "line": 116,
       "text": "Task DEP-002"
     },
@@ -245,7 +154,7 @@
       "id": "DEP-003",
       "type": "roadmap_task",
       "status": "planned",
-      "source_file": "roadmap.md",
+      "source_file": "docs/roadmap.md",
       "line": 130,
       "text": "Task DEP-003"
     },
@@ -253,7 +162,7 @@
       "id": "HG-001",
       "type": "roadmap_task",
       "status": "planned",
-      "source_file": "roadmap.md",
+      "source_file": "docs/roadmap.md",
       "line": 155,
       "text": "Task HG-001"
     },
@@ -261,7 +170,7 @@
       "id": "HG-002",
       "type": "roadmap_task",
       "status": "planned",
-      "source_file": "roadmap.md",
+      "source_file": "docs/roadmap.md",
       "line": 178,
       "text": "Task HG-002"
     },
@@ -269,7 +178,7 @@
       "id": "HG-003",
       "type": "roadmap_task",
       "status": "planned",
-      "source_file": "roadmap.md",
+      "source_file": "docs/roadmap.md",
       "line": 197,
       "text": "Task HG-003"
     },
@@ -277,7 +186,7 @@
       "id": "SCH-001",
       "type": "roadmap_task",
       "status": "planned",
-      "source_file": "roadmap.md",
+      "source_file": "docs/roadmap.md",
       "line": 216,
       "text": "Task SCH-001"
     },
@@ -285,7 +194,7 @@
       "id": "SCH-002",
       "type": "roadmap_task",
       "status": "planned",
-      "source_file": "roadmap.md",
+      "source_file": "docs/roadmap.md",
       "line": 234,
       "text": "Task SCH-002"
     },
@@ -293,7 +202,7 @@
       "id": "PHON-001",
       "type": "roadmap_task",
       "status": "planned",
-      "source_file": "roadmap.md",
+      "source_file": "docs/roadmap.md",
       "line": 259,
       "text": "Task PHON-001"
     },
@@ -301,7 +210,7 @@
       "id": "PHON-002",
       "type": "roadmap_task",
       "status": "planned",
-      "source_file": "roadmap.md",
+      "source_file": "docs/roadmap.md",
       "line": 279,
       "text": "Task PHON-002"
     },
@@ -309,7 +218,7 @@
       "id": "PHON-003",
       "type": "roadmap_task",
       "status": "planned",
-      "source_file": "roadmap.md",
+      "source_file": "docs/roadmap.md",
       "line": 295,
       "text": "Task PHON-003"
     },
@@ -317,7 +226,7 @@
       "id": "MORPH-001",
       "type": "roadmap_task",
       "status": "planned",
-      "source_file": "roadmap.md",
+      "source_file": "docs/roadmap.md",
       "line": 312,
       "text": "Task MORPH-001"
     },
@@ -325,7 +234,7 @@
       "id": "MORPH-002",
       "type": "roadmap_task",
       "status": "planned",
-      "source_file": "roadmap.md",
+      "source_file": "docs/roadmap.md",
       "line": 331,
       "text": "Task MORPH-002"
     },
@@ -333,7 +242,7 @@
       "id": "MORPH-003",
       "type": "roadmap_task",
       "status": "planned",
-      "source_file": "roadmap.md",
+      "source_file": "docs/roadmap.md",
       "line": 348,
       "text": "Task MORPH-003"
     },
@@ -341,7 +250,7 @@
       "id": "SYN-001",
       "type": "roadmap_task",
       "status": "planned",
-      "source_file": "roadmap.md",
+      "source_file": "docs/roadmap.md",
       "line": 366,
       "text": "Task SYN-001"
     },
@@ -349,7 +258,7 @@
       "id": "SYN-002",
       "type": "roadmap_task",
       "status": "planned",
-      "source_file": "roadmap.md",
+      "source_file": "docs/roadmap.md",
       "line": 382,
       "text": "Task SYN-002"
     },
@@ -357,7 +266,7 @@
       "id": "SYN-003",
       "type": "roadmap_task",
       "status": "planned",
-      "source_file": "roadmap.md",
+      "source_file": "docs/roadmap.md",
       "line": 398,
       "text": "Task SYN-003"
     },
@@ -365,7 +274,7 @@
       "id": "SEM-001",
       "type": "roadmap_task",
       "status": "planned",
-      "source_file": "roadmap.md",
+      "source_file": "docs/roadmap.md",
       "line": 415,
       "text": "Task SEM-001"
     },
@@ -373,7 +282,7 @@
       "id": "SEM-002",
       "type": "roadmap_task",
       "status": "planned",
-      "source_file": "roadmap.md",
+      "source_file": "docs/roadmap.md",
       "line": 430,
       "text": "Task SEM-002"
     },
@@ -381,7 +290,7 @@
       "id": "SEM-003",
       "type": "roadmap_task",
       "status": "planned",
-      "source_file": "roadmap.md",
+      "source_file": "docs/roadmap.md",
       "line": 445,
       "text": "Task SEM-003"
     },
@@ -389,7 +298,7 @@
       "id": "PRAG-001",
       "type": "roadmap_task",
       "status": "planned",
-      "source_file": "roadmap.md",
+      "source_file": "docs/roadmap.md",
       "line": 462,
       "text": "Task PRAG-001"
     },
@@ -397,7 +306,7 @@
       "id": "PRAG-002",
       "type": "roadmap_task",
       "status": "planned",
-      "source_file": "roadmap.md",
+      "source_file": "docs/roadmap.md",
       "line": 477,
       "text": "Task PRAG-002"
     },
@@ -405,7 +314,7 @@
       "id": "PRAG-003",
       "type": "roadmap_task",
       "status": "planned",
-      "source_file": "roadmap.md",
+      "source_file": "docs/roadmap.md",
       "line": 492,
       "text": "Task PRAG-003"
     },
@@ -413,7 +322,7 @@
       "id": "DISC-001",
       "type": "roadmap_task",
       "status": "planned",
-      "source_file": "roadmap.md",
+      "source_file": "docs/roadmap.md",
       "line": 508,
       "text": "Task DISC-001"
     },
@@ -421,7 +330,7 @@
       "id": "DISC-002",
       "type": "roadmap_task",
       "status": "planned",
-      "source_file": "roadmap.md",
+      "source_file": "docs/roadmap.md",
       "line": 523,
       "text": "Task DISC-002"
     },
@@ -429,7 +338,7 @@
       "id": "SOCIO-001",
       "type": "roadmap_task",
       "status": "planned",
-      "source_file": "roadmap.md",
+      "source_file": "docs/roadmap.md",
       "line": 540,
       "text": "Task SOCIO-001"
     },
@@ -437,7 +346,7 @@
       "id": "SOCIO-002",
       "type": "roadmap_task",
       "status": "planned",
-      "source_file": "roadmap.md",
+      "source_file": "docs/roadmap.md",
       "line": 554,
       "text": "Task SOCIO-002"
     },
@@ -445,7 +354,7 @@
       "id": "VIS-001",
       "type": "roadmap_task",
       "status": "planned",
-      "source_file": "roadmap.md",
+      "source_file": "docs/roadmap.md",
       "line": 577,
       "text": "Task VIS-001"
     },
@@ -453,7 +362,7 @@
       "id": "VIS-002",
       "type": "roadmap_task",
       "status": "planned",
-      "source_file": "roadmap.md",
+      "source_file": "docs/roadmap.md",
       "line": 592,
       "text": "Task VIS-002"
     },
@@ -461,7 +370,7 @@
       "id": "ALIGN-001",
       "type": "roadmap_task",
       "status": "planned",
-      "source_file": "roadmap.md",
+      "source_file": "docs/roadmap.md",
       "line": 609,
       "text": "Task ALIGN-001"
     },
@@ -469,7 +378,7 @@
       "id": "RHET-001",
       "type": "roadmap_task",
       "status": "planned",
-      "source_file": "roadmap.md",
+      "source_file": "docs/roadmap.md",
       "line": 633,
       "text": "Task RHET-001"
     },
@@ -477,7 +386,7 @@
       "id": "RHET-002",
       "type": "roadmap_task",
       "status": "planned",
-      "source_file": "roadmap.md",
+      "source_file": "docs/roadmap.md",
       "line": 648,
       "text": "Task RHET-002"
     },
@@ -485,7 +394,7 @@
       "id": "SEMI-001",
       "type": "roadmap_task",
       "status": "planned",
-      "source_file": "roadmap.md",
+      "source_file": "docs/roadmap.md",
       "line": 665,
       "text": "Task SEMI-001"
     },
@@ -493,7 +402,7 @@
       "id": "SAFE-001",
       "type": "roadmap_task",
       "status": "planned",
-      "source_file": "roadmap.md",
+      "source_file": "docs/roadmap.md",
       "line": 688,
       "text": "Task SAFE-001"
     },
@@ -501,7 +410,7 @@
       "id": "SAFE-002",
       "type": "roadmap_task",
       "status": "planned",
-      "source_file": "roadmap.md",
+      "source_file": "docs/roadmap.md",
       "line": 703,
       "text": "Task SAFE-002"
     },
@@ -509,7 +418,7 @@
       "id": "META-001",
       "type": "roadmap_task",
       "status": "planned",
-      "source_file": "roadmap.md",
+      "source_file": "docs/roadmap.md",
       "line": 727,
       "text": "Task META-001"
     },
@@ -517,7 +426,7 @@
       "id": "META-002",
       "type": "roadmap_task",
       "status": "planned",
-      "source_file": "roadmap.md",
+      "source_file": "docs/roadmap.md",
       "line": 742,
       "text": "Task META-002"
     },
@@ -525,7 +434,7 @@
       "id": "VIZ-001",
       "type": "roadmap_task",
       "status": "planned",
-      "source_file": "roadmap.md",
+      "source_file": "docs/roadmap.md",
       "line": 766,
       "text": "Task VIZ-001"
     },
@@ -533,7 +442,7 @@
       "id": "VIZ-002",
       "type": "roadmap_task",
       "status": "planned",
-      "source_file": "roadmap.md",
+      "source_file": "docs/roadmap.md",
       "line": 781,
       "text": "Task VIZ-002"
     },
@@ -541,7 +450,7 @@
       "id": "API-001",
       "type": "roadmap_task",
       "status": "planned",
-      "source_file": "roadmap.md",
+      "source_file": "docs/roadmap.md",
       "line": 797,
       "text": "Task API-001"
     },
@@ -549,7 +458,7 @@
       "id": "TEST-001",
       "type": "roadmap_task",
       "status": "planned",
-      "source_file": "roadmap.md",
+      "source_file": "docs/roadmap.md",
       "line": 822,
       "text": "Task TEST-001"
     },
@@ -557,7 +466,7 @@
       "id": "TEST-002",
       "type": "roadmap_task",
       "status": "planned",
-      "source_file": "roadmap.md",
+      "source_file": "docs/roadmap.md",
       "line": 839,
       "text": "Task TEST-002"
     },
@@ -565,7 +474,7 @@
       "id": "DEPLOY-001",
       "type": "roadmap_task",
       "status": "planned",
-      "source_file": "roadmap.md",
+      "source_file": "docs/roadmap.md",
       "line": 863,
       "text": "Task DEPLOY-001"
     },
@@ -573,7 +482,7 @@
       "id": "DEPLOY-002",
       "type": "roadmap_task",
       "status": "planned",
-      "source_file": "roadmap.md",
+      "source_file": "docs/roadmap.md",
       "line": 880,
       "text": "Task DEPLOY-002"
     },
@@ -581,303 +490,303 @@
       "id": "OPT-001",
       "type": "roadmap_task",
       "status": "planned",
-      "source_file": "roadmap.md",
+      "source_file": "docs/roadmap.md",
       "line": 904,
       "text": "Task OPT-001"
     },
     {
-      "id": "suggestion::9a01d2e38379",
+      "id": "suggestion::6ffacc499b7c",
       "type": "suggested_feature_or_use_case",
       "status": "planned",
-      "source_file": "0469-arc4n-seed-texts-and-atomization-2.md",
+      "source_file": "docs/corpus/0469-arc4n-seed-texts-and-atomization-2.md",
       "line": 208,
       "text": "[Next Step Reference ID: ARC4N001-NEXT01]"
     },
     {
-      "id": "suggestion::d847e1a8e745",
+      "id": "suggestion::7ce27603ddc5",
       "type": "suggested_feature_or_use_case",
       "status": "planned",
-      "source_file": "0469-arc4n-seed-texts-and-atomization-2.md",
+      "source_file": "docs/corpus/0469-arc4n-seed-texts-and-atomization-2.md",
       "line": 211,
       "text": "> Would you like me to also propose a file-naming syntax system for maximum future database parsing (e.g., `ODYSSEY_WORD_0001_Sing.txt`)?"
     },
     {
-      "id": "suggestion::b7faf6f0220c",
+      "id": "suggestion::e5c2b20e0547",
       "type": "suggested_feature_or_use_case",
       "status": "planned",
-      "source_file": "0469-arc4n-seed-texts-and-atomization-2.md",
+      "source_file": "docs/corpus/0469-arc4n-seed-texts-and-atomization-2.md",
       "line": 352,
       "text": "| Should we plan an experimental \"New Alphabet\" generation after first 3 seed texts? | Yes (pilot program) | Later (after stability) |"
     },
     {
-      "id": "suggestion::b7f3f5241f97",
+      "id": "suggestion::9c591420b1d2",
       "type": "suggested_feature_or_use_case",
       "status": "planned",
-      "source_file": "0469-arc4n-seed-texts-and-atomization-2.md",
+      "source_file": "docs/corpus/0469-arc4n-seed-texts-and-atomization-2.md",
       "line": 356,
       "text": "# [Next Step Reference ID: ARC4N001-NEXT02]"
     },
     {
-      "id": "suggestion::587895cd7f99",
+      "id": "suggestion::4ceb4f8dc382",
       "type": "suggested_feature_or_use_case",
       "status": "planned",
-      "source_file": "0469-arc4n-seed-texts-and-atomization-2.md",
+      "source_file": "docs/corpus/0469-arc4n-seed-texts-and-atomization-2.md",
       "line": 362,
       "text": "> Should I proceed to sketch a visual flowchart showing how a single *letter* can mutate into future language forms across ARC4N?"
     },
     {
-      "id": "suggestion::e41423842fd8",
+      "id": "suggestion::917e31e7d63a",
       "type": "suggested_feature_or_use_case",
       "status": "planned",
-      "source_file": "0469-arc4n-seed-texts-and-atomization-2.md",
+      "source_file": "docs/corpus/0469-arc4n-seed-texts-and-atomization-2.md",
       "line": 486,
       "text": "- **Should we imagine new *sung* languages** (musical syllabic structures) **emerging from ARC4N too?**"
     },
     {
-      "id": "suggestion::702261e55b29",
+      "id": "suggestion::e4e08d095a81",
       "type": "suggested_feature_or_use_case",
       "status": "planned",
-      "source_file": "0469-arc4n-seed-texts-and-atomization-2.md",
+      "source_file": "docs/corpus/0469-arc4n-seed-texts-and-atomization-2.md",
       "line": 491,
       "text": "# [Next Step Reference ID: ARC4N001-NEXT03]"
     },
     {
-      "id": "suggestion::453379a4d52d",
+      "id": "suggestion::3feebab7027e",
       "type": "suggested_feature_or_use_case",
       "status": "planned",
-      "source_file": "0469-arc4n-seed-texts-and-atomization-2.md",
+      "source_file": "docs/corpus/0469-arc4n-seed-texts-and-atomization-2.md",
       "line": 493,
       "text": ":: Awaiting your direction: Which prototype should we build next? ::"
     },
     {
-      "id": "suggestion::08ec260722f3",
+      "id": "suggestion::d21b33f92c10",
       "type": "suggested_feature_or_use_case",
       "status": "planned",
-      "source_file": "0469-arc4n-seed-texts-and-atomization-2.md",
+      "source_file": "docs/corpus/0469-arc4n-seed-texts-and-atomization-2.md",
       "line": 507,
       "text": "Would you like me to start by fusing **A + E** into a full micro-chain evolution (visual, phonetic, symbolic)?"
     },
     {
-      "id": "suggestion::b0463656e09e",
+      "id": "suggestion::731f1ecda916",
       "type": "suggested_feature_or_use_case",
       "status": "planned",
-      "source_file": "0469-arc4n-seed-texts-and-atomization-2.md",
+      "source_file": "docs/corpus/0469-arc4n-seed-texts-and-atomization-2.md",
       "line": 653,
       "text": "# [Next Step Reference ID: ARC4N001-NEXT04]"
     },
     {
-      "id": "suggestion::535f1c371caf",
+      "id": "suggestion::5ddcab3c825f",
       "type": "suggested_feature_or_use_case",
       "status": "planned",
-      "source_file": "0469-arc4n-seed-texts-and-atomization-2.md",
+      "source_file": "docs/corpus/0469-arc4n-seed-texts-and-atomization-2.md",
       "line": 664,
       "text": "(*We can build both eventually, but it will focus this immediate next step.*)"
     },
     {
-      "id": "suggestion::244e6f7afc3e",
+      "id": "suggestion::80d2a0ff377b",
       "type": "suggested_feature_or_use_case",
       "status": "planned",
-      "source_file": "0469-arc4n-seed-texts-and-atomization-2.md",
+      "source_file": "docs/corpus/0469-arc4n-seed-texts-and-atomization-2.md",
       "line": 673,
       "text": "Should we also track how the languages in our current reality have shaped and changed to create algorithms and functions to mirror this? English has been around for quite some time, has changed drastically, Italian, Roman, Latin, Japanese, all of these languages have shifted over time. Now, we could be attempting to do a Clockwork Orange and update language how we presuppose it might be, or we could literally create mathematical understandings of how language changes and implement that. Here, in our work, but then also, since this is modular and cellular and automatable, right, we're building a live synthetic machine, which we could, and will automate and will change through natural generative ways and also through unnatural ways via a user. And take natural evolution and ramp it up, right? If you look at the graph of how technology changed things over time, right, it's a greatly upward curve that we just don't understand. Thousands of years, we had somewhat similar access to technology, and then suddenly, digital technology takes us on the upward swing in a way that we are not even able to comprehend."
     },
     {
-      "id": "suggestion::3032974fdc0e",
+      "id": "suggestion::092c4a7a1615",
       "type": "suggested_feature_or_use_case",
       "status": "planned",
-      "source_file": "0469-arc4n-seed-texts-and-atomization-2.md",
+      "source_file": "docs/corpus/0469-arc4n-seed-texts-and-atomization-2.md",
       "line": 826,
       "text": "# [Next Step Reference ID: ARC4N001-NEXT05]"
     },
     {
-      "id": "suggestion::b0064385e237",
+      "id": "suggestion::5e3a9280263c",
       "type": "suggested_feature_or_use_case",
       "status": "planned",
-      "source_file": "0469-arc4n-seed-texts-and-atomization-2.md",
+      "source_file": "docs/corpus/0469-arc4n-seed-texts-and-atomization-2.md",
       "line": 832,
       "text": "| Which prototype or engine component should we start building next? | P5 - Natural Historic Drift Model | P6 - First Synthetic Mutation Trial |"
     },
     {
-      "id": "suggestion::2d7026e13525",
+      "id": "suggestion::1adaef68c7fb",
       "type": "suggested_feature_or_use_case",
       "status": "planned",
-      "source_file": "0469-arc4n-seed-texts-and-atomization-2.md",
+      "source_file": "docs/corpus/0469-arc4n-seed-texts-and-atomization-2.md",
       "line": 983,
       "text": "# [Next Step Reference ID: ARC4N001-NEXT06]"
     },
     {
-      "id": "suggestion::51b016a66ab0",
+      "id": "suggestion::fc6b00430ac8",
       "type": "suggested_feature_or_use_case",
       "status": "planned",
-      "source_file": "0469-arc4n-seed-texts-and-atomization-2.md",
+      "source_file": "docs/corpus/0469-arc4n-seed-texts-and-atomization-2.md",
       "line": 987,
       "text": "|[Would you like me to also pre-draft the text of the public post in case you want it immediately?]|"
     },
     {
-      "id": "suggestion::a3b44b265ac6",
+      "id": "suggestion::8a50349804b0",
       "type": "suggested_feature_or_use_case",
       "status": "planned",
-      "source_file": "0469-arc4n-seed-texts-and-atomization-2.md",
+      "source_file": "docs/corpus/0469-arc4n-seed-texts-and-atomization-2.md",
       "line": 1116,
       "text": "## 7. **What Areas of Study Should We Expand Into for Further Research?**"
     },
     {
-      "id": "suggestion::86db60bf3f9f",
+      "id": "suggestion::2b4a585ac023",
       "type": "suggested_feature_or_use_case",
       "status": "planned",
-      "source_file": "0469-arc4n-seed-texts-and-atomization-2.md",
+      "source_file": "docs/corpus/0469-arc4n-seed-texts-and-atomization-2.md",
       "line": 1175,
       "text": "# [Next Step Reference ID: ARC4N001-NEXT07]"
     },
     {
-      "id": "suggestion::b3f50178dd1f",
+      "id": "suggestion::fb01bba58a5e",
       "type": "suggested_feature_or_use_case",
       "status": "planned",
-      "source_file": "0469-arc4n-seed-texts-and-atomization-2.md",
+      "source_file": "docs/corpus/0469-arc4n-seed-texts-and-atomization-2.md",
       "line": 1179,
       "text": "- Or would you like to first quickly draft an internal **Funding Abstract Sentence** to prepare your future grant language?"
     },
     {
-      "id": "suggestion::7fe1df4dd08a",
+      "id": "suggestion::b40e375e40aa",
       "type": "suggested_feature_or_use_case",
       "status": "planned",
-      "source_file": "0469-arc4n-seed-texts-and-atomization-2.md",
+      "source_file": "docs/corpus/0469-arc4n-seed-texts-and-atomization-2.md",
       "line": 1293,
       "text": "# [Next Step Reference ID: ARC4N001-NEXT08]"
     },
     {
-      "id": "suggestion::43a45ed580df",
+      "id": "suggestion::16c4d0953a31",
       "type": "suggested_feature_or_use_case",
       "status": "planned",
-      "source_file": "0469-arc4n-seed-texts-and-atomization-2.md",
+      "source_file": "docs/corpus/0469-arc4n-seed-texts-and-atomization-2.md",
       "line": 1405,
       "text": "ARC4N must model:"
     },
     {
-      "id": "suggestion::0995842fcb9c",
+      "id": "suggestion::e0263e8d0b77",
       "type": "suggested_feature_or_use_case",
       "status": "planned",
-      "source_file": "0469-arc4n-seed-texts-and-atomization-2.md",
+      "source_file": "docs/corpus/0469-arc4n-seed-texts-and-atomization-2.md",
       "line": 1486,
       "text": "# [Next Step Reference ID: ARC4N001-NEXT09]"
     },
     {
-      "id": "suggestion::644fe1570154",
+      "id": "suggestion::e7e12bc2c364",
       "type": "suggested_feature_or_use_case",
       "status": "planned",
-      "source_file": "0469-arc4n-seed-texts-and-atomization-2.md",
+      "source_file": "docs/corpus/0469-arc4n-seed-texts-and-atomization-2.md",
       "line": 1490,
       "text": "- Would you like me to also generate **thread starter templates** for the UX, Academic, and Funding threads using these cartridges?"
     },
     {
-      "id": "suggestion::a012bde9f756",
+      "id": "suggestion::99eb312e486a",
       "type": "suggested_feature_or_use_case",
       "status": "planned",
-      "source_file": "0469-arc4n-seed-texts-and-atomization-2.md",
+      "source_file": "docs/corpus/0469-arc4n-seed-texts-and-atomization-2.md",
       "line": 1637,
       "text": "# [Next Step Reference ID: ARC4N001-NEXT10]"
     },
     {
-      "id": "suggestion::ec36bf5bfd02",
+      "id": "suggestion::7de553e91279",
       "type": "suggested_feature_or_use_case",
       "status": "planned",
-      "source_file": "0469-arc4n-seed-texts-and-atomization-2.md",
+      "source_file": "docs/corpus/0469-arc4n-seed-texts-and-atomization-2.md",
       "line": 1640,
       "text": "- Which new thread would you like to launch first: UX, Academic, Funding, or Other?"
     },
     {
-      "id": "suggestion::beb74ca7eb51",
+      "id": "suggestion::e2cb04afdb9e",
       "type": "suggested_feature_or_use_case",
       "status": "planned",
-      "source_file": "0469-arc4n-seed-texts-and-atomization-2.md",
+      "source_file": "docs/corpus/0469-arc4n-seed-texts-and-atomization-2.md",
       "line": 1641,
       "text": "- Would you like me to generate first action prompts inside the new thread automatically once launched? (To maintain velocity.)"
     },
     {
-      "id": "suggestion::f0e7f2b99f3b",
+      "id": "suggestion::9ce123fadeda",
       "type": "suggested_feature_or_use_case",
       "status": "planned",
-      "source_file": "0469-arc4n-seed-texts-and-atomization-2.md",
+      "source_file": "docs/corpus/0469-arc4n-seed-texts-and-atomization-2.md",
       "line": 1753,
       "text": "# (D) Proposed Immediate Next Steps Post-Meta-Critique:"
     },
     {
-      "id": "suggestion::5a85c2410d4f",
+      "id": "suggestion::2f3555e4c6ea",
       "type": "suggested_feature_or_use_case",
       "status": "planned",
-      "source_file": "0469-arc4n-seed-texts-and-atomization-2.md",
+      "source_file": "docs/corpus/0469-arc4n-seed-texts-and-atomization-2.md",
       "line": 1773,
       "text": "# [Next Step Reference ID: ARC4N001-NEXT11]"
     },
     {
-      "id": "suggestion::1f5c4ce8338d",
+      "id": "suggestion::f363f17f638e",
       "type": "suggested_feature_or_use_case",
       "status": "planned",
-      "source_file": "0469-arc4n-seed-texts-and-atomization-2.md",
+      "source_file": "docs/corpus/0469-arc4n-seed-texts-and-atomization-2.md",
       "line": 1777,
       "text": "- Would you like me to immediately scaffold the Prototype Tracker file with what we’ve built so far (Language Spiral, Glyph Fusion, Drift Engines, Cartridges)?"
     },
     {
-      "id": "suggestion::4dc6db4ceba7",
+      "id": "suggestion::b3f77383c36c",
       "type": "suggested_feature_or_use_case",
       "status": "planned",
-      "source_file": "0469-arc4n-seed-texts-and-atomization-2.md",
+      "source_file": "docs/corpus/0469-arc4n-seed-texts-and-atomization-2.md",
       "line": 1811,
       "text": "I flagged it as a potential next step."
     },
     {
-      "id": "suggestion::e9255478be1d",
+      "id": "suggestion::d6d2a2dc73ff",
       "type": "suggested_feature_or_use_case",
       "status": "planned",
-      "source_file": "0469-arc4n-seed-texts-and-atomization-2.md",
+      "source_file": "docs/corpus/0469-arc4n-seed-texts-and-atomization-2.md",
       "line": 1954,
       "text": "| Action ID | Next Step | Result |"
     },
     {
-      "id": "suggestion::eedcd6adb351",
+      "id": "suggestion::0bf3e848b7f5",
       "type": "suggested_feature_or_use_case",
       "status": "planned",
-      "source_file": "0469-arc4n-seed-texts-and-atomization-2.md",
+      "source_file": "docs/corpus/0469-arc4n-seed-texts-and-atomization-2.md",
       "line": 1956,
       "text": "| [A1] | Build Prototype Tracker Now | Full list of all prototyped ideas captured formally |"
     },
     {
-      "id": "suggestion::46546aeaba87",
+      "id": "suggestion::fd2d1cefa34e",
       "type": "suggested_feature_or_use_case",
       "status": "planned",
-      "source_file": "0469-arc4n-seed-texts-and-atomization-2.md",
+      "source_file": "docs/corpus/0469-arc4n-seed-texts-and-atomization-2.md",
       "line": 1972,
       "text": "# [Next Step Reference ID: ARC4N001-NEXT12]"
     },
     {
-      "id": "suggestion::40b24953447a",
+      "id": "suggestion::c7b4ede8802f",
       "type": "suggested_feature_or_use_case",
       "status": "planned",
-      "source_file": "0469-arc4n-seed-texts-and-atomization-2.md",
+      "source_file": "docs/corpus/0469-arc4n-seed-texts-and-atomization-2.md",
       "line": 2037,
       "text": "**We should immediately SPLIT paths cleanly:**"
     },
     {
-      "id": "suggestion::63284b3d0bb7",
+      "id": "suggestion::be79b0f1484e",
       "type": "suggested_feature_or_use_case",
       "status": "planned",
-      "source_file": "0469-arc4n-seed-texts-and-atomization-2.md",
+      "source_file": "docs/corpus/0469-arc4n-seed-texts-and-atomization-2.md",
       "line": 2095,
       "text": "# [Next Step Reference ID: ARC4N001-NEXT13]"
     },
     {
-      "id": "suggestion::098f54085ee0",
+      "id": "suggestion::43deadb007e0",
       "type": "suggested_feature_or_use_case",
       "status": "planned",
-      "source_file": "0469-arc4n-seed-texts-and-atomization-2.md",
+      "source_file": "docs/corpus/0469-arc4n-seed-texts-and-atomization-2.md",
       "line": 2176,
       "text": "> Which phase of evolution (expansion or compression) should we build first tangible artifacts for?"
     },
     {
-      "id": "suggestion::263aac1a40e2",
+      "id": "suggestion::84a9414b108b",
       "type": "suggested_feature_or_use_case",
       "status": "planned",
-      "source_file": "0469-arc4n-seed-texts-and-atomization-2.md",
+      "source_file": "docs/corpus/0469-arc4n-seed-texts-and-atomization-2.md",
       "line": 2192,
       "text": "- Build Prototype Tracker capturing all proposed systems (glyph fusion, drift engines, cartridge systems)"
     }

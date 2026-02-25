@@ -5,13 +5,13 @@ from __future__ import annotations
 import hashlib
 import json
 import random
-import re
 from typing import Any
 
 from sqlalchemy import func, select
 from sqlalchemy.orm import Session
 
-from nexus_babel.models import Atom, Branch, BranchEvent, Document, RemixArtifact, RemixSourceLink
+from nexus_babel.models import Atom, Branch, BranchEvent, Document, RemixArtifact
+from nexus_babel.services import remix_artifact_persistence, remix_artifact_serialization, remix_strategies
 from nexus_babel.services.evolution import EvolutionService
 from nexus_babel.services.governance import GovernanceService
 
@@ -223,55 +223,10 @@ class RemixService:
         }
 
     def _artifact_summary(self, artifact: RemixArtifact) -> dict[str, Any]:
-        return {
-            "remix_artifact_id": artifact.id,
-            "strategy": artifact.strategy,
-            "seed": artifact.seed,
-            "mode": artifact.mode,
-            "text_hash": artifact.text_hash,
-            "create_branch": artifact.create_branch,
-            "branch_id": artifact.branch_id,
-            "governance_decision_id": artifact.governance_decision_id,
-            "source_document_id": artifact.source_document_id,
-            "target_document_id": artifact.target_document_id,
-            "created_at": artifact.created_at,
-        }
+        return remix_artifact_serialization.artifact_summary(artifact)
 
     def _artifact_to_dict(self, artifact: RemixArtifact) -> dict[str, Any]:
-        source_links = sorted(list(artifact.source_links or []), key=lambda r: (r.role, r.id))
-        governance_trace = ((artifact.artifact_metadata or {}).get("governance") or {}).get("decision_trace") or {}
-        return {
-            "remix_artifact_id": artifact.id,
-            "strategy": artifact.strategy,
-            "seed": artifact.seed,
-            "mode": artifact.mode,
-            "remixed_text": artifact.remixed_text,
-            "text_hash": artifact.text_hash,
-            "payload_hash": artifact.payload_hash,
-            "rng_seed_hex": artifact.rng_seed_hex,
-            "create_branch": artifact.create_branch,
-            "source_document_id": artifact.source_document_id,
-            "source_branch_id": artifact.source_branch_id,
-            "target_document_id": artifact.target_document_id,
-            "target_branch_id": artifact.target_branch_id,
-            "branch_id": artifact.branch_id,
-            "branch_event_id": artifact.branch_event_id,
-            "governance_decision_id": artifact.governance_decision_id,
-            "governance_trace": governance_trace,
-            "lineage_graph_refs": artifact.lineage_graph_refs or {},
-            "source_links": [
-                {
-                    "role": row.role,
-                    "document_id": row.document_id,
-                    "branch_id": row.branch_id,
-                    "atom_level": row.atom_level,
-                    "atom_count": row.atom_count,
-                    "atom_refs": row.atom_refs or [],
-                }
-                for row in source_links
-            ],
-            "created_at": artifact.created_at,
-        }
+        return remix_artifact_serialization.artifact_to_dict(artifact)
 
     def _resolve_context(
         self,
@@ -395,54 +350,22 @@ class RemixService:
         target_ctx: dict[str, Any],
         source_atom_refs: list[dict[str, Any]],
     ) -> RemixArtifact:
-        artifact = RemixArtifact(
-            source_document_id=source_ctx.get("document_id"),
-            source_branch_id=source_ctx.get("branch_id"),
-            target_document_id=target_ctx.get("document_id"),
-            target_branch_id=target_ctx.get("branch_id"),
+        return remix_artifact_persistence.create_artifact(
+            session,
             strategy=strategy,
             seed=seed,
-            mode=mode.upper(),
+            mode=mode,
             remixed_text=remixed_text,
             text_hash=text_hash,
             rng_seed_hex=rng_seed_hex,
             payload_hash=payload_hash,
             create_branch=create_branch,
             governance_decision_id=governance_decision_id,
-            artifact_metadata={"governance": {"decision_trace": governance_trace}},
+            governance_trace=governance_trace,
+            source_ctx=source_ctx,
+            target_ctx=target_ctx,
+            source_atom_refs=source_atom_refs,
         )
-        session.add(artifact)
-        session.flush()
-
-        source_refs = [row for row in source_atom_refs if row.get("role") == "source"]
-        target_refs = [row for row in source_atom_refs if row.get("role") == "target"]
-        source_level = source_refs[0]["atom_level"] if source_refs else None
-        target_level = target_refs[0]["atom_level"] if target_refs else None
-
-        session.add_all(
-            [
-                RemixSourceLink(
-                    remix_artifact_id=artifact.id,
-                    role="source",
-                    document_id=source_ctx.get("document_id"),
-                    branch_id=source_ctx.get("branch_id"),
-                    atom_level=source_level,
-                    atom_count=len(source_refs),
-                    atom_refs=source_refs,
-                ),
-                RemixSourceLink(
-                    remix_artifact_id=artifact.id,
-                    role="target",
-                    document_id=target_ctx.get("document_id"),
-                    branch_id=target_ctx.get("branch_id"),
-                    atom_level=target_level,
-                    atom_count=len(target_refs),
-                    atom_refs=target_refs,
-                ),
-            ]
-        )
-        session.flush()
-        return artifact
 
     def _build_lineage_graph_refs(
         self,
@@ -453,24 +376,13 @@ class RemixService:
         branch_event_id: str | None,
         remix_artifact_id: str,
     ) -> dict[str, Any]:
-        nodes: list[str] = [f"remix:{remix_artifact_id}"]
-        for key in ("document_id", "branch_id"):
-            if source_ctx.get(key):
-                nodes.append(f"source_{key}:{source_ctx[key]}")
-            if target_ctx.get(key):
-                nodes.append(f"target_{key}:{target_ctx[key]}")
-        if branch_id:
-            nodes.append(f"branch:{branch_id}")
-        if branch_event_id:
-            nodes.append(f"branch_event:{branch_event_id}")
-        return {
-            "nodes": nodes,
-            "edges": [
-                {"from": f"remix:{remix_artifact_id}", "to": f"branch:{branch_id}", "type": "PRODUCED"}
-                for _ in [1]
-                if branch_id
-            ],
-        }
+        return remix_artifact_serialization.build_lineage_graph_refs(
+            source_ctx=source_ctx,
+            target_ctx=target_ctx,
+            branch_id=branch_id,
+            branch_event_id=branch_event_id,
+            remix_artifact_id=remix_artifact_id,
+        )
 
     def _resolve_text(self, session: Session, document_id: str | None, branch_id: str | None) -> str:
         if branch_id:
@@ -488,62 +400,17 @@ class RemixService:
         return branch.root_document_id if branch else None
 
     def _apply_strategy(self, source: str, target: str, strategy: str, rng: random.Random) -> str:
-        if strategy == "interleave":
-            return self._interleave(source, target)
-        if strategy == "thematic_blend":
-            return self._thematic_blend(source, target, rng)
-        if strategy == "temporal_layer":
-            return self._temporal_layer(source, target, rng)
-        if strategy == "glyph_collide":
-            return self._glyph_collide(source, target, rng)
-        raise ValueError(f"Unknown remix strategy: {strategy}")
+        return remix_strategies.apply_strategy(source=source, target=target, strategy=strategy, rng=rng)
 
+    # Backward-compatible wrappers used by existing tests and internal callers.
     def _interleave(self, source: str, target: str) -> str:
-        source_words = re.findall(r"\S+", source)
-        target_words = re.findall(r"\S+", target)
-        result: list[str] = []
-        max_len = max(len(source_words), len(target_words))
-        for i in range(max_len):
-            if i < len(source_words):
-                result.append(source_words[i])
-            if i < len(target_words):
-                result.append(target_words[i])
-        return " ".join(result)
+        return remix_strategies.interleave(source, target)
 
     def _thematic_blend(self, source: str, target: str, rng: random.Random) -> str:
-        source_sentences = [s.strip() for s in re.split(r"[.!?]+", source) if s.strip()]
-        target_sentences = [s.strip() for s in re.split(r"[.!?]+", target) if s.strip()]
-        combined = source_sentences + target_sentences
-        rng.shuffle(combined)
-        if not combined:
-            return ""
-        return ". ".join(combined[: max(len(source_sentences), len(target_sentences), 1)]) + "."
+        return remix_strategies.thematic_blend(source, target, rng)
 
     def _temporal_layer(self, source: str, target: str, rng: random.Random) -> str:
-        source_paras = [p.strip() for p in re.split(r"\n\s*\n", source) if p.strip()]
-        target_paras = [p.strip() for p in re.split(r"\n\s*\n", target) if p.strip()]
-        result: list[str] = []
-        max_len = max(len(source_paras), len(target_paras), 1)
-        for i in range(max_len):
-            if i < len(source_paras):
-                result.append(source_paras[i])
-            if i < len(target_paras) and rng.random() > 0.3:
-                result.append(f"[temporal overlay] {target_paras[i]}")
-        return "\n\n".join(result)
+        return remix_strategies.temporal_layer(source, target, rng)
 
     def _glyph_collide(self, source: str, target: str, rng: random.Random) -> str:
-        source_glyphs = [c for c in source if not c.isspace()]
-        target_glyphs = [c for c in target if not c.isspace()]
-        result: list[str] = []
-        max_len = max(len(source_glyphs), len(target_glyphs))
-        for i in range(min(max_len, 2000)):
-            s = source_glyphs[i] if i < len(source_glyphs) else ""
-            t = target_glyphs[i] if i < len(target_glyphs) else ""
-            if s == t:
-                result.append(s)
-            elif s and t:
-                result.append(s if rng.random() > 0.5 else t)
-            else:
-                result.append(s or t)
-        return "".join(result)
-
+        return remix_strategies.glyph_collide(source, target, rng)

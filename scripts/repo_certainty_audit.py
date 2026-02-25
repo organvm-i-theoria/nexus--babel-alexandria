@@ -5,6 +5,9 @@ import argparse
 import hashlib
 import json
 import re
+import subprocess
+import sys
+import tempfile
 from dataclasses import dataclass
 from datetime import datetime, timezone
 from pathlib import Path
@@ -39,14 +42,26 @@ class FileEntry:
 
 
 def _git_ls_files(root: Path) -> list[Path]:
-    skip_dirs = {".git", ".venv", "__pycache__", ".pytest_cache"}
-    files: list[Path] = []
-    for path in root.rglob("*"):
-        if any(part in skip_dirs for part in path.parts):
-            continue
-        if path.is_file():
-            files.append(path)
-    return sorted(files)
+    try:
+        out = subprocess.check_output(
+            ["git", "-C", str(root), "ls-files", "--cached", "--others", "--exclude-standard", "-z"],
+            stderr=subprocess.DEVNULL,
+        )
+        paths = [root / p for p in out.decode("utf-8", errors="ignore").split("\x00") if p]
+        for extra in ("Makefile",):
+            extra_path = root / extra
+            if extra_path.is_file() and extra_path not in paths:
+                paths.append(extra_path)
+        return sorted([p for p in paths if p.is_file()])
+    except Exception:
+        skip_dirs = {".git", ".venv", "__pycache__", ".pytest_cache"}
+        files: list[Path] = []
+        for path in root.rglob("*"):
+            if any(part in skip_dirs for part in path.parts):
+                continue
+            if path.is_file():
+                files.append(path)
+        return sorted(files)
 
 
 def _is_binary(data: bytes) -> bool:
@@ -86,11 +101,14 @@ def _normalize_path_template(path: str) -> str:
     return re.sub(r"\{[^}]+\}", "{}", path)
 
 
-def _collect_manifest(root: Path) -> tuple[list[FileEntry], dict[str, str]]:
+def _collect_manifest(root: Path, *, exclude_prefixes: set[str] | None = None) -> tuple[list[FileEntry], dict[str, str]]:
     file_entries: list[FileEntry] = []
     text_cache: dict[str, str] = {}
+    prefixes = exclude_prefixes or set()
     for path in _git_ls_files(root):
         rel = path.relative_to(root).as_posix()
+        if any(rel == prefix.rstrip("/") or rel.startswith(prefix) for prefix in prefixes):
+            continue
         data = path.read_bytes()
         sha = _sha256_bytes(data)
         binary = _is_binary(data)
@@ -130,27 +148,35 @@ def _collect_manifest(root: Path) -> tuple[list[FileEntry], dict[str, str]]:
 
 
 def _implemented_routes(text_cache: dict[str, str]) -> set[str]:
-    routes_text = text_cache.get("src/nexus_babel/api/routes.py", "")
     routes = set()
-    for m in ROUTE_RE.finditer(routes_text):
-        path = m.group(1)
-        if path.startswith("/api/v1/"):
-            routes.add(path)
-        else:
-            routes.add(f"/api/v1{path}")
+    route_sources = [
+        path
+        for path in text_cache
+        if path == "src/nexus_babel/api/routes.py"
+        or (path.startswith("src/nexus_babel/api/routes/") and path.endswith(".py"))
+    ]
+    for source in route_sources:
+        routes_text = text_cache.get(source, "")
+        for m in ROUTE_RE.finditer(routes_text):
+            path = m.group(1)
+            if path.startswith("/api/v1/"):
+                routes.add(path)
+            else:
+                routes.add(f"/api/v1{path}")
     return routes
 
 
 def _extract_roadmap_tasks(text_cache: dict[str, str]) -> list[dict[str, Any]]:
     tasks = []
-    roadmap = text_cache.get("roadmap.md", "")
+    source_file = "docs/roadmap.md" if "docs/roadmap.md" in text_cache else "roadmap.md"
+    roadmap = text_cache.get(source_file, "")
     for m in ROADMAP_TASK_RE.finditer(roadmap):
         tasks.append(
             {
                 "id": m.group(1),
                 "type": "roadmap_task",
                 "status": "planned",
-                "source_file": "roadmap.md",
+                "source_file": source_file,
                 "line": roadmap.count("\n", 0, m.start()) + 1,
                 "text": f"Task {m.group(1)}",
             }
@@ -198,6 +224,9 @@ def _extract_prompt_suggestions(text_cache: dict[str, str]) -> list[dict[str, An
             "README.md",
             "# Theoria Linguae Machina Comprehensive Design Document for the….md",
             "Nexus_Bable-Alexandria.md",
+            "docs/corpus/0469-arc4n-seed-texts-and-atomization-2.md",
+            "docs/corpus/# Theoria Linguae Machina Comprehensive Design Document for the….md",
+            "docs/corpus/Nexus_Bable-Alexandria.md",
         }:
             continue
         for line_number, line in enumerate(text.splitlines(), start=1):
@@ -296,27 +325,18 @@ def _write_report(
     out_path.write_text("\n".join(lines), encoding="utf-8")
 
 
-def main() -> None:
-    parser = argparse.ArgumentParser(description="Generate repository ingestion + feature certainty evidence.")
-    parser.add_argument("--root", default=".", help="Repository root path")
-    parser.add_argument("--out-dir", default="docs/certainty", help="Output directory")
-    args = parser.parse_args()
-
-    root = Path(args.root).resolve()
-    out_dir = (root / args.out_dir).resolve()
+def _generate_certainty_outputs(root: Path, out_dir: Path, *, exclude_prefixes: set[str] | None = None) -> dict[str, Any]:
     out_dir.mkdir(parents=True, exist_ok=True)
-
     generated_at = datetime.now(timezone.utc).isoformat()
-    manifest, text_cache = _collect_manifest(root)
+    manifest, text_cache = _collect_manifest(root, exclude_prefixes=exclude_prefixes)
     implemented = _implemented_routes(text_cache)
-    ledger = []
+    ledger: list[dict[str, Any]] = []
     ledger.extend(_extract_roadmap_tasks(text_cache))
     ledger.extend(_extract_endpoint_requirements(text_cache, implemented))
     ledger.extend(_extract_prompt_suggestions(text_cache))
     ledger.sort(key=lambda item: (item["type"], item["source_file"], item["line"], item["id"]))
 
     summary = _summaries(manifest, ledger)
-
     manifest_payload = {
         "generated_at": generated_at,
         "root": str(root),
@@ -336,8 +356,88 @@ def main() -> None:
     manifest_path.write_text(json.dumps(manifest_payload, indent=2, ensure_ascii=False), encoding="utf-8")
     ledger_path.write_text(json.dumps(ledger_payload, indent=2, ensure_ascii=False), encoding="utf-8")
     _write_report(report_path, generated_at, summary, manifest, ledger)
+    return {
+        "manifest": manifest_path,
+        "ledger": ledger_path,
+        "report": report_path,
+        "summary": summary,
+    }
 
-    print(json.dumps({"manifest": str(manifest_path), "ledger": str(ledger_path), "report": str(report_path), "summary": summary}, indent=2))
+
+def _normalized_json_for_check(payload: dict[str, Any]) -> dict[str, Any]:
+    normalized = dict(payload)
+    normalized.pop("generated_at", None)
+    normalized.pop("root", None)
+    return normalized
+
+
+def _normalized_report_for_check(text: str) -> str:
+    return re.sub(r"^- Generated: `[^`]+`$", "- Generated: `<normalized>`", text, flags=re.MULTILINE)
+
+
+def _check_certainty_outputs(expected_dir: Path, generated_dir: Path) -> tuple[bool, list[str]]:
+    issues: list[str] = []
+    json_names = ["file_manifest.json", "feature_usecase_ledger.json"]
+    for name in json_names:
+        expected_path = expected_dir / name
+        generated_path = generated_dir / name
+        if not expected_path.is_file():
+            issues.append(f"missing committed artifact: {expected_path}")
+            continue
+        expected_payload = json.loads(expected_path.read_text(encoding="utf-8"))
+        generated_payload = json.loads(generated_path.read_text(encoding="utf-8"))
+        if _normalized_json_for_check(expected_payload) != _normalized_json_for_check(generated_payload):
+            issues.append(f"stale artifact content: {expected_path}")
+
+    report_name = "repo_certainty_report.md"
+    expected_report_path = expected_dir / report_name
+    generated_report_path = generated_dir / report_name
+    if not expected_report_path.is_file():
+        issues.append(f"missing committed artifact: {expected_report_path}")
+    else:
+        expected_report = _normalized_report_for_check(expected_report_path.read_text(encoding="utf-8"))
+        generated_report = _normalized_report_for_check(generated_report_path.read_text(encoding="utf-8"))
+        if expected_report != generated_report:
+            issues.append(f"stale artifact content: {expected_report_path}")
+
+    return (len(issues) == 0), issues
+
+
+def main() -> None:
+    parser = argparse.ArgumentParser(description="Generate repository ingestion + feature certainty evidence.")
+    parser.add_argument("--root", default=".", help="Repository root path")
+    parser.add_argument("--out-dir", default="docs/certainty", help="Output directory")
+    parser.add_argument("--check", action="store_true", help="Verify committed certainty artifacts are up to date")
+    args = parser.parse_args()
+
+    root = Path(args.root).resolve()
+    out_dir = (root / args.out_dir).resolve()
+    exclude_prefix = Path(args.out_dir).as_posix().strip("/")
+    exclude_prefixes = {f"{exclude_prefix}/"} if exclude_prefix else set()
+    if args.check:
+        with tempfile.TemporaryDirectory(prefix="certainty-check-") as tmp_dir:
+            _generate_certainty_outputs(root, Path(tmp_dir), exclude_prefixes=exclude_prefixes)
+            ok, issues = _check_certainty_outputs(out_dir, Path(tmp_dir))
+        if not ok:
+            print("Certainty artifacts are stale. Regenerate with: python scripts/repo_certainty_audit.py", file=sys.stderr)
+            for issue in issues:
+                print(f"- {issue}", file=sys.stderr)
+            raise SystemExit(1)
+        print(json.dumps({"status": "ok", "checked_dir": str(out_dir)}, indent=2))
+        return
+
+    generated = _generate_certainty_outputs(root, out_dir, exclude_prefixes=exclude_prefixes)
+    print(
+        json.dumps(
+            {
+                "manifest": str(generated["manifest"]),
+                "ledger": str(generated["ledger"]),
+                "report": str(generated["report"]),
+                "summary": generated["summary"],
+            },
+            indent=2,
+        )
+    )
 
 
 if __name__ == "__main__":

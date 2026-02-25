@@ -28,11 +28,23 @@ The NLP engine underneath (Theoria Linguae Machina) provides 9-layer rhetorical-
 
 ## Implementation Status
 
-- Full REST API under `/api/v1/*` with 25+ endpoints
+- Full REST API under `/api/v1/*` with 28 operations across ingest, analysis, jobs, governance, branches, remix, and corpus seed management
 - UI shells: `/app/corpus`, `/app/hypergraph`, `/app/timeline`, `/app/governance`
 - Postgres-compatible SQLAlchemy schema + Neo4j projection adapter
 - Async job queue with retry/backoff, canonicalization, multimodal ingestion
 - Test coverage: ingestion, governance, hypergraph integrity, branch determinism, evolution, remix, ARC4N atomization
+
+### MVP Implemented vs Planned (Snapshot)
+
+| Area | MVP Implemented (Current Repo) | Planned / Roadmap (RLOS) |
+|---|---|---|
+| API surface | `28` `/api/v1` operations for ingest, analysis, jobs, governance, branches, remix, corpus seeds | Expanded orchestration and deeper analysis APIs aligned to long-horizon RLOS roadmap |
+| Analysis engine | Deterministic heuristic layer outputs with plugin fallback architecture (`deterministic`, `ml_stub`) | Full ML-backed multi-layer RLOS implementations and richer plugin providers |
+| Governance | PUBLIC/RAW mode policy evaluation with audit logging and decision traces | Expanded policy governance, stronger auth, and broader compliance controls |
+| Evolution & Remix | Deterministic branch evolution + remix artifact persistence/lineage hooks | Deeper generative engines, richer lineage projections, and advanced composition semantics |
+| Ops & DX | FastAPI app, worker, Alembic migrations, contract/integration tests, operator runbook | Broader CI quality gates, production deployment hardening, and roadmap-driven subsystem expansion |
+
+This repository is an active MVP implementation with a preserved theoretical corpus. The long-form RLOS roadmap in `docs/roadmap.md` remains aspirational and should not be interpreted as already implemented.
 
 ### Quickstart
 
@@ -50,6 +62,8 @@ The NLP engine underneath (Theoria Linguae Machina) provides 9-layer rhetorical-
    - `python scripts/ingest_corpus.py`
 7. Run tests:
    - `pytest -q`
+8. Regenerate normalized OpenAPI contract snapshot after intentional API changes:
+   - `make openapi-snapshot` (or `.venv/bin/python scripts/generate_openapi_contract_snapshot.py`)
 
 ### Security Model (MVP)
 
