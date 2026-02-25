@@ -9,6 +9,7 @@ from pydantic import BaseModel, Field
 Mode = Literal["RAW", "PUBLIC"]
 ExecutionMode = Literal["sync", "async", "shadow"]
 RemixStrategy = Literal["interleave", "thematic_blend", "temporal_layer", "glyph_collide"]
+MergeStrategy = Literal["left_wins", "right_wins", "interleave"]
 
 
 class GlyphSeed(BaseModel):
@@ -116,6 +117,21 @@ class MultiEvolveResponse(BaseModel):
     final_preview: str
 
 
+class MergeBranchesRequest(BaseModel):
+    left_branch_id: str
+    right_branch_id: str
+    strategy: MergeStrategy = "interleave"
+    mode: Mode = "PUBLIC"
+
+
+class MergeBranchesResponse(BaseModel):
+    new_branch_id: str
+    event_id: str
+    strategy: MergeStrategy
+    lca_branch_id: str | None = None
+    diff_summary: dict[str, Any] = Field(default_factory=dict)
+
+
 class BranchEventView(BaseModel):
     branch_id: str
     event_id: str
@@ -131,6 +147,41 @@ class BranchTimelineResponse(BaseModel):
     root_document_id: str | None
     events: list[BranchEventView]
     replay_snapshot: dict[str, Any]
+
+
+class BranchVisualizationNode(BaseModel):
+    id: str
+    kind: str
+    branch_id: str
+    parent_branch_id: str | None = None
+    root_document_id: str | None = None
+    event_index: int
+    event_type: str
+    phase: str | None = None
+    mode: str
+    created_at: datetime
+    metadata: dict[str, Any] = Field(default_factory=dict)
+
+
+class BranchVisualizationEdge(BaseModel):
+    id: str
+    source: str
+    target: str
+    type: str
+
+
+class BranchVisualizationSummary(BaseModel):
+    event_count: int
+    edge_count: int
+    lineage_depth: int
+
+
+class BranchVisualizationResponse(BaseModel):
+    branch_id: str
+    root_document_id: str | None = None
+    nodes: list[BranchVisualizationNode] = Field(default_factory=list)
+    edges: list[BranchVisualizationEdge] = Field(default_factory=list)
+    summary: BranchVisualizationSummary
 
 
 class RhetoricalAnalysisRequest(BaseModel):

@@ -11,8 +11,11 @@ from nexus_babel.schemas import (
     BranchEventView,
     BranchReplayResponse,
     BranchTimelineResponse,
+    BranchVisualizationResponse,
     EvolveBranchRequest,
     EvolveBranchResponse,
+    MergeBranchesRequest,
+    MergeBranchesResponse,
     MultiEvolveRequest,
     MultiEvolveResponse,
 )
@@ -171,11 +174,50 @@ def compare_branch(branch_id: str, other_branch_id: str, request: Request) -> Br
         session.close()
 
 
-@router.get("/branches/{branch_id}/visualization", dependencies=[Depends(require_auth("viewer"))])
-def branch_visualization(branch_id: str, request: Request) -> dict:
+@router.post("/branches/merge", response_model=MergeBranchesResponse)
+def merge_branches(
+    payload: MergeBranchesRequest,
+    request: Request,
+    auth_context: AuthContext = Depends(require_auth("operator")),
+) -> MergeBranchesResponse:
     session = open_session(request)
     try:
-        return request.app.state.evolution_service.get_visualization(session=session, branch_id=branch_id)
+        enforce_mode(request, auth_context, payload.mode)
+        branch, event, lca = request.app.state.evolution_service.merge_branches(
+            session=session,
+            left_branch_id=payload.left_branch_id,
+            right_branch_id=payload.right_branch_id,
+            strategy=payload.strategy,
+            mode=payload.mode,
+        )
+        session.commit()
+        return MergeBranchesResponse(
+            new_branch_id=branch.id,
+            event_id=event.id,
+            strategy=payload.strategy,
+            lca_branch_id=getattr(lca, "id", None),
+            diff_summary=event.diff_summary,
+        )
+    except HTTPException:
+        session.rollback()
+        raise
+    except Exception as exc:
+        session.rollback()
+        default_status = 404 if isinstance(exc, LookupError) else 400
+        raise to_http_exception(exc, default_status=default_status) from exc
+    finally:
+        session.close()
+
+
+@router.get(
+    "/branches/{branch_id}/visualization",
+    response_model=BranchVisualizationResponse,
+    dependencies=[Depends(require_auth("viewer"))],
+)
+def branch_visualization(branch_id: str, request: Request) -> BranchVisualizationResponse:
+    session = open_session(request)
+    try:
+        return BranchVisualizationResponse(**request.app.state.evolution_service.get_visualization(session=session, branch_id=branch_id))
     except Exception as exc:
         raise to_http_exception(exc, default_status=404) from exc
     finally:

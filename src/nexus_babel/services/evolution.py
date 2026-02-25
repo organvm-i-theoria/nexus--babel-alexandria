@@ -72,6 +72,7 @@ class EvolutionService:
 
     GLYPH_POOL = ["∆", "Æ", "Ω", "§", "☲", "⟁", "Ψ", "Φ", "Θ", "Ξ"]
     PHASES = {"expansion", "peak", "compression", "rebirth"}
+    MERGE_STRATEGIES = {"left_wins", "right_wins", "interleave"}
 
     def evolve_branch(
         self,
@@ -206,37 +207,58 @@ class EvolutionService:
             "final_preview": final_text[:500],
         }
 
+    def merge_branches(
+        self,
+        session: Session,
+        left_branch_id: str,
+        right_branch_id: str,
+        strategy: str,
+        *,
+        mode: str = "PUBLIC",
+    ) -> tuple[Branch, BranchEvent, Branch | None]:
+        left_branch = session.scalar(select(Branch).where(Branch.id == left_branch_id))
+        if not left_branch:
+            raise LookupError(f"Left branch {left_branch_id} not found")
+        right_branch = session.scalar(select(Branch).where(Branch.id == right_branch_id))
+        if not right_branch:
+            raise LookupError(f"Right branch {right_branch_id} not found")
+
+        normalized_strategy = str(strategy).strip().lower()
+        if normalized_strategy not in self.MERGE_STRATEGIES:
+            raise ValueError(f"Unsupported merge strategy: {strategy}")
+
+        lca = self._find_lca(session, left_branch, right_branch)
+        if lca is None and left_branch.root_document_id != right_branch.root_document_id:
+            raise ValueError("Branches do not share a common ancestor or root document")
+
+        left_text, _, _ = self._replay_lineage_text(session, left_branch, use_checkpoints=True)
+        right_text, _, _ = self._replay_lineage_text(session, right_branch, use_checkpoints=True)
+        merged_text = self._merge_texts(left_text, right_text, normalized_strategy)
+
+        merge_payload = {
+            "strategy": normalized_strategy,
+            "left_branch_id": left_branch_id,
+            "right_branch_id": right_branch_id,
+            "lca_branch_id": getattr(lca, "id", None),
+            "merged_text": merged_text,
+            "seed": 0,
+        }
+        branch, event = self.evolve_branch(
+            session=session,
+            parent_branch_id=left_branch.id,
+            root_document_id=left_branch.root_document_id,
+            event_type="merge",
+            event_payload=merge_payload,
+            mode=mode,
+        )
+        return branch, event, lca
+
     def get_timeline(self, session: Session, branch_id: str) -> dict[str, Any]:
         branch = session.scalar(select(Branch).where(Branch.id == branch_id))
         if not branch:
             raise ValueError(f"Branch {branch_id} not found")
 
-        lineage = self._lineage(session, branch)
-        events: list[BranchEvent] = []
-        for node in lineage:
-            events.extend(
-                session.scalars(
-                    select(BranchEvent).where(BranchEvent.branch_id == node.id).order_by(BranchEvent.event_index, BranchEvent.created_at)
-                ).all()
-            )
-
-        root_text = ""
-        if branch.root_document_id:
-            doc = session.scalar(select(Document).where(Document.id == branch.root_document_id))
-            if doc:
-                root_text = str((doc.provenance or {}).get("extracted_text", ""))
-
-        replay_text = root_text
-        checkpoint_start_index = 0
-        latest_checkpoint = self._latest_lineage_checkpoint(session, lineage)
-        if latest_checkpoint is not None:
-            snapshot = self._decompress_snapshot(latest_checkpoint.snapshot_compressed)
-            if "current_text" in snapshot:
-                replay_text = str(snapshot.get("current_text", ""))
-                checkpoint_start_index = min(max(int(latest_checkpoint.event_index), 0), len(events))
-
-        for event in events[checkpoint_start_index:]:
-            replay_text = self._apply_event(replay_text, event.event_type, event.event_payload).output_text
+        replay_text, lineage, events = self._replay_lineage_text(session, branch, use_checkpoints=True)
 
         return {
             "branch": branch,
@@ -386,6 +408,62 @@ class EvolutionService:
             .order_by(BranchCheckpoint.event_index.desc(), BranchCheckpoint.created_at.desc())
         )
 
+    def _collect_lineage_events(self, session: Session, lineage: list[Branch]) -> list[BranchEvent]:
+        events: list[BranchEvent] = []
+        for node in lineage:
+            events.extend(
+                session.scalars(
+                    select(BranchEvent)
+                    .where(BranchEvent.branch_id == node.id)
+                    .order_by(BranchEvent.event_index, BranchEvent.created_at)
+                ).all()
+            )
+        return events
+
+    def _resolve_root_text(self, session: Session, root_document_id: str | None) -> str:
+        if not root_document_id:
+            return ""
+        doc = session.scalar(select(Document).where(Document.id == root_document_id))
+        if not doc:
+            return ""
+        return str((doc.provenance or {}).get("extracted_text", ""))
+
+    def _replay_lineage_text(
+        self,
+        session: Session,
+        branch: Branch,
+        *,
+        use_checkpoints: bool = True,
+    ) -> tuple[str, list[Branch], list[BranchEvent]]:
+        lineage = self._lineage(session, branch)
+        events = self._collect_lineage_events(session, lineage)
+        replay_text = self._resolve_root_text(session, branch.root_document_id)
+
+        checkpoint_start_index = 0
+        if use_checkpoints:
+            latest_checkpoint = self._latest_lineage_checkpoint(session, lineage)
+            if latest_checkpoint is not None:
+                snapshot = self._decompress_snapshot(latest_checkpoint.snapshot_compressed)
+                if "current_text" in snapshot:
+                    replay_text = str(snapshot.get("current_text", ""))
+                    checkpoint_start_index = min(max(int(latest_checkpoint.event_index), 0), len(events))
+
+        for event in events[checkpoint_start_index:]:
+            replay_text = self._apply_event(replay_text, event.event_type, event.event_payload).output_text
+
+        return replay_text, lineage, events
+
+    def _find_lca(self, session: Session, left_branch: Branch, right_branch: Branch) -> Branch | None:
+        left_lineage = self._lineage(session, left_branch)
+        right_lineage = self._lineage(session, right_branch)
+
+        left_by_id = {branch.id: branch for branch in left_lineage}
+        lca: Branch | None = None
+        for branch in right_lineage:
+            if branch.id in left_by_id:
+                lca = left_by_id[branch.id]
+        return lca
+
     def _next_event_index(self, session: Session, branch_id: str) -> int:
         max_index = session.scalar(select(func.max(BranchEvent.event_index)).where(BranchEvent.branch_id == branch_id))
         return int(max_index or 0) + 1
@@ -433,6 +511,16 @@ class EvolutionService:
             return data
 
         if event_type == "reverse_drift":
+            data.setdefault("seed", 0)
+            return data
+
+        if event_type == "merge":
+            strategy = str(data.get("strategy", "interleave")).strip().lower()
+            if strategy not in self.MERGE_STRATEGIES:
+                raise ValueError(f"Unsupported merge strategy: {strategy}")
+            merged_text = str(data.get("merged_text", ""))
+            data["strategy"] = strategy
+            data["merged_text"] = merged_text
             data.setdefault("seed", 0)
             return data
 
@@ -547,6 +635,22 @@ class EvolutionService:
                 },
             )
 
+        if event_type == "merge":
+            merged_text = str(event_payload.get("merged_text", text))
+            strategy = str(event_payload.get("strategy", "interleave"))
+            return DriftResult(
+                merged_text,
+                {
+                    "event": event_type,
+                    "strategy": strategy,
+                    "left_branch_id": event_payload.get("left_branch_id"),
+                    "right_branch_id": event_payload.get("right_branch_id"),
+                    "lca_branch_id": event_payload.get("lca_branch_id"),
+                    "before_chars": before_chars,
+                    "after_chars": len(merged_text),
+                },
+            )
+
         return DriftResult(text, {"event": event_type, "before_chars": before_chars, "after_chars": len(text), "note": "no-op"})
 
     def _compress_snapshot(self, snapshot: dict[str, Any]) -> str:
@@ -559,6 +663,23 @@ class EvolutionService:
         decoded = zlib.decompress(raw)
         data = json.loads(decoded.decode("utf-8"))
         return data if isinstance(data, dict) else {}
+
+    def _merge_texts(self, left_text: str, right_text: str, strategy: str) -> str:
+        if strategy == "left_wins":
+            return left_text
+        if strategy == "right_wins":
+            return right_text
+        if strategy == "interleave":
+            left_words = left_text.split()
+            right_words = right_text.split()
+            merged: list[str] = []
+            for idx in range(max(len(left_words), len(right_words))):
+                if idx < len(left_words):
+                    merged.append(left_words[idx])
+                if idx < len(right_words):
+                    merged.append(right_words[idx])
+            return " ".join(merged)
+        raise ValueError(f"Unsupported merge strategy: {strategy}")
 
     def _simple_distance(self, left: str, right: str) -> int:
         length = max(len(left), len(right))
