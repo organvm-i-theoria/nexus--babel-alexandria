@@ -1,7 +1,7 @@
 # Repository Certainty Report
 
-- Generated: `2026-02-25T13:46:19.441171+00:00`
-- Files processed: `154`
+- Generated: `2026-02-25T14:24:20.648967+00:00`
+- Files processed: `158`
 - Feature/use-case entries: `95`
 - Feature status split: `{'implemented': 10, 'planned': 85}`
 
@@ -39,7 +39,7 @@
 | `GEMINI.md` | `text` | 957 | 19 | `06f4ee20523b516b296c427463c6ad891e9f242f3bc8693b18fdbee13011f0ac` |
 | `LICENSE` | `text` | 1064 | 22 | `6d319436c6a6428d1cfa592e3386aef31cb02e04d67731a577b68395c5e963fc` |
 | `MANIFEST.yaml` | `text` | 73790 | 1931 | `eabc9892bf75038588d9e77eec64f4b4dd28cf28bbee7c376d4654b95def5d08` |
-| `Makefile` | `text` | 1099 | 54 | `76dc33feefc2cf499c9b0764a250c4ed6804e388bb5a9e96ba05d6a6d7cb3991` |
+| `Makefile` | `text` | 1121 | 54 | `3ace454949ff8263c92695c4833c601d59712860673c0afa81ff0c6943b97595` |
 | `README.md` | `text` | 41701 | 441 | `4e55cef95ef16aad3d659b91c65fc5f194cb74fcffe8932d99add216309362a2` |
 | `alembic.ini` | `text` | 570 | 38 | `10cbd807a4fd691b24ef067c98e10ca269c0455c11f3fdd16dcf9c2bf30bc4fc` |
 | `alembic/env.py` | `text` | 1258 | 48 | `ca979c9c3923b76f89d216b92636f6c759cffee075b8f7c0117f984b020356ae` |
@@ -54,16 +54,18 @@
 | `docs/OPERATOR_RUNBOOK.md` | `text` | 4505 | 173 | `71ede55e6b3211f61913bf052889cc134eb808c37489b20a4493a00c0d365397` |
 | `docs/alexandria_babel/AB-PLAN-01_Build_Tickets.json` | `text` | 7205 | 193 | `7dcd8b8ef592e01361f3ee5212962b4637d264ce23df6cccae6057d470bc2a80` |
 | `docs/alexandria_babel/AB-PLAN-01_Build_Tickets.md` | `text` | 9201 | 271 | `1725a01824fa9c0330574249cc02c47137d01f2b2d96e3941c3d92ebf65f658b` |
+| `docs/alexandria_babel/AB-PLAN-02_Build_Tickets.json` | `text` | 3348 | 110 | `b3329b851fb2b0d74b07b637457fcb2b4b599b9fe6badc2a31940d39922e26d4` |
+| `docs/alexandria_babel/AB-PLAN-02_Build_Tickets.md` | `text` | 2368 | 40 | `caf4f26d9415ae5e16f8d5ec940910657ba1580c41e4bd65b825dd95b0cc5c29` |
 | `docs/alexandria_babel/Organism_Blueprint.md` | `text` | 1820 | 44 | `e54874fb6e1d72bd12aadefdc2bd538d6dbc3e53ef799b1c6175b2bef6fab563` |
 | `docs/alexandria_babel/Protocol_Tracker.md` | `text` | 1125 | 27 | `b3df4987793cbb8c7edd0c29365d3e164f62a43ac793489350bde5c401e14c02` |
-| `docs/alexandria_babel/Prototype_Tracker.md` | `text` | 2047 | 36 | `90f0b610dc4dc4af46fd2bcb3025c78d52970be91839457697a3b402ce93882e` |
+| `docs/alexandria_babel/Prototype_Tracker.md` | `text` | 2676 | 40 | `ccec31e91a4a452a994a5c664da00a98fbd1030fba83c0c1ad9a03cd45eb4460` |
 | `docs/alexandria_babel/Save_Receipt_2026-02-18.md` | `text` | 831 | 15 | `404b5075336832ebe9ec1911dea5b99f8353ad35cf69b4b9298858bbb2858f8f` |
 | `docs/alexandria_babel/Thread_Plan_Academic.md` | `text` | 274 | 11 | `5ecba6fde374cb7bb4f71709478c294612231599a9a774c62d00470dc7a9189f` |
 | `docs/alexandria_babel/Thread_Plan_Funding.md` | `text` | 269 | 11 | `7384c8cb4d8d8bc9e1032039f8db3bd6d1ee17288e6636a1944214fa678ea95c` |
 | `docs/alexandria_babel/Thread_Plan_UX.md` | `text` | 227 | 11 | `de5c8ae1a4791de14531cf1823355d0da05ee729c47e2e7328c5b5d7a7b491a3` |
 | `docs/alexandria_babel/feature_usecase_ledger.json` | `text` | 109553 | 2808 | `22882acb74eafbd45570aa3a1f3eec289cf8da78859dead3e7dfd884497816cd` |
 | `docs/alexandria_babel/feature_usecase_matrix.md` | `text` | 57971 | 308 | `033260940de7ce0531ca55b5050d17872a35174182a7a9eced329ca940459cb2` |
-| `docs/alexandria_babel/index.md` | `text` | 1033 | 19 | `98955cd522756ed03f848e5d91b99465389fc594a8b050ac0c7b45a305d61fac` |
+| `docs/alexandria_babel/index.md` | `text` | 1191 | 21 | `6d6219c41bba1d51c9a2eecc401799b91fc80eb2a3ee625ef2d691786dd1cb66` |
 | `docs/alexandria_babel/seed_corpus_registry.yaml` | `text` | 1129 | 38 | `034d41fd10a2f77fec9ddf56501b0b75eba606ff9f5919840fb64bb7507b502e` |
 | `docs/corpus/# Theoria Linguae Machina Comprehensive Design Document for the….md` | `text` | 51702 | 894 | `9beea098ab6cc29314b670615d788288f672dd5d56abae5068dfecf0fdc3cab6` |
 | `docs/corpus/0469-arc4n-seed-texts-and-atomization-2.md` | `text` | 81969 | 2250 | `e54720b7e5e3af43da08e31a9bdc003f8e2955cf20046082f87b8f706d13ed74` |
@@ -100,7 +102,7 @@
 | `specs/02-linguistic-analysis/tasks.md` | `text` | 27727 | 432 | `b77234d35a53e45454b3577da3051cc46fa13192797847e89f9f44025f7de644` |
 | `specs/03-evolution-branching/plan.md` | `text` | 28256 | 784 | `32090d2464189bcb148594bb659eaa3fb9b6aab440ed7e63a8bc48273bbb9d50` |
 | `specs/03-evolution-branching/spec.md` | `text` | 37317 | 584 | `9253b65e0673c887c82085084a6b9d830695765ad7ee2419907470ed49868355` |
-| `specs/03-evolution-branching/tasks.md` | `text` | 32818 | 547 | `c11c6fe78b38cdce1facd877abaad5d746b9468aff93d5ca084d0cbdcbf3e0f8` |
+| `specs/03-evolution-branching/tasks.md` | `text` | 32818 | 547 | `af1ff7a8abb92f24fb71f51667b2b58f6e2c9e4e85549da3f82322ac419060ed` |
 | `specs/04-remix-recombination/plan.md` | `text` | 21591 | 451 | `2e3303e47176cbac388566231c07e002eace751996961268ef3f9b5f450ba279` |
 | `specs/04-remix-recombination/spec.md` | `text` | 28330 | 390 | `c0249b8863e37bc4ab65889af6852d1bee1ed87f04c05ebc6b48f00b8dfa8a56` |
 | `specs/04-remix-recombination/tasks.md` | `text` | 25264 | 544 | `7f88873dcc4e2455aa22cb5573cdcaa1fbf33c63b107f02d1fe7eb3f336f6456` |
@@ -127,7 +129,7 @@
 | `src/nexus_babel/api/routes/__init__.py` | `text` | 854 | 26 | `70af20097b4b44c73105dbd6c76ff7d11253cd19325629f3184ef5bb9aea0228` |
 | `src/nexus_babel/api/routes/analysis.py` | `text` | 6295 | 168 | `c4ab9c97d09ce28540558d8daf4bf2565845ede925ca1d7442c6a9dd75b9935a` |
 | `src/nexus_babel/api/routes/auth.py` | `text` | 833 | 28 | `a6e6e23d33f92a6455af6f6af62a284039eb49c72753de739ffa36c6c839e3d4` |
-| `src/nexus_babel/api/routes/branches.py` | `text` | 4752 | 129 | `230424516eccda429c32e8c8f793d2b3a041502e11e91d06c3ca556294db13ac` |
+| `src/nexus_babel/api/routes/branches.py` | `text` | 6690 | 183 | `be3177ac521eabe47e83251dccbbc220f78e49f0df46a71be699ebbc14b8c383` |
 | `src/nexus_babel/api/routes/documents.py` | `text` | 3366 | 94 | `c5184bf3a5dd5ae7b2779935f4382c84439fe3099df8652810eebe9df2962624` |
 | `src/nexus_babel/api/routes/governance.py` | `text` | 1892 | 52 | `481f57d1b730c2a5cb66d6634bea8c18fe0da894304d1a6b1b895925c1bed6c8` |
 | `src/nexus_babel/api/routes/ingest.py` | `text` | 4629 | 121 | `5a4dab6816563f6e362f3d3e2a401e79992ec3a91ea5fdb0c166b4845df84e5e` |
@@ -138,12 +140,12 @@
 | `src/nexus_babel/frontend/templates/shell.html` | `text` | 12456 | 358 | `d3fe6d15d8e5d24152039103c371747ae5542073fbebdb9c9ffafb1b96d63ecb` |
 | `src/nexus_babel/main.py` | `text` | 7144 | 175 | `2b9bf8e71b8fb242ef16b6186590deb572e5dc5248d651e20a1a77075b6e6059` |
 | `src/nexus_babel/models.py` | `text` | 19022 | 359 | `15cb38cdc30faeae4269b31b41c9bb2f27fd6589ba2315a7672483b4de61e834` |
-| `src/nexus_babel/schemas.py` | `text` | 9492 | 357 | `fb6ebdced0974a425e41b1c247f0d56bfda0956efea99ecc4908f89cfbc834e6` |
+| `src/nexus_babel/schemas.py` | `text` | 10078 | 378 | `fdfa46a638a080606a3c0a98abda53e50f9a0f709de1a095b039c380eccf35b0` |
 | `src/nexus_babel/services/__init__.py` | `text` | 0 | 0 | `e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855` |
 | `src/nexus_babel/services/analysis.py` | `text` | 11004 | 271 | `0ccfcc5f1882b04619bb3978f0a42d7881d375f9b9206770c865f59ffe552476` |
 | `src/nexus_babel/services/auth.py` | `text` | 2525 | 77 | `a70037cf62cbbdca9e1aa89054b1b8481e5f5d5be558beb8c673776ef2410baf` |
 | `src/nexus_babel/services/canonicalization.py` | `text` | 3189 | 104 | `7b4fea277864f6dee507cdb35c982863d303eec48be63a33b496818fde5e855d` |
-| `src/nexus_babel/services/evolution.py` | `text` | 15978 | 399 | `5b6933e80cea7b35aafca895390deccfa6a2b1a2eba5800b0cb147a044485e60` |
+| `src/nexus_babel/services/evolution.py` | `text` | 23212 | 572 | `d298b42b28c58561e78ca3989c2f55a16d530df4ffd811aa98c5281885efc71e` |
 | `src/nexus_babel/services/glyph_data.py` | `text` | 6157 | 164 | `56f6188f1a6428ed74361926f2e1f4a4922f61af995b7a5347e1deb324483fa6` |
 | `src/nexus_babel/services/governance.py` | `text` | 5639 | 155 | `86b4f9dd65d484260b3049316609c716b8a4395a049e747161637f749d5534fd` |
 | `src/nexus_babel/services/hypergraph.py` | `text` | 7519 | 192 | `d15c3de807e56ec9b26010086b1293929909bf1659134c4f90c82bca19465f2a` |
@@ -170,10 +172,12 @@
 | `src/nexus_babel/services/text_utils.py` | `text` | 7685 | 230 | `fc6442f25ccda3197de01c33295e7e3cf11c53e3d45b5710b28548fc71e31de9` |
 | `src/nexus_babel/worker.py` | `text` | 1439 | 49 | `081430c11e21bcf79d7a8c0102fda78eb88f921bbe53ce76e345c8fa602571d9` |
 | `tests/conftest.py` | `text` | 2687 | 92 | `bfcd1230773c46a2fec5b5507741570f765090a02d1abd594a95552f1b6ff1cd` |
-| `tests/snapshots/openapi_contract_normalized.json` | `text` | 74795 | 3234 | `f50ddf53a140771d26af9e94b5925c502252906c7235e3f5d5e80ec50a19b6c7` |
+| `tests/snapshots/openapi_contract_normalized.json` | `text` | 79435 | 3431 | `2b08359609211ef8b44ce73de83a00dc7f5503a89b6b0a917f69911262d4eb90` |
 | `tests/test_ab_plan_01.py` | `text` | 14172 | 374 | `baf9e44ba6c6e9e869a6167e48928a108fcbc6a1318af401128cd99ad7525721` |
 | `tests/test_arc4n.py` | `text` | 14924 | 409 | `9bf04cefc72cfd8b5bdf24ed4956de627269653a7a88db4c4cd526d7ed394adf` |
-| `tests/test_hardening_runtime.py` | `text` | 4431 | 139 | `368e90aea6e74b76f9c5bd4b1d6684ad1c4387eb4246996994903099e39d34b0` |
+| `tests/test_evolution.py` | `text` | 1704 | 53 | `d9b743f4a7709f862ff8285e93646daed6ab97af76c2226bce9a5141eb31513d` |
+| `tests/test_evolution_api.py` | `text` | 9844 | 266 | `c376948c39a580028cff90f00e8a6c0295e57c4094d6dbca13943fba037d7a5c` |
+| `tests/test_hardening_runtime.py` | `text` | 4431 | 139 | `a445e0a73b9c2c4524dacabbd03ab50ab29edff2f47b3b1bfe22a99ceb8b290b` |
 | `tests/test_ingestion_helpers.py` | `text` | 2147 | 57 | `00f2f40ed0cb49af207bd515908a8acdd64b5661c760d25a9c8ff03888943a92` |
 | `tests/test_mvp.py` | `text` | 20828 | 509 | `c31329955f277c7173e3f869ac0139debf3e23ac944068ffcaae877824eac950` |
 | `tests/test_openapi_contract_snapshot.py` | `text` | 545 | 17 | `bf1b7ee69ca442cf49b9f1c7980ba001c52be0cfc65e7d710261a4bad801be66` |

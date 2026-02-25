@@ -15,6 +15,10 @@ Legend:
 | Phase Cycle Engine (Expansion/Peak/Compression/Rebirth) | Implemented | `src/nexus_babel/services/evolution.py` (`phase_shift`) |
 | Glyph Fusion Engine | Implemented | `src/nexus_babel/services/evolution.py` (`glyph_fusion`) |
 | Branch Replay + Compare | Implemented | `src/nexus_babel/api/routes.py` (`/branches/{id}/replay`, `/compare`) |
+| Reverse Drift Event Type | Implemented | `src/nexus_babel/services/evolution.py` (`reverse_drift`), `tests/test_evolution.py` |
+| Multi-Evolve Batch Endpoint | Implemented | `src/nexus_babel/api/routes/branches.py` (`POST /api/v1/evolve/multi`), `tests/test_evolution_api.py` |
+| Checkpoint-Accelerated Replay | Implemented (benchmark pending) | `src/nexus_babel/services/evolution.py` (`get_timeline` checkpoint path), `tests/test_evolution_api.py` |
+| Evolution Visualization Graph Endpoint | Implemented | `src/nexus_babel/api/routes/branches.py` (`GET /api/v1/branches/{id}/visualization`), `tests/test_evolution_api.py` |
 | Cartridge Master Index | Planned | `AB-PLAN-04 Governance + Artifact Ops` |
 | UX Explorer Thread Scaffolds | Planned | `AB-PLAN-03 Explorer UX + Interaction` |
 | Academic Outreach Thread Scaffolds | Planned | `AB-PLAN-05 Academic + Funding` |

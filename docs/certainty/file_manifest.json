@@ -1,10 +1,10 @@
 {
-  "generated_at": "2026-02-25T13:46:19.441171+00:00",
+  "generated_at": "2026-02-25T14:24:20.648967+00:00",
   "root": "/Users/4jp/Workspace/organvm-i-theoria/nexus--babel-alexandria-",
   "summary": {
-    "files_total": 154,
+    "files_total": 158,
     "files_by_kind": {
-      "text": 152,
+      "text": 156,
       "pdf": 2
     },
     "features_total": 95,
@@ -142,8 +142,8 @@
     },
     {
       "path": "Makefile",
-      "sha256": "76dc33feefc2cf499c9b0764a250c4ed6804e388bb5a9e96ba05d6a6d7cb3991",
-      "size_bytes": 1099,
+      "sha256": "3ace454949ff8263c92695c4833c601d59712860673c0afa81ff0c6943b97595",
+      "size_bytes": 1121,
       "kind": "text",
       "lines": 54,
       "pdf_pages": null,
@@ -291,6 +291,26 @@
       "conflict_markers": false
     },
     {
+      "path": "docs/alexandria_babel/AB-PLAN-02_Build_Tickets.json",
+      "sha256": "b3329b851fb2b0d74b07b637457fcb2b4b599b9fe6badc2a31940d39922e26d4",
+      "size_bytes": 3348,
+      "kind": "text",
+      "lines": 110,
+      "pdf_pages": null,
+      "pdf_text_chars": null,
+      "conflict_markers": false
+    },
+    {
+      "path": "docs/alexandria_babel/AB-PLAN-02_Build_Tickets.md",
+      "sha256": "caf4f26d9415ae5e16f8d5ec940910657ba1580c41e4bd65b825dd95b0cc5c29",
+      "size_bytes": 2368,
+      "kind": "text",
+      "lines": 40,
+      "pdf_pages": null,
+      "pdf_text_chars": null,
+      "conflict_markers": false
+    },
+    {
       "path": "docs/alexandria_babel/Organism_Blueprint.md",
       "sha256": "e54874fb6e1d72bd12aadefdc2bd538d6dbc3e53ef799b1c6175b2bef6fab563",
       "size_bytes": 1820,
@@ -312,10 +332,10 @@
     },
     {
       "path": "docs/alexandria_babel/Prototype_Tracker.md",
-      "sha256": "90f0b610dc4dc4af46fd2bcb3025c78d52970be91839457697a3b402ce93882e",
-      "size_bytes": 2047,
+      "sha256": "ccec31e91a4a452a994a5c664da00a98fbd1030fba83c0c1ad9a03cd45eb4460",
+      "size_bytes": 2676,
       "kind": "text",
-      "lines": 36,
+      "lines": 40,
       "pdf_pages": null,
       "pdf_text_chars": null,
       "conflict_markers": false
@@ -382,10 +402,10 @@
     },
     {
       "path": "docs/alexandria_babel/index.md",
-      "sha256": "98955cd522756ed03f848e5d91b99465389fc594a8b050ac0c7b45a305d61fac",
-      "size_bytes": 1033,
+      "sha256": "6d6219c41bba1d51c9a2eecc401799b91fc80eb2a3ee625ef2d691786dd1cb66",
+      "size_bytes": 1191,
       "kind": "text",
-      "lines": 19,
+      "lines": 21,
       "pdf_pages": null,
       "pdf_text_chars": null,
       "conflict_markers": false
@@ -752,7 +772,7 @@
     },
     {
       "path": "specs/03-evolution-branching/tasks.md",
-      "sha256": "c11c6fe78b38cdce1facd877abaad5d746b9468aff93d5ca084d0cbdcbf3e0f8",
+      "sha256": "af1ff7a8abb92f24fb71f51667b2b58f6e2c9e4e85549da3f82322ac419060ed",
       "size_bytes": 32818,
       "kind": "text",
       "lines": 547,
@@ -1022,10 +1042,10 @@
     },
     {
       "path": "src/nexus_babel/api/routes/branches.py",
-      "sha256": "230424516eccda429c32e8c8f793d2b3a041502e11e91d06c3ca556294db13ac",
-      "size_bytes": 4752,
+      "sha256": "be3177ac521eabe47e83251dccbbc220f78e49f0df46a71be699ebbc14b8c383",
+      "size_bytes": 6690,
       "kind": "text",
-      "lines": 129,
+      "lines": 183,
       "pdf_pages": null,
       "pdf_text_chars": null,
       "conflict_markers": false
@@ -1132,10 +1152,10 @@
     },
     {
       "path": "src/nexus_babel/schemas.py",
-      "sha256": "fb6ebdced0974a425e41b1c247f0d56bfda0956efea99ecc4908f89cfbc834e6",
-      "size_bytes": 9492,
+      "sha256": "fdfa46a638a080606a3c0a98abda53e50f9a0f709de1a095b039c380eccf35b0",
+      "size_bytes": 10078,
       "kind": "text",
-      "lines": 357,
+      "lines": 378,
       "pdf_pages": null,
       "pdf_text_chars": null,
       "conflict_markers": false
@@ -1182,10 +1202,10 @@
     },
     {
       "path": "src/nexus_babel/services/evolution.py",
-      "sha256": "5b6933e80cea7b35aafca895390deccfa6a2b1a2eba5800b0cb147a044485e60",
-      "size_bytes": 15978,
+      "sha256": "d298b42b28c58561e78ca3989c2f55a16d530df4ffd811aa98c5281885efc71e",
+      "size_bytes": 23212,
       "kind": "text",
-      "lines": 399,
+      "lines": 572,
       "pdf_pages": null,
       "pdf_text_chars": null,
       "conflict_markers": false
@@ -1452,10 +1472,10 @@
     },
     {
       "path": "tests/snapshots/openapi_contract_normalized.json",
-      "sha256": "f50ddf53a140771d26af9e94b5925c502252906c7235e3f5d5e80ec50a19b6c7",
-      "size_bytes": 74795,
+      "sha256": "2b08359609211ef8b44ce73de83a00dc7f5503a89b6b0a917f69911262d4eb90",
+      "size_bytes": 79435,
       "kind": "text",
-      "lines": 3234,
+      "lines": 3431,
       "pdf_pages": null,
       "pdf_text_chars": null,
       "conflict_markers": false
@@ -1481,8 +1501,28 @@
       "conflict_markers": false
     },
     {
+      "path": "tests/test_evolution.py",
+      "sha256": "d9b743f4a7709f862ff8285e93646daed6ab97af76c2226bce9a5141eb31513d",
+      "size_bytes": 1704,
+      "kind": "text",
+      "lines": 53,
+      "pdf_pages": null,
+      "pdf_text_chars": null,
+      "conflict_markers": false
+    },
+    {
+      "path": "tests/test_evolution_api.py",
+      "sha256": "c376948c39a580028cff90f00e8a6c0295e57c4094d6dbca13943fba037d7a5c",
+      "size_bytes": 9844,
+      "kind": "text",
+      "lines": 266,
+      "pdf_pages": null,
+      "pdf_text_chars": null,
+      "conflict_markers": false
+    },
+    {
       "path": "tests/test_hardening_runtime.py",
-      "sha256": "368e90aea6e74b76f9c5bd4b1d6684ad1c4387eb4246996994903099e39d34b0",
+      "sha256": "a445e0a73b9c2c4524dacabbd03ab50ab29edff2f47b3b1bfe22a99ceb8b290b",
       "size_bytes": 4431,
       "kind": "text",
       "lines": 139,

@@ -366,59 +366,59 @@
 
 ### S03-13: Reverse Drift Event Type
 
-- [ ] **T13-01** [P] Add `"reverse_drift"` case to `_validate_event_payload()`: accept `{seed}` with default `seed=0`.
+- [x] **T13-01** [P] Add `"reverse_drift"` case to `_validate_event_payload()`: accept `{seed}` with default `seed=0`.
   - File: `src/nexus_babel/services/evolution.py`
   - AC: `_validate_event_payload("reverse_drift", {})` returns `{"seed": 0}`. Unknown event type still raises ValueError.
 
-- [ ] **T13-02** [S] [Story T13-01] Add `"reverse_drift"` case to `_apply_event()`: iterate `REVERSE_NATURAL_MAP`, apply `re.sub(old, new, text, flags=re.IGNORECASE)` for each entry. Return `DriftResult` with `{event: "reverse_drift", reversals, before_chars, after_chars}`.
+- [x] **T13-02** [S] [Story T13-01] Add `"reverse_drift"` case to `_apply_event()`: iterate `REVERSE_NATURAL_MAP`, apply `re.sub(old, new, text, flags=re.IGNORECASE)` for each entry. Return `DriftResult` with `{event: "reverse_drift", reversals, before_chars, after_chars}`.
   - File: `src/nexus_babel/services/evolution.py`
   - AC: `_apply_event("fis", "reverse_drift", {"seed": 0}).output_text` contains `"phs"` (reverse of `"ph"->"f"` is `"f"->"ph"`). Count of replacements tracked.
 
-- [ ] **T13-03** [S] [Story T13-02] Write test `test_reverse_drift_basic` applying `reverse_drift` to text that was previously natural-drifted. Verify at least some original patterns are restored.
+- [x] **T13-03** [S] [Story T13-02] Write test `test_reverse_drift_basic` applying `reverse_drift` to text that was previously natural-drifted. Verify at least some original patterns are restored.
   - File: `tests/test_evolution.py`
   - AC: Apply natural_drift to `"the"` (produces `"THORN e"`), then reverse_drift -> contains `"th"`.
 
-- [ ] **T13-04** [P] Write test `test_reverse_drift_lossy` demonstrating that reverse drift is lossy: text containing legitimate `"f"` gets converted to `"ph"`.
+- [x] **T13-04** [P] Write test `test_reverse_drift_lossy` demonstrating that reverse drift is lossy: text containing legitimate `"f"` gets converted to `"ph"`.
   - File: `tests/test_evolution.py`
   - AC: Input `"fun"` -> output `"phun"`. Documented as expected behavior.
 
-- [ ] **T13-05** [P] Write test `test_reverse_drift_12_entries` verifying all 12 `REVERSE_NATURAL_MAP` entries are applied.
+- [x] **T13-05** [P] Write test `test_reverse_drift_12_entries` verifying all 12 `REVERSE_NATURAL_MAP` entries are applied.
   - File: `tests/test_evolution.py`
   - AC: Parametrized test for each reverse mapping. 12 cases.
 
 ### S03-14: Multi-Evolve Batch Endpoint
 
-- [ ] **T14-01** [P] Add `MultiEvolveRequest` and `MultiEvolveResponse` schemas to `schemas.py`.
+- [x] **T14-01** [P] Add `MultiEvolveRequest` and `MultiEvolveResponse` schemas to `schemas.py`.
   - File: `src/nexus_babel/schemas.py`
   - AC: Both models importable. Request has `root_document_id`, `parent_branch_id`, `events` (list), `mode`. Response has `branch_ids`, `final_branch_id`, `event_count`, `final_text_hash`, `final_preview`.
 
-- [ ] **T14-02** [S] [Story T14-01] Add `multi_evolve()` method to `EvolutionService` that loops through `events`, calling `evolve_branch()` for each, threading `parent_branch_id` from the result of each call.
+- [x] **T14-02** [S] [Story T14-01] Add `multi_evolve()` method to `EvolutionService` that loops through `events`, calling `evolve_branch()` for each, threading `parent_branch_id` from the result of each call.
   - File: `src/nexus_babel/services/evolution.py`
   - AC: Returns list of `(Branch, BranchEvent)` tuples. Each successive call uses previous branch as parent.
 
-- [ ] **T14-03** [S] [Story T14-02] Add `POST /api/v1/evolve/multi` route in `routes.py` with `operator` auth.
+- [x] **T14-03** [S] [Story T14-02] Add `POST /api/v1/evolve/multi` route in `routes.py` with `operator` auth.
   - File: `src/nexus_babel/api/routes.py`
   - AC: Route registered, accepts `MultiEvolveRequest`, returns `MultiEvolveResponse`.
 
-- [ ] **T14-04** [S] [Story T14-03] Write integration test `test_multi_evolve_chain` that submits 4 events in a batch. Verify 4 branch IDs returned, `final_branch_id` is the last, `event_count == 4`.
+- [x] **T14-04** [S] [Story T14-03] Write integration test `test_multi_evolve_chain` that submits 4 events in a batch. Verify 4 branch IDs returned, `final_branch_id` is the last, `event_count == 4`.
   - File: `tests/test_evolution.py`
   - AC: All assertions pass. Final preview is the result of all 4 transformations applied sequentially.
 
-- [ ] **T14-05** [P] Write test `test_multi_evolve_empty_events_raises` with empty events list. Verify 400 or ValueError.
+- [x] **T14-05** [P] Write test `test_multi_evolve_empty_events_raises` with empty events list. Verify 400 or ValueError.
   - File: `tests/test_evolution.py`
   - AC: Error raised for empty event list.
 
-- [ ] **T14-06** [P] Write test `test_multi_evolve_rollback_on_failure` where the 3rd event has an invalid payload. Verify no branches are created (transaction rollback).
+- [x] **T14-06** [P] Write test `test_multi_evolve_rollback_on_failure` where the 3rd event has an invalid payload. Verify no branches are created (transaction rollback).
   - File: `tests/test_evolution.py`
   - AC: After failed call, no new branches exist in DB.
 
 ### S03-15: Checkpoint-Accelerated Replay
 
-- [ ] **T15-01** [P] Modify `get_timeline()` to check for the most recent `BranchCheckpoint` in the lineage before replaying from root.
+- [x] **T15-01** [P] Modify `get_timeline()` to check for the most recent `BranchCheckpoint` in the lineage before replaying from root.
   - File: `src/nexus_babel/services/evolution.py`
   - AC: When a checkpoint exists, replay starts from checkpoint state. When no checkpoint exists, full replay from root (backward compatible).
 
-- [ ] **T15-02** [S] [Story T15-01] Write test `test_checkpoint_accelerated_replay_correctness` that creates 20 sequential branches (checkpoint at 10 and 20), replays the 20th, and verifies the result matches a full replay from root.
+- [x] **T15-02** [S] [Story T15-01] Write test `test_checkpoint_accelerated_replay_correctness` that creates 20 sequential branches (checkpoint at 10 and 20), replays the 20th, and verifies the result matches a full replay from root.
   - File: `tests/test_evolution.py`
   - AC: Checkpointed replay `text_hash` == full replay `text_hash`.
 
@@ -490,7 +490,7 @@
 
 ### S03-19: Evolution Visualization
 
-- [ ] **T19-01** [P] Add `GET /api/v1/branches/{id}/visualization` endpoint returning graph data (nodes=events, edges=parent links, metadata=phase/type).
+- [x] **T19-01** [P] Add `GET /api/v1/branches/{id}/visualization` endpoint returning graph data (nodes=events, edges=parent links, metadata=phase/type).
   - File: `src/nexus_babel/api/routes.py`
   - AC: Response is a JSON graph structure compatible with D3.js force layout.
 
