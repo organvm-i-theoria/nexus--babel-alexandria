@@ -103,7 +103,7 @@ def test_api_route_count_parity(client):
         if not path.startswith("/api/v1/"):
             continue
         operations += sum(1 for method in spec if method in http_methods)
-    assert operations == 28
+    assert operations == 30
 
 
 def test_runbook_make_targets_exist():

@@ -9,9 +9,9 @@ test:
 
 lint:
 	@if [ -x .venv/bin/ruff ]; then \
-		.venv/bin/ruff check src tests scripts; \
+		.venv/bin/ruff check --no-cache src tests scripts; \
 	else \
-		ruff check src tests scripts; \
+		ruff check --no-cache src tests scripts; \
 	fi
 
 openapi-snapshot:

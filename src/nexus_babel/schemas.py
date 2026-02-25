@@ -95,6 +95,27 @@ class EvolveBranchResponse(BaseModel):
     diff_summary: dict[str, Any]
 
 
+class MultiEvolveEventInput(BaseModel):
+    event_type: str
+    event_payload: dict[str, Any] = Field(default_factory=dict)
+
+
+class MultiEvolveRequest(BaseModel):
+    parent_branch_id: str | None = None
+    root_document_id: str | None = None
+    events: list[MultiEvolveEventInput] = Field(default_factory=list)
+    mode: Mode = "PUBLIC"
+
+
+class MultiEvolveResponse(BaseModel):
+    branch_ids: list[str] = Field(default_factory=list)
+    event_ids: list[str] = Field(default_factory=list)
+    final_branch_id: str
+    event_count: int
+    final_text_hash: str
+    final_preview: str
+
+
 class BranchEventView(BaseModel):
     branch_id: str
     event_id: str

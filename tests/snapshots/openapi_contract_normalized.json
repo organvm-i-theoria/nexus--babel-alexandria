@@ -900,6 +900,95 @@
         ],
         "type": "object"
       },
+      "MultiEvolveEventInput": {
+        "properties": {
+          "event_payload": {
+            "additionalProperties": true,
+            "type": "object"
+          },
+          "event_type": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "event_type"
+        ],
+        "type": "object"
+      },
+      "MultiEvolveRequest": {
+        "properties": {
+          "events": {
+            "items": {
+              "$ref": "#/components/schemas/MultiEvolveEventInput"
+            },
+            "type": "array"
+          },
+          "mode": {
+            "default": "PUBLIC",
+            "enum": [
+              "PUBLIC",
+              "RAW"
+            ],
+            "type": "string"
+          },
+          "parent_branch_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "root_document_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "type": "object"
+      },
+      "MultiEvolveResponse": {
+        "properties": {
+          "branch_ids": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "event_count": {
+            "type": "integer"
+          },
+          "event_ids": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "final_branch_id": {
+            "type": "string"
+          },
+          "final_preview": {
+            "type": "string"
+          },
+          "final_text_hash": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "event_count",
+          "final_branch_id",
+          "final_preview",
+          "final_text_hash"
+        ],
+        "type": "object"
+      },
       "RemixArtifactListItem": {
         "properties": {
           "branch_id": {
@@ -2163,6 +2252,60 @@
         "tags": []
       }
     },
+    "/api/v1/branches/{branch_id}/visualization": {
+      "get": {
+        "operationId": "branch_visualization_api_v1_branches__branch_id__visualization_get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "branch_id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "X-Nexus-API-Key",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            }
+          }
+        ],
+        "requestBody": null,
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": true,
+                  "type": "object"
+                }
+              }
+            }
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        },
+        "security": [],
+        "tags": []
+      }
+    },
     "/api/v1/corpus/seed": {
       "post": {
         "operationId": "provision_seed_text_api_v1_corpus_seed_post",
@@ -2398,6 +2541,60 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/EvolveBranchResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        },
+        "security": [],
+        "tags": []
+      }
+    },
+    "/api/v1/evolve/multi": {
+      "post": {
+        "operationId": "multi_evolve_api_v1_evolve_multi_post",
+        "parameters": [
+          {
+            "in": "header",
+            "name": "X-Nexus-API-Key",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/MultiEvolveRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MultiEvolveResponse"
                 }
               }
             }

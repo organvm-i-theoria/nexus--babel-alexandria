@@ -13,6 +13,8 @@ from nexus_babel.schemas import (
     BranchTimelineResponse,
     EvolveBranchRequest,
     EvolveBranchResponse,
+    MultiEvolveRequest,
+    MultiEvolveResponse,
 )
 from nexus_babel.services.auth import AuthContext
 
@@ -38,6 +40,47 @@ def evolve_branch(
         )
         session.commit()
         return EvolveBranchResponse(new_branch_id=branch.id, event_id=event.id, diff_summary=event.diff_summary)
+    except HTTPException:
+        session.rollback()
+        raise
+    except Exception as exc:
+        session.rollback()
+        raise to_http_exception(exc, default_status=400) from exc
+    finally:
+        session.close()
+
+
+@router.post("/evolve/multi", response_model=MultiEvolveResponse)
+def multi_evolve(
+    payload: MultiEvolveRequest,
+    request: Request,
+    auth_context: AuthContext = Depends(require_auth("operator")),
+) -> MultiEvolveResponse:
+    session = open_session(request)
+    try:
+        enforce_mode(request, auth_context, payload.mode)
+        result = request.app.state.evolution_service.multi_evolve(
+            session=session,
+            parent_branch_id=payload.parent_branch_id,
+            root_document_id=payload.root_document_id,
+            events=[
+                {
+                    "event_type": event.event_type,
+                    "event_payload": event.event_payload,
+                }
+                for event in payload.events
+            ],
+            mode=payload.mode,
+        )
+        session.commit()
+        return MultiEvolveResponse(
+            branch_ids=list(result.get("branch_ids", [])),
+            event_ids=list(result.get("event_ids", [])),
+            final_branch_id=result["final_branch_id"],
+            event_count=int(result["event_count"]),
+            final_text_hash=result["final_text_hash"],
+            final_preview=result["final_preview"],
+        )
     except HTTPException:
         session.rollback()
         raise
@@ -122,6 +165,17 @@ def compare_branch(branch_id: str, other_branch_id: str, request: Request) -> Br
             right_branch_id=other_branch_id,
         )
         return BranchCompareResponse(**data)
+    except Exception as exc:
+        raise to_http_exception(exc, default_status=404) from exc
+    finally:
+        session.close()
+
+
+@router.get("/branches/{branch_id}/visualization", dependencies=[Depends(require_auth("viewer"))])
+def branch_visualization(branch_id: str, request: Request) -> dict:
+    session = open_session(request)
+    try:
+        return request.app.state.evolution_service.get_visualization(session=session, branch_id=branch_id)
     except Exception as exc:
         raise to_http_exception(exc, default_status=404) from exc
     finally:

@@ -142,6 +142,7 @@ class EvolutionService:
             },
         )
         session.add(event)
+        session.flush()
 
         total_lineage_events = lineage_event_count + 1
         if total_lineage_events % 10 == 0:
@@ -155,6 +156,55 @@ class EvolutionService:
             )
 
         return new_branch, event
+
+    def multi_evolve(
+        self,
+        session: Session,
+        parent_branch_id: str | None,
+        root_document_id: str | None,
+        events: list[dict[str, Any]],
+        mode: str,
+    ) -> dict[str, Any]:
+        if not events:
+            raise ValueError("events must not be empty")
+
+        created_pairs: list[tuple[Branch, BranchEvent]] = []
+        current_parent_branch_id = parent_branch_id
+        current_root_document_id = root_document_id
+
+        for idx, item in enumerate(events):
+            event_type = str((item or {}).get("event_type", "")).strip()
+            event_payload = dict((item or {}).get("event_payload") or {})
+            if not event_type:
+                raise ValueError(f"events[{idx}].event_type is required")
+
+            branch, event = self.evolve_branch(
+                session=session,
+                parent_branch_id=current_parent_branch_id,
+                root_document_id=current_root_document_id,
+                event_type=event_type,
+                event_payload=event_payload,
+                mode=mode,
+            )
+            created_pairs.append((branch, event))
+            current_parent_branch_id = branch.id
+            current_root_document_id = branch.root_document_id
+
+        final_branch = created_pairs[-1][0]
+        final_snapshot = dict(final_branch.state_snapshot or {})
+        final_text = str(final_snapshot.get("current_text", ""))
+        final_text_hash = str(final_snapshot.get("text_hash") or hashlib.sha256(final_text.encode("utf-8")).hexdigest())
+
+        return {
+            "branches": [branch for branch, _ in created_pairs],
+            "events": [event for _, event in created_pairs],
+            "branch_ids": [branch.id for branch, _ in created_pairs],
+            "event_ids": [event.id for _, event in created_pairs],
+            "final_branch_id": final_branch.id,
+            "event_count": len(created_pairs),
+            "final_text_hash": final_text_hash,
+            "final_preview": final_text[:500],
+        }
 
     def get_timeline(self, session: Session, branch_id: str) -> dict[str, Any]:
         branch = session.scalar(select(Branch).where(Branch.id == branch_id))
@@ -177,7 +227,15 @@ class EvolutionService:
                 root_text = str((doc.provenance or {}).get("extracted_text", ""))
 
         replay_text = root_text
-        for event in events:
+        checkpoint_start_index = 0
+        latest_checkpoint = self._latest_lineage_checkpoint(session, lineage)
+        if latest_checkpoint is not None:
+            snapshot = self._decompress_snapshot(latest_checkpoint.snapshot_compressed)
+            if "current_text" in snapshot:
+                replay_text = str(snapshot.get("current_text", ""))
+                checkpoint_start_index = min(max(int(latest_checkpoint.event_index), 0), len(events))
+
+        for event in events[checkpoint_start_index:]:
             replay_text = self._apply_event(replay_text, event.event_type, event.event_payload).output_text
 
         return {
@@ -187,6 +245,82 @@ class EvolutionService:
                 "text_hash": hashlib.sha256(replay_text.encode("utf-8")).hexdigest(),
                 "preview": replay_text[:500],
                 "event_count": len(events),
+            },
+        }
+
+    def get_visualization(self, session: Session, branch_id: str) -> dict[str, Any]:
+        branch = session.scalar(select(Branch).where(Branch.id == branch_id))
+        if not branch:
+            raise ValueError(f"Branch {branch_id} not found")
+
+        lineage = self._lineage(session, branch)
+        branch_events_by_id: dict[str, list[BranchEvent]] = {}
+        nodes: list[dict[str, Any]] = []
+        edges: list[dict[str, Any]] = []
+
+        for node in lineage:
+            branch_events = session.scalars(
+                select(BranchEvent).where(BranchEvent.branch_id == node.id).order_by(BranchEvent.event_index, BranchEvent.created_at)
+            ).all()
+            branch_events_by_id[node.id] = branch_events
+
+            phase = str((node.state_snapshot or {}).get("phase", "")) or None
+            for event in branch_events:
+                nodes.append(
+                    {
+                        "id": event.id,
+                        "kind": "event",
+                        "branch_id": node.id,
+                        "parent_branch_id": node.parent_branch_id,
+                        "root_document_id": node.root_document_id,
+                        "event_index": event.event_index,
+                        "event_type": event.event_type,
+                        "phase": phase,
+                        "mode": node.mode,
+                        "created_at": event.created_at,
+                        "metadata": {
+                            "diff_summary": event.diff_summary,
+                            "event_payload": event.event_payload,
+                        },
+                    }
+                )
+
+            for prev, curr in zip(branch_events, branch_events[1:]):
+                edges.append(
+                    {
+                        "id": f"{prev.id}->{curr.id}",
+                        "source": prev.id,
+                        "target": curr.id,
+                        "type": "intra_branch_sequence",
+                    }
+                )
+
+        last_event_by_branch = {branch_id_: events[-1] for branch_id_, events in branch_events_by_id.items() if events}
+        for node in lineage:
+            if not node.parent_branch_id:
+                continue
+            parent_event = last_event_by_branch.get(node.parent_branch_id)
+            child_event = last_event_by_branch.get(node.id)
+            if parent_event is None or child_event is None:
+                continue
+            edges.append(
+                {
+                    "id": f"{parent_event.id}->{child_event.id}:parent",
+                    "source": parent_event.id,
+                    "target": child_event.id,
+                    "type": "parent_branch",
+                }
+            )
+
+        return {
+            "branch_id": branch.id,
+            "root_document_id": branch.root_document_id,
+            "nodes": nodes,
+            "edges": edges,
+            "summary": {
+                "event_count": len(nodes),
+                "edge_count": len(edges),
+                "lineage_depth": len(lineage),
             },
         }
 
@@ -242,6 +376,16 @@ class EvolutionService:
             )
         return count
 
+    def _latest_lineage_checkpoint(self, session: Session, lineage: list[Branch]) -> BranchCheckpoint | None:
+        lineage_ids = [node.id for node in lineage]
+        if not lineage_ids:
+            return None
+        return session.scalar(
+            select(BranchCheckpoint)
+            .where(BranchCheckpoint.branch_id.in_(lineage_ids))
+            .order_by(BranchCheckpoint.event_index.desc(), BranchCheckpoint.created_at.desc())
+        )
+
     def _next_event_index(self, session: Session, branch_id: str) -> int:
         max_index = session.scalar(select(func.max(BranchEvent.event_index)).where(BranchEvent.branch_id == branch_id))
         return int(max_index or 0) + 1
@@ -286,6 +430,10 @@ class EvolutionService:
         if event_type == "remix":
             data.setdefault("seed", 0)
             data.setdefault("strategy", "interleave")
+            return data
+
+        if event_type == "reverse_drift":
+            data.setdefault("seed", 0)
             return data
 
         raise ValueError(f"Unsupported event_type: {event_type}")
@@ -380,12 +528,37 @@ class EvolutionService:
             strategy = str(event_payload.get("strategy", "interleave"))
             return DriftResult(remixed_text, {"event": event_type, "strategy": strategy, "before_chars": before_chars, "after_chars": len(remixed_text)})
 
+        if event_type == "reverse_drift":
+            out = text
+            reversals = 0
+            # Apply longer keys first to avoid short keys (e.g. "f") shadowing
+            # more specific reversals (e.g. "fi" -> "fl").
+            reverse_pairs = sorted(self.REVERSE_NATURAL_MAP.items(), key=lambda pair: len(pair[0]), reverse=True)
+            for old, new in reverse_pairs:
+                out, count = re.subn(re.escape(old), new, out, flags=re.IGNORECASE)
+                reversals += count
+            return DriftResult(
+                out,
+                {
+                    "event": event_type,
+                    "reversals": reversals,
+                    "before_chars": before_chars,
+                    "after_chars": len(out),
+                },
+            )
+
         return DriftResult(text, {"event": event_type, "before_chars": before_chars, "after_chars": len(text), "note": "no-op"})
 
     def _compress_snapshot(self, snapshot: dict[str, Any]) -> str:
         encoded = json.dumps(snapshot, sort_keys=True).encode("utf-8")
         compressed = zlib.compress(encoded, level=9)
         return base64.b64encode(compressed).decode("ascii")
+
+    def _decompress_snapshot(self, payload: str) -> dict[str, Any]:
+        raw = base64.b64decode(payload.encode("ascii"))
+        decoded = zlib.decompress(raw)
+        data = json.loads(decoded.decode("utf-8"))
+        return data if isinstance(data, dict) else {}
 
     def _simple_distance(self, left: str, right: str) -> int:
         length = max(len(left), len(right))
