@@ -196,6 +196,7 @@ def merge_branches(
             event_id=event.id,
             strategy=payload.strategy,
             lca_branch_id=getattr(lca, "id", None),
+            conflict_semantics=dict((event.diff_summary or {}).get("conflict_semantics", {})),
             diff_summary=event.diff_summary,
         )
     except HTTPException:

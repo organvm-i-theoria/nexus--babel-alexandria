@@ -129,6 +129,7 @@ class MergeBranchesResponse(BaseModel):
     event_id: str
     strategy: MergeStrategy
     lca_branch_id: str | None = None
+    conflict_semantics: dict[str, Any] = Field(default_factory=dict)
     diff_summary: dict[str, Any] = Field(default_factory=dict)
 
 
@@ -153,6 +154,7 @@ class BranchVisualizationNode(BaseModel):
     id: str
     kind: str
     branch_id: str
+    lineage_role: str = "primary"
     parent_branch_id: str | None = None
     root_document_id: str | None = None
     event_index: int
@@ -168,12 +170,15 @@ class BranchVisualizationEdge(BaseModel):
     source: str
     target: str
     type: str
+    metadata: dict[str, Any] = Field(default_factory=dict)
 
 
 class BranchVisualizationSummary(BaseModel):
     event_count: int
     edge_count: int
     lineage_depth: int
+    secondary_lineage_branch_count: int = 0
+    merge_secondary_edge_count: int = 0
 
 
 class BranchVisualizationResponse(BaseModel):

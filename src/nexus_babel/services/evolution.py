@@ -234,6 +234,12 @@ class EvolutionService:
         left_text, _, _ = self._replay_lineage_text(session, left_branch, use_checkpoints=True)
         right_text, _, _ = self._replay_lineage_text(session, right_branch, use_checkpoints=True)
         merged_text = self._merge_texts(left_text, right_text, normalized_strategy)
+        conflict_semantics = self._build_merge_conflict_semantics(
+            left_text=left_text,
+            right_text=right_text,
+            merged_text=merged_text,
+            strategy=normalized_strategy,
+        )
 
         merge_payload = {
             "strategy": normalized_strategy,
@@ -241,6 +247,9 @@ class EvolutionService:
             "right_branch_id": right_branch_id,
             "lca_branch_id": getattr(lca, "id", None),
             "merged_text": merged_text,
+            "left_text_hash": hashlib.sha256(left_text.encode("utf-8")).hexdigest(),
+            "right_text_hash": hashlib.sha256(right_text.encode("utf-8")).hexdigest(),
+            "conflict_semantics": conflict_semantics,
             "seed": 0,
         }
         branch, event = self.evolve_branch(
@@ -275,16 +284,55 @@ class EvolutionService:
         if not branch:
             raise ValueError(f"Branch {branch_id} not found")
 
-        lineage = self._lineage(session, branch)
+        primary_lineage = self._lineage(session, branch)
+        primary_branch_ids = {node.id for node in primary_lineage}
+        branches_by_id: dict[str, Branch] = {node.id: node for node in primary_lineage}
         branch_events_by_id: dict[str, list[BranchEvent]] = {}
-        nodes: list[dict[str, Any]] = []
-        edges: list[dict[str, Any]] = []
+        scan_queue: list[Branch] = list(primary_lineage)
+        scanned: set[str] = set()
 
-        for node in lineage:
+        # Expand graph to include merge secondary parent lineages so secondary-parent
+        # edges point to actual nodes in the graph.
+        while scan_queue:
+            node = scan_queue.pop(0)
+            if node.id in scanned:
+                continue
+            scanned.add(node.id)
             branch_events = session.scalars(
                 select(BranchEvent).where(BranchEvent.branch_id == node.id).order_by(BranchEvent.event_index, BranchEvent.created_at)
             ).all()
             branch_events_by_id[node.id] = branch_events
+
+            for event in branch_events:
+                if event.event_type != "merge":
+                    continue
+                right_branch_id = str((event.event_payload or {}).get("right_branch_id") or "").strip()
+                if not right_branch_id:
+                    continue
+                right_branch = session.scalar(select(Branch).where(Branch.id == right_branch_id))
+                if not right_branch:
+                    continue
+                for secondary_node in self._lineage(session, right_branch):
+                    if secondary_node.id not in branches_by_id:
+                        branches_by_id[secondary_node.id] = secondary_node
+                        scan_queue.append(secondary_node)
+
+        lineage = list(primary_lineage) + sorted(
+            [node for node_id, node in branches_by_id.items() if node_id not in primary_branch_ids],
+            key=lambda node: (node.created_at, node.id),
+        )
+        nodes: list[dict[str, Any]] = []
+        edges: list[dict[str, Any]] = []
+        edge_ids: set[str] = set()
+        secondary_branch_ids = {node.id for node in lineage if node.id not in primary_branch_ids}
+
+        for node in lineage:
+            branch_events = branch_events_by_id.get(node.id)
+            if branch_events is None:
+                branch_events = session.scalars(
+                    select(BranchEvent).where(BranchEvent.branch_id == node.id).order_by(BranchEvent.event_index, BranchEvent.created_at)
+                ).all()
+                branch_events_by_id[node.id] = branch_events
 
             phase = str((node.state_snapshot or {}).get("phase", "")) or None
             for event in branch_events:
@@ -293,6 +341,7 @@ class EvolutionService:
                         "id": event.id,
                         "kind": "event",
                         "branch_id": node.id,
+                        "lineage_role": "secondary_merge_parent" if node.id in secondary_branch_ids else "primary",
                         "parent_branch_id": node.parent_branch_id,
                         "root_document_id": node.root_document_id,
                         "event_index": event.event_index,
@@ -308,14 +357,11 @@ class EvolutionService:
                 )
 
             for prev, curr in zip(branch_events, branch_events[1:]):
-                edges.append(
-                    {
-                        "id": f"{prev.id}->{curr.id}",
-                        "source": prev.id,
-                        "target": curr.id,
-                        "type": "intra_branch_sequence",
-                    }
-                )
+                edge_id = f"{prev.id}->{curr.id}"
+                if edge_id in edge_ids:
+                    continue
+                edge_ids.add(edge_id)
+                edges.append({"id": edge_id, "source": prev.id, "target": curr.id, "type": "intra_branch_sequence", "metadata": {}})
 
         last_event_by_branch = {branch_id_: events[-1] for branch_id_, events in branch_events_by_id.items() if events}
         for node in lineage:
@@ -325,14 +371,49 @@ class EvolutionService:
             child_event = last_event_by_branch.get(node.id)
             if parent_event is None or child_event is None:
                 continue
-            edges.append(
-                {
-                    "id": f"{parent_event.id}->{child_event.id}:parent",
-                    "source": parent_event.id,
-                    "target": child_event.id,
-                    "type": "parent_branch",
-                }
-            )
+            edge_id = f"{parent_event.id}->{child_event.id}:parent"
+            if edge_id not in edge_ids:
+                edge_ids.add(edge_id)
+                edges.append(
+                    {
+                        "id": edge_id,
+                        "source": parent_event.id,
+                        "target": child_event.id,
+                        "type": "parent_branch",
+                        "metadata": {"relationship": "primary_parent"},
+                    }
+                )
+
+        merge_secondary_edge_count = 0
+        for node in lineage:
+            for event in branch_events_by_id.get(node.id, []):
+                if event.event_type != "merge":
+                    continue
+                payload = dict(event.event_payload or {})
+                right_branch_id = str(payload.get("right_branch_id") or "").strip()
+                if not right_branch_id:
+                    continue
+                secondary_parent_event = last_event_by_branch.get(right_branch_id)
+                if secondary_parent_event is None:
+                    continue
+                edge_id = f"{secondary_parent_event.id}->{event.id}:merge-secondary"
+                if edge_id in edge_ids:
+                    continue
+                edge_ids.add(edge_id)
+                merge_secondary_edge_count += 1
+                edges.append(
+                    {
+                        "id": edge_id,
+                        "source": secondary_parent_event.id,
+                        "target": event.id,
+                        "type": "merge_secondary_parent",
+                        "metadata": {
+                            "strategy": payload.get("strategy"),
+                            "lca_branch_id": payload.get("lca_branch_id"),
+                            "right_branch_id": right_branch_id,
+                        },
+                    }
+                )
 
         return {
             "branch_id": branch.id,
@@ -342,7 +423,9 @@ class EvolutionService:
             "summary": {
                 "event_count": len(nodes),
                 "edge_count": len(edges),
-                "lineage_depth": len(lineage),
+                "lineage_depth": len(primary_lineage),
+                "secondary_lineage_branch_count": len(secondary_branch_ids),
+                "merge_secondary_edge_count": merge_secondary_edge_count,
             },
         }
 
@@ -519,8 +602,15 @@ class EvolutionService:
             if strategy not in self.MERGE_STRATEGIES:
                 raise ValueError(f"Unsupported merge strategy: {strategy}")
             merged_text = str(data.get("merged_text", ""))
+            for key in ("left_text_hash", "right_text_hash"):
+                if key in data and data[key] is not None:
+                    data[key] = str(data[key])
+            conflict_semantics = data.get("conflict_semantics", {})
+            if not isinstance(conflict_semantics, dict):
+                raise ValueError("conflict_semantics must be an object")
             data["strategy"] = strategy
             data["merged_text"] = merged_text
+            data["conflict_semantics"] = conflict_semantics
             data.setdefault("seed", 0)
             return data
 
@@ -638,6 +728,9 @@ class EvolutionService:
         if event_type == "merge":
             merged_text = str(event_payload.get("merged_text", text))
             strategy = str(event_payload.get("strategy", "interleave"))
+            conflict_semantics = event_payload.get("conflict_semantics", {})
+            if not isinstance(conflict_semantics, dict):
+                conflict_semantics = {}
             return DriftResult(
                 merged_text,
                 {
@@ -646,6 +739,9 @@ class EvolutionService:
                     "left_branch_id": event_payload.get("left_branch_id"),
                     "right_branch_id": event_payload.get("right_branch_id"),
                     "lca_branch_id": event_payload.get("lca_branch_id"),
+                    "left_text_hash": event_payload.get("left_text_hash"),
+                    "right_text_hash": event_payload.get("right_text_hash"),
+                    "conflict_semantics": conflict_semantics,
                     "before_chars": before_chars,
                     "after_chars": len(merged_text),
                 },
@@ -680,6 +776,70 @@ class EvolutionService:
                     merged.append(right_words[idx])
             return " ".join(merged)
         raise ValueError(f"Unsupported merge strategy: {strategy}")
+
+    def _build_merge_conflict_semantics(
+        self,
+        *,
+        left_text: str,
+        right_text: str,
+        merged_text: str,
+        strategy: str,
+    ) -> dict[str, Any]:
+        left_words = left_text.split()
+        right_words = right_text.split()
+        merged_words = merged_text.split()
+        left_word_set = set(left_words)
+        right_word_set = set(right_words)
+        left_hash = hashlib.sha256(left_text.encode("utf-8")).hexdigest()
+        right_hash = hashlib.sha256(right_text.encode("utf-8")).hexdigest()
+        inputs_identical = left_hash == right_hash
+
+        if inputs_identical:
+            resolution = "identical_inputs"
+        elif strategy == "left_wins":
+            resolution = "left_preferred"
+        elif strategy == "right_wins":
+            resolution = "right_preferred"
+        else:
+            resolution = "interleaved_union"
+
+        return {
+            "resolution": resolution,
+            "strategy_effect": {
+                "left_wins": "preserve_left",
+                "right_wins": "preserve_right",
+                "interleave": "word_interleave",
+            }.get(strategy, "unknown"),
+            "inputs_identical": inputs_identical,
+            "drops_non_selected_input": strategy in {"left_wins", "right_wins"} and not inputs_identical,
+            "left_chars": len(left_text),
+            "right_chars": len(right_text),
+            "merged_chars": len(merged_text),
+            "left_words": len(left_words),
+            "right_words": len(right_words),
+            "merged_words": len(merged_words),
+            "shared_word_count": len(left_word_set & right_word_set),
+            "left_only_word_count": len(left_word_set - right_word_set),
+            "right_only_word_count": len(right_word_set - left_word_set),
+            "common_prefix_chars": self._common_prefix_chars(left_text, right_text),
+            "common_suffix_chars": self._common_suffix_chars(left_text, right_text),
+        }
+
+    def _common_prefix_chars(self, left: str, right: str) -> int:
+        count = 0
+        for left_char, right_char in zip(left, right):
+            if left_char != right_char:
+                break
+            count += 1
+        return count
+
+    def _common_suffix_chars(self, left: str, right: str) -> int:
+        count = 0
+        for left_char, right_char in zip(reversed(left), reversed(right)):
+            if left_char != right_char:
+                break
+            count += 1
+        return count
 
     def _simple_distance(self, left: str, right: str) -> int:
         length = max(len(left), len(right))
