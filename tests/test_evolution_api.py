@@ -363,6 +363,12 @@ def test_branch_merge_interleave(client, sample_corpus, auth_headers):
     assert merge_payload["diff_summary"]["event"] == "merge"
     assert merge_payload["diff_summary"]["left_branch_id"] == left_branch
     assert merge_payload["diff_summary"]["right_branch_id"] == right_branch
+    assert merge_payload["diff_summary"]["left_text_hash"]
+    assert merge_payload["diff_summary"]["right_text_hash"]
+    assert merge_payload["conflict_semantics"]
+    assert merge_payload["conflict_semantics"]["resolution"] == "interleaved_union"
+    assert merge_payload["conflict_semantics"]["strategy_effect"] == "word_interleave"
+    assert merge_payload["diff_summary"]["conflict_semantics"] == merge_payload["conflict_semantics"]
 
     replay_resp = client.post(f"/api/v1/branches/{merge_payload['new_branch_id']}/replay", headers=auth_headers["viewer"])
     assert replay_resp.status_code == 200, replay_resp.text
@@ -375,6 +381,68 @@ def test_branch_merge_interleave(client, sample_corpus, auth_headers):
     right_word = next((w for w in right_replay.split() if w.isalpha()), None)
     assert left_word is not None and left_word in merged_preview
     assert right_word is not None and right_word in merged_preview
+
+
+def test_branch_visualization_includes_merge_secondary_parent_edges(client, sample_corpus, auth_headers):
+    doc_id = _ingest_one(client, sample_corpus, auth_headers["operator"])
+
+    left_root = _evolve(
+        client,
+        auth_headers["operator"],
+        root_document_id=doc_id,
+        event_type="natural_drift",
+        event_payload={"seed": 10},
+    )
+    left_tip = _evolve(
+        client,
+        auth_headers["operator"],
+        parent_branch_id=left_root,
+        event_type="phase_shift",
+        event_payload={"phase": "peak", "seed": 11},
+    )
+    right_root = _evolve(
+        client,
+        auth_headers["operator"],
+        root_document_id=doc_id,
+        event_type="reverse_drift",
+        event_payload={"seed": 12},
+    )
+    right_tip = _evolve(
+        client,
+        auth_headers["operator"],
+        parent_branch_id=right_root,
+        event_type="synthetic_mutation",
+        event_payload={"mutation_rate": 0.05, "seed": 13},
+    )
+
+    merge_resp = client.post(
+        "/api/v1/branches/merge",
+        headers=auth_headers["operator"],
+        json={
+            "left_branch_id": left_tip,
+            "right_branch_id": right_tip,
+            "strategy": "interleave",
+            "mode": "PUBLIC",
+        },
+    )
+    assert merge_resp.status_code == 200, merge_resp.text
+    merged_branch_id = merge_resp.json()["new_branch_id"]
+
+    viz_resp = client.get(f"/api/v1/branches/{merged_branch_id}/visualization", headers=auth_headers["viewer"])
+    assert viz_resp.status_code == 200, viz_resp.text
+    payload = viz_resp.json()
+
+    assert payload["summary"]["secondary_lineage_branch_count"] >= 1
+    assert payload["summary"]["merge_secondary_edge_count"] >= 1
+    assert any(edge["type"] == "merge_secondary_parent" for edge in payload["edges"])
+    assert any(
+        edge["type"] == "merge_secondary_parent" and edge["metadata"]["right_branch_id"] == right_tip
+        for edge in payload["edges"]
+    )
+    assert any(
+        node["branch_id"] == right_tip and node["lineage_role"] == "secondary_merge_parent"
+        for node in payload["nodes"]
+    )
 
 
 def test_branch_merge_requires_operator(client, sample_corpus, auth_headers):

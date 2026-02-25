@@ -347,6 +347,10 @@
           "id": {
             "type": "string"
           },
+          "metadata": {
+            "additionalProperties": true,
+            "type": "object"
+          },
           "source": {
             "type": "string"
           },
@@ -384,6 +388,10 @@
             "type": "string"
           },
           "kind": {
+            "type": "string"
+          },
+          "lineage_role": {
+            "default": "primary",
             "type": "string"
           },
           "metadata": {
@@ -478,6 +486,14 @@
             "type": "integer"
           },
           "lineage_depth": {
+            "type": "integer"
+          },
+          "merge_secondary_edge_count": {
+            "default": 0,
+            "type": "integer"
+          },
+          "secondary_lineage_branch_count": {
+            "default": 0,
             "type": "integer"
           }
         },
@@ -1080,6 +1096,10 @@
       },
       "MergeBranchesResponse": {
         "properties": {
+          "conflict_semantics": {
+            "additionalProperties": true,
+            "type": "object"
+          },
           "diff_summary": {
             "additionalProperties": true,
             "type": "object"
