@@ -438,3 +438,11 @@ The specification itself is released under MIT. The document references CC BY-NC
 **[@4444J99](https://github.com/4444J99)**
 
 Part of [ORGAN-I: Theoria](https://github.com/organvm-i-theoria) — the theory organ of the [ORGANVM](https://github.com/meta-organvm) system.
+
+<!-- SYSTEM-NAV-START -->
+
+---
+
+<sub>[Portfolio](https://4444j99.github.io/portfolio/) · [System Directory](https://4444j99.github.io/portfolio/directory/) · [ORGAN I · Theoria](https://organvm-i-theoria.github.io/) · Part of the <a href="https://4444j99.github.io/portfolio/directory/">ORGANVM eight-organ system</a></sub>
+
+<!-- SYSTEM-NAV-END -->
