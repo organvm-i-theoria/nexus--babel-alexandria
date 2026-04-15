@@ -23,6 +23,14 @@ agents:
     workflow: .github/workflows/ci-minimal.yml
     description: "Continuous integration pipeline"
 
+implements:
+  - concept: formation_protocol
+    zettel_source: "post-flood/archive_original/.zettel-index.yaml#formation_protocol"
+    aspect: "GENERATOR formation — produces ONT_FRAGMENT, RULE_PROPOSAL, THEORY_MEMO from literary canon"
+  - concept: repo_fusion
+    zettel_source: "post-flood/archive_original/.zettel-index.yaml#repo_fusion"
+    aspect: "Third-location synthesis — recombines canonical literary material into new knowledge structures"
+
 produces:
   - type: theory
     description: "Epistemological frameworks, recursive engines, ontological systems"
