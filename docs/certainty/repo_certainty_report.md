@@ -1,7 +1,7 @@
 # Repository Certainty Report
 
-- Generated: `2026-02-25T17:34:13.794679+00:00`
-- Files processed: `167`
+- Generated: `2026-07-06T21:14:57.137908+00:00`
+- Files processed: `176`
 - Feature/use-case entries: `95`
 - Feature status split: `{'implemented': 10, 'planned': 85}`
 
@@ -27,20 +27,24 @@
 
 | Path | Kind | Bytes | Lines | SHA256 |
 |---|---|---:|---:|---|
+| `.editorconfig` | `text` | 443 | 35 | `f43d02afb32b2338f89ed3410b204fe01a3cf937577523869839fcf9d35abe9b` |
 | `.env.example` | `text` | 1275 | 28 | `bd513bc016ad4f743b8da76509955de642431e582008bcbbf253d84f337a2e4a` |
+| `.gitattributes` | `text` | 1091 | 72 | `d4b76be8eef7e4628d33476a18307efcd659da76115ade6c7718343349b564fa` |
 | `.github/AGENTS.md` | `text` | 834 | 24 | `1de9ad6c131630c992313eeb6fb5eaba74846cfa2f1588d3931b6d73c3875c13` |
 | `.github/GEMINI.md` | `text` | 957 | 19 | `c5b13e45745ce4c076bf2f0e9513f46c2b98fed22f08fd03e6ae52f106f95fb8` |
 | `.github/SECURITY.md` | `text` | 659 | 25 | `caa97e5ccbd5a6df132e0e746ee26c3466d3a8846c3f1821d0282a069d482ad0` |
 | `.github/SUPPORT.md` | `text` | 527 | 14 | `f50510518415c2dd8542c6f5df3a6733569fcef57248b76559e81fea74959a8f` |
-| `.github/workflows/ci-minimal.yml` | `text` | 1836 | 48 | `7b2815104492c963854e9360561dc87db07baa3347c5b1c4c17871f237fc8413` |
+| `.github/dependabot.yml` | `text` | 404 | 21 | `f197c830d9c106be64297e552e47995d321463424ccc764361d1d7e85842ed94` |
+| `.github/workflows/ci-minimal.yml` | `text` | 1836 | 48 | `91e389d7239d56171e8652c5d4e9f480f1073398a4bed2c4e482be046228ddc1` |
 | `.gitignore` | `text` | 609 | 68 | `e8bcab25f2bf6dcd69f95a4a3799bfc7f3f0fe840fa95ce879a6d65c62567f26` |
-| `AGENTS.md` | `text` | 763 | 22 | `e1a4e2d026f7402b861674bb5615f9a56f9f14b7d3f3c781851cffe304a71756` |
-| `CLAUDE.md` | `text` | 14282 | 206 | `9bc0059fbd3f785861229e05778a1e9b5bead10d039b11bf414135c015e81809` |
-| `GEMINI.md` | `text` | 957 | 19 | `06f4ee20523b516b296c427463c6ad891e9f242f3bc8693b18fdbee13011f0ac` |
+| `AGENTS.md` | `text` | 496 | 21 | `b5ddb1fd4175306209c9a5dd2ceb0b69333c71c744f20fa72f67064ccb119247` |
+| `CLAUDE.md` | `text` | 25224 | 418 | `643b6edf069642b8df8b3bfe4402b11fceea186480ba9737f23f121f2150b322` |
+| `DISCOVERY.md` | `text` | 3111 | 21 | `30c511c5d11779483a56c5116be2c0c0fb8326df773e4e553a25d5d8d15b8aac` |
+| `GEMINI.md` | `text` | 11908 | 231 | `1afdc5a54732d02bddd774ef5b1bf3ada371f00bc239b98b8c37aa2d554b8314` |
 | `LICENSE` | `text` | 1064 | 22 | `6d319436c6a6428d1cfa592e3386aef31cb02e04d67731a577b68395c5e963fc` |
 | `MANIFEST.yaml` | `text` | 73790 | 1931 | `eabc9892bf75038588d9e77eec64f4b4dd28cf28bbee7c376d4654b95def5d08` |
 | `Makefile` | `text` | 1316 | 61 | `88dbeff2a11f74f73e4ce9a01f2eaf78e64d30d0f4f65dfe9ae06db2bf2999e1` |
-| `README.md` | `text` | 41701 | 441 | `4e55cef95ef16aad3d659b91c65fc5f194cb74fcffe8932d99add216309362a2` |
+| `README.md` | `text` | 42055 | 449 | `ba1955a853ad09a3f923c533abd85c855799615865b96471f6572a1ab4bd66cd` |
 | `alembic.ini` | `text` | 570 | 38 | `10cbd807a4fd691b24ef067c98e10ca269c0455c11f3fdd16dcf9c2bf30bc4fc` |
 | `alembic/env.py` | `text` | 1258 | 48 | `ca979c9c3923b76f89d216b92636f6c759cffee075b8f7c0117f984b020356ae` |
 | `alembic/script.py.mako` | `text` | 546 | 27 | `45b179250bf89ed063fb4304fa9e0c23979e7126daf8937177e85b6cbcd10829` |
@@ -82,7 +86,11 @@
 | `docs/reviews/evaluation_to_growth_2026-02-25.md` | `text` | 14874 | 337 | `e9f0e047d1c0777491d8e5bcac25542b1794f5464e3aba62d408e50991ab9cb6` |
 | `docs/roadmap.md` | `text` | 20844 | 1003 | `a7f47ace061f4af8f04cd59f3424d53b7f0aaf83f4bdad97dc0feef472696f25` |
 | `docs/roadmap_mvp_next.md` | `text` | 5710 | 167 | `ecec78412332cf299807ef91e84d76a5f93eb8dfa1c94d0866c0545753516edc` |
-| `pyproject.toml` | `text` | 1012 | 52 | `ac49fcafb9ed7d3cdddf58be1a1351e30197972670161fd32d920186522a2e14` |
+| `ecosystem.yaml` | `text` | 536 | 19 | `ba1dc959b4cd5c61660899f46700eb91051d84bb9e2cc2be10c9442054c0ed35` |
+| `ecosystem/pillar-dna/content.yaml` | `text` | 810 | 39 | `846552206789f78c0291bafd3fc752226d788108eef138abf7ce0b0f962b8bce` |
+| `ecosystem/pillar-dna/delivery.yaml` | `text` | 928 | 41 | `dbb0b6248c4a99da07d6527074969effad35b9fd3237aaf18a6ea37a0530e5e0` |
+| `network-map.yaml` | `text` | 1916 | 90 | `e458bca6737a298b73ad5ab19e2fa23108f24fdf710159ddebd7a76c6cccc886` |
+| `pyproject.toml` | `text` | 1015 | 52 | `64baa66bc9f2e6f638c32b5e2f6c38053ff8d75b84c6f90a8ce2e1fc3b7117c4` |
 | `scripts/alexandria_babel_alignment.py` | `text` | 13948 | 359 | `5cb14497811b005aee06701d434afd3e00682c98e51900de4db11c33f5030313` |
 | `scripts/demo_sequence.py` | `text` | 10806 | 264 | `442ac9e5190e14fd3c6b0287fe16ad989a2f7f2d60dddeba578680dc00c90bb0` |
 | `scripts/export_atom_library.py` | `text` | 5444 | 140 | `0a7b00bc5a44752ac15b2e79628a1237177af611a61a0f06a13f9775fcb9ff68` |
@@ -93,7 +101,7 @@
 | `scripts/repo_certainty_audit.py` | `text` | 16897 | 445 | `b7ed92ac179e09a308847793a97b42258c545dd99b1022e9e440e532bd55e284` |
 | `scripts/run_api.sh` | `text` | 103 | 4 | `ef5c1e6448a8a103d3e4639927be0617cbd5d4a143cfbe23193b8c2980638e0c` |
 | `scripts/visualize_atoms.py` | `text` | 9889 | 250 | `e5faac7df16778083e5e3d7afb34b036acb7ea175ff12084b718fa787131d58d` |
-| `seed.yaml` | `text` | 1094 | 42 | `2937e7625e3495a0233aa3e29b91dd3d27a65c8ef3029b7254a4da1115d13f92` |
+| `seed.yaml` | `text` | 1551 | 50 | `3d7e13674166b3f8032fe02597afb25396a840127f0fb0c7896aa0200df228ca` |
 | `specs/01-ingestion-atomization/plan.md` | `text` | 18553 | 408 | `96e6049254a577da6aec54c9c675aeb259c18d9942a6517f14ac67f43d9ce75e` |
 | `specs/01-ingestion-atomization/spec.md` | `text` | 28811 | 431 | `874734a508493a604e4bd276e42935dd01772419795ef7f158fded2a73f98422` |
 | `specs/01-ingestion-atomization/tasks.md` | `text` | 18207 | 425 | `76ce71c753c92e047b49758d9b6266ce746df364c69e004ccd8d4722957bbcfd` |
@@ -193,7 +201,8 @@
 | `tests/test_plugins.py` | `text` | 1633 | 45 | `89783f06b2af0d02412b00de8c6feee6cea6603089b78621daf30f8628a19771` |
 | `tests/test_remix_helpers.py` | `text` | 3641 | 106 | `c8425c7cb60a0aeaeebfc080c602f9b5388ee66a03002c7f6b392a24cab48f91` |
 | `tests/test_wave2.py` | `text` | 5588 | 152 | `17c2ed71e00b559bcae1d9b4f2bab4c428480668f0996df906f29918d93e38d2` |
-| `uv.lock` | `text` | 332744 | 1541 | `ffee93fe4c0c746356a4f199c2e7705e2408d147245888289ec3b0f50928bc39` |
+| `uv.lock` | `text` | 332744 | 1541 | `1b1094b651712b936a78314fda34826cf548ce2c5e9efb8136acdbe3afd8dcc6` |
+| `value-repos.json` | `text` | 40 | 4 | `78a795874f3234a06ded5ab1ebf32984b446feb260f812ff17aa70e9ba010204` |
 
 ## Feature/Use-Case Ledger
 
