@@ -2,12 +2,16 @@ from __future__ import annotations
 
 import argparse
 import time
+from typing import TYPE_CHECKING
 
 from nexus_babel.main import create_app
 
+if TYPE_CHECKING:
+    from fastapi import FastAPI
 
-def run_worker(*, once: bool = False, max_jobs: int | None = None) -> int:
-    app = create_app()
+
+def run_worker(*, once: bool = False, max_jobs: int | None = None, app: FastAPI | None = None) -> int:
+    app = app or create_app()
     processed = 0
 
     while True:
@@ -22,6 +26,7 @@ def run_worker(*, once: bool = False, max_jobs: int | None = None) -> int:
             session.commit()
         except Exception:
             session.rollback()
+            raise
         finally:
             session.close()
 
